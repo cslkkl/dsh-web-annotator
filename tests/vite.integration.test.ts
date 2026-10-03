@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, mkdir, readFile, realpath, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createRequire } from 'node:module';
@@ -15,7 +15,9 @@ const reactAliases = ['react/jsx-dev-runtime', 'react/jsx-runtime'].map((find) =
 }));
 
 async function fixture() {
-  const directory = await mkdtemp(join(tmpdir(), 'layout-care-vite-'));
+  // Windows CI exposes TEMP through an 8.3 alias (RUNNER~1). Vite checks
+  // canonical file paths, so its root must use the same canonical directory.
+  const directory = await realpath(await mkdtemp(join(tmpdir(), 'layout-care-vite-')));
   await mkdir(join(directory, 'src'));
   await writeFile(
     join(directory, 'index.html'),
@@ -42,7 +44,9 @@ test('packaged Vite entry serves its bridge and preserves TSX source hints acros
     const address = server.httpServer!.address();
     assert.ok(address && typeof address !== 'string');
     const origin = `http://127.0.0.1:${address.port}`;
-    const html = await (await fetch(`${origin}/sandbox/`)).text();
+    const htmlResponse = await fetch(`${origin}/sandbox/`);
+    assert.equal(htmlResponse.status, 200);
+    const html = await htmlResponse.text();
     assert.match(html, /window\.__LAYOUT_CARE_CONFIG__/);
     assert.match(html, /https:\/\/harness\.example\.com/);
     assert.match(html, /\/sandbox\/__layout-care__\/bridge\.js/);
