@@ -2,13 +2,13 @@
 
 在 Harness 原有 Browser 标签页里，点击或框选网页，然后就地添加评论、向当前 Agent 提问。
 
-**0.2.0-alpha.7 是预览版，精确支持 Harness 0.2.0-rc.2。** 一个预构建安装包包含插件和 Browser、Chat、Layout 扩展，安装后正常重启 Desktop 即可试用。扩展尚未合入官方 Harness，本项目也尚未公开发布或被插件市场收录。
+**0.2.0-alpha.7 是预览版，精确支持 Harness 0.2.0-rc.2。** 一个预构建安装包包含插件和 Browser、Chat、Layout 扩展，安装后正常重启 Desktop 即可试用。源码已公开，预构建包通过 GitHub Release 分发。扩展尚未合入官方 Harness；npm 尚未发布，插件市场尚未收录。
 
 ![真实 Harness Browser 中的框选批注](docs/images/annotation-region.png)
 
 ## 安装
 
-当前使用维护者构建的 `dsh-web-annotator-0.2.0-alpha.7.tgz`，在 DSH 插件管理页选择该本地包，或使用官方 CLI：
+从 [预览 Release](https://github.com/cslkkl/dsh-web-annotator/releases/tag/v0.2.0-alpha.7) 下载 `dsh-web-annotator-0.2.0-alpha.7.tgz`，在 DSH 插件管理页选择该本地包，或使用官方 CLI：
 
 ```sh
 dsh plugin --profile desktop add --ignore-scripts /absolute/path/dsh-web-annotator-0.2.0-alpha.7.tgz

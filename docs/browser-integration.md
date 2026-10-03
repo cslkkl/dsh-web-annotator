@@ -29,7 +29,7 @@ Layout 提供方用 `npm run build:layout-provider` 构建，`npm run typecheck:
 
 安装包自己的 `cordis.patch.yml` 禁用 stock Browser、Chat 和 Layout 行，再插入包内扩展提供方。Loader 的按 ID patch 中 `name` 只能断言已有名称，不能重命名，因此使用新的行 ID。卸载整个 bundle 后这些替换随 bundle 层撤销。
 
-`prepack` 检查三套提供方、主包入口、精确版本和补丁哈希，缺少或过期时拒绝打包。`lib/host/bundle.json` 记录宿主来源与产物哈希，保留原始 MIT 许可证和 bundle 依赖的许可证。这不是官方 Harness 发行版，尚未公开发布。
+`prepack` 检查三套提供方、主包入口、精确版本和补丁哈希，缺少或过期时拒绝打包。`lib/host/bundle.json` 记录宿主来源与产物哈希，保留原始 MIT 许可证和 bundle 依赖的许可证。这是本项目的预览分发包，不是官方 Harness 发行版。
 
 验收使用独立 Profile、官方 replay 模型和临时会话日志。设置 `WEB_ANNOTATOR_BUNDLED_HOST=1` 后，脚本只安装这个打包产物，不挂载源码路径的提供方。测试配置禁用真实模型，不能复制到日常 Profile。
 

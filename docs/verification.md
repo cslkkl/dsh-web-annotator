@@ -39,6 +39,6 @@ npm run test:acceptance
 
 2026-10-04 验收 `dsh-web-annotator@0.2.0-alpha.7` 单包产物：42 项常规检查和 18 项真实 Harness Web 验收通过。在没有宿主 `node_modules` 的源码副本中构建三套提供方，补充明确的 token-meter 开发依赖，避免构建依赖本机全局安装。独立 Profile 只安装一个 tgz，不挂载源码提供方；全部运行文件及 bundle patch 与已验收包逐字节一致。随后通过官方 CLI 卸载这个包，确认三套官方行恢复启用，并冷启动 Harness 成功读取会话列表。
 
-这一版本的单包验证覆盖 Windows Web composition；当前日常 Desktop 仍安装旧名 alpha.6，alpha.7 没有重新进行原生 Desktop 验收。市场中搜索和一键安装未验证，npm / Release 及市场收录尚未发布。
+这一版本的单包验证覆盖 Windows Web composition；当前日常 Desktop 仍安装旧名 alpha.6，alpha.7 没有重新进行原生 Desktop 验收。预览包通过 GitHub Release 分发；npm 和市场收录尚未发布，市场中搜索和一键安装未验证。
 
 Desktop 原生图片提交和模型识图、其他远程页面、真实模型修改源码，以及完整官方 monorepo 的覆盖率 / 平台门禁均未验证。这里的宿主类型检查覆盖 Browser、Chat 和 Layout Client，并使用安装的 rc.2 声明及精确基线的 Client 构建环境类型；不等同于官方全仓检查。当前稀疏检出使用已发布 CLI 的依赖目录，未提供 vitest，不能运行官方全仓 GUI 门禁。发布稳定版前应完成这些检查。
