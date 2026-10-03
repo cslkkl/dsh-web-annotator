@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "policy": "dsh-plugin-naming/v1",
+  "plugin": {
+    "namespace": "cslkkl",
+    "name": "web-annotator",
+    "coordinate": "cslkkl/web-annotator",
+    "packageName": "dsh-web-annotator"
+  },
+  "names": {
+    "pluginNames": ["cslkkl-web-annotator"],
+    "loaderIds": [
+      "cslkkl-web-annotator",
+      "cslkkl-web-annotator-browser",
+      "cslkkl-web-annotator-chat",
+      "cslkkl-web-annotator-layout"
+    ],
+    "services": [],
+    "tools": [],
+    "commands": [],
+    "skills": [],
+    "skillProviders": [],
+    "events": [],
+    "settingsNamespaces": [],
+    "routes": []
+  }
+}

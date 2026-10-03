@@ -1,0 +1,344 @@
+:root {
+  font-family: 'Noto Sans SC', system-ui, sans-serif;
+  color: #25352e;
+  background: #f7f5f0;
+  font-synthesis: none;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+}
+a {
+  color: inherit;
+}
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+button:focus-visible,
+a:focus-visible,
+.carousel:focus-visible {
+  outline: 2px solid #366e51;
+  outline-offset: 4px;
+}
+.workspace {
+  width: min(100% - 64px, 960px);
+  margin: 0 auto;
+}
+.site-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  min-height: 100px;
+  border-bottom: 1px solid #dcded5;
+}
+.wordmark {
+  font-size: 25px;
+  font-weight: 700;
+  letter-spacing: -1px;
+  text-decoration: none;
+}
+.wordmark-dot {
+  font-size: 12px;
+  color: #a17653;
+  vertical-align: top;
+  margin-left: 5px;
+}
+.edition {
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: #67756b;
+}
+.intro {
+  padding: 64px 0 32px;
+  max-width: 620px;
+}
+.eyebrow {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1.6px;
+  color: #687b6b;
+  margin: 0 0 17px;
+}
+h1 {
+  font-size: clamp(36px, 5vw, 60px);
+  line-height: 1.3;
+  letter-spacing: -2px;
+  font-weight: 500;
+  margin: 0 0 22px;
+}
+.lede {
+  color: #69756d;
+  line-height: 1.9;
+  font-size: 14px;
+  max-width: 480px;
+}
+.review-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+  padding: 22px 0;
+  border-top: 1px solid #dcded5;
+  border-bottom: 1px solid #dcded5;
+}
+.review-controls strong {
+  font-size: 13px;
+  font-weight: 500;
+}
+.review-controls p {
+  font-size: 11px;
+  line-height: 1.8;
+  color: #758074;
+  margin: 8px 0 0;
+  max-width: 510px;
+}
+.status-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  background: #ae7344;
+  border-radius: 50%;
+  margin-right: 8px;
+}
+.status-dot.good {
+  background: #518364;
+}
+.review-controls button {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 25px;
+  font: inherit;
+  font-size: 11px;
+  border: 1px solid #344f3d;
+  color: #f8f7f0;
+  background: #344f3d;
+  padding: 13px 16px;
+  cursor: pointer;
+  border-radius: 3px;
+}
+.review-controls button:hover {
+  background: #45644e;
+}
+.feature-section,
+.collection-section {
+  margin-top: 42px;
+}
+.section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+.section-heading h2 {
+  font-size: 15px;
+  font-weight: 500;
+  margin: 0;
+}
+.section-heading > span {
+  font-size: 9px;
+  letter-spacing: 1.2px;
+  color: #899286;
+}
+.feature-card {
+  width: 560px;
+  background: #eeeee6;
+  border: 1px solid #dedfd3;
+  border-radius: 5px;
+  overflow: hidden;
+}
+.feature-card.repaired {
+  width: min(100%, 560px);
+}
+.card-art {
+  position: relative;
+  height: 215px;
+  overflow: hidden;
+  background: #d8dfd0;
+}
+.art-circle {
+  position: absolute;
+  width: 142px;
+  height: 142px;
+  border-radius: 50%;
+  background: #b78055;
+  left: 30%;
+  top: 38px;
+}
+.art-frame {
+  position: absolute;
+  width: 98px;
+  height: 172px;
+  background: #eee9d9;
+  left: 48%;
+  top: 82px;
+  border-radius: 60px 60px 0 0;
+  box-shadow: 18px 14px 0 #476b51;
+}
+.art-line {
+  position: absolute;
+  width: 210px;
+  height: 1px;
+  background: #84967b;
+  left: 28px;
+  top: 183px;
+}
+.card-body {
+  padding: 27px 29px;
+}
+.card-body .eyebrow {
+  font-size: 9px;
+  margin-bottom: 12px;
+}
+.card-body h3 {
+  font-size: 22px;
+  line-height: 1.5;
+  font-weight: 500;
+  margin: 0 0 12px;
+}
+.card-body > p:not(.eyebrow) {
+  color: #70806e;
+  line-height: 1.9;
+  font-size: 12px;
+  margin: 0;
+}
+.card-body a {
+  margin-top: 23px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  text-decoration: none;
+  color: #446647;
+}
+.demo-note {
+  font-size: 10px;
+  color: #7e887b;
+  line-height: 1.9;
+  margin: 14px 0 0;
+}
+.carousel {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  padding: 0 0 10px;
+  scrollbar-width: thin;
+  scrollbar-color: #aab4a1 transparent;
+}
+.collection-card {
+  flex: 0 0 238px;
+  position: relative;
+  height: 224px;
+  padding: 18px;
+  background: #e9dfca;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.collection-card.green {
+  background: #d7e0cf;
+}
+.collection-card.blue {
+  background: #d8e0e3;
+}
+.collection-card.pink {
+  background: #e5d9d1;
+}
+.collection-number {
+  font-size: 10px;
+  color: #6f796a;
+}
+.collection-card h3 {
+  position: absolute;
+  bottom: 14px;
+  font-size: 13px;
+  font-weight: 500;
+}
+.mini-art {
+  width: 82px;
+  height: 100px;
+  border-radius: 42px 42px 0 0;
+  background: #788d69;
+  margin: 12px auto 0;
+  box-shadow: 13px 9px 0 #f8f4e4;
+  transform: rotate(-9deg);
+}
+.green .mini-art {
+  background: #ad8a60;
+  transform: rotate(12deg);
+}
+.blue .mini-art {
+  background: #729397;
+  border-radius: 0 50px 0 50px;
+}
+.pink .mini-art {
+  background: #a66f59;
+  border-radius: 50%;
+  transform: rotate(18deg);
+}
+footer {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 60px;
+  padding: 24px 0;
+  border-top: 1px solid #dcded5;
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: #778272;
+}
+footer span {
+  letter-spacing: 0;
+}
+@media (max-width: 600px) {
+  .workspace {
+    width: calc(100% - 36px);
+  }
+  .site-header {
+    min-height: 78px;
+    gap: 10px;
+  }
+  .wordmark {
+    font-size: 22px;
+  }
+  .edition {
+    font-size: 8px;
+    letter-spacing: 0;
+  }
+  .intro {
+    padding-top: 40px;
+  }
+  h1 {
+    font-size: 38px;
+  }
+  .lede {
+    font-size: 12px;
+  }
+  .review-controls {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+  .review-controls button {
+    align-self: flex-start;
+  }
+  .feature-section,
+  .collection-section {
+    margin-top: 30px;
+  }
+  .section-heading > span {
+    font-size: 8px;
+  }
+  .collection-card {
+    flex-basis: 214px;
+  }
+  .card-body {
+    padding: 24px;
+  }
+  .card-body h3 {
+    font-size: 21px;
+  }
+}

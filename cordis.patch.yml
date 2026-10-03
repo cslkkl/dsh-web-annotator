@@ -1,0 +1,15 @@
+- id: ui-sidebar-browser
+  disabled: true
+- id: ui-chat
+  disabled: true
+- id: ui-layout
+  disabled: true
+- insert:
+    - id: cslkkl-web-annotator-browser
+      name: ./lib/host/browser-provider/lib/index.js
+    - id: cslkkl-web-annotator-chat
+      name: ./lib/host/chat-provider/lib/index.js
+    - id: cslkkl-web-annotator-layout
+      name: ./lib/host/layout-provider/lib/index.js
+    - id: cslkkl-web-annotator
+      name: dsh-web-annotator

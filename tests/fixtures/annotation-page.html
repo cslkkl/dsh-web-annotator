@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><title>批注交互验收页</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f8f8f6;color:#252726;font:16px/1.6 system-ui}main{padding:40px 32px;max-width:620px}h1{font-size:28px;font-weight:500;line-height:1.3}h2{font-size:20px;font-weight:500}button,input{font:inherit;padding:8px 12px;border:1px solid #bbb;border-radius:8px}button{background:#fff;cursor:pointer}.card{margin-top:24px;padding:24px;background:white;border:1px solid #ddd;border-radius:12px}.space{height:220px}#blank{position:absolute;right:0;top:0;width:20px;height:100vh}#bottom{margin-top:700px}
+</style></head><body>
+<main><p>DSH Web Annotator · 实际网页交互</p><h1 id="heading">在页面上，直接表达你的想法</h1>
+<section class="card" id="card" data-layout-care-source="tests/fixtures/annotation-page.html:8:1"><h2 id="card-title">这一区域可以框选</h2><p>框选保存矩形范围，候选元素只是定位资料。</p><button id="counter">点击次数：0</button><input id="page-input" aria-label="网页输入框" placeholder="按住空格操作网页"></section>
+<div class="space"></div><div id="shadow-host"></div><canvas id="canvas" width="260" height="70" aria-label="画布区域"></canvas>
+<section id="bottom" class="card"><h2>滚动后的区域</h2><p>选区保留文档坐标。</p></section></main><div id="blank"></div>
+<script>
+let count=0;document.querySelector('#counter').onclick=()=>{document.querySelector('#counter').textContent='点击次数：'+ ++count};
+document.querySelector('#shadow-host').attachShadow({mode:'open'}).innerHTML='<button id="inside">Shadow DOM 按钮</button>';
+const paint=document.querySelector('#canvas').getContext('2d');paint.fillStyle='#d7e2da';paint.fillRect(0,0,260,70);paint.fillStyle='#253b2b';paint.font='16px system-ui';paint.fillText('支持选取画布区域',22,43);
+</script></body></html>

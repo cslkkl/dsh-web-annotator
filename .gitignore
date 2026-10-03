@@ -1,0 +1,8 @@
+node_modules/
+*.tgz
+test-results/
+.DS_Store
+lib/
+integration/
+playwright-report/
+.host-source/
