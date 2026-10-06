@@ -124,3 +124,19 @@ test('image-only text omits DOM JSON; detailed requests preserve changes and nev
     false,
   );
 });
+
+test('mixed screenshot requests preserve every note and map attachments without shifting their targets', () => {
+  const notes = [
+    annotation,
+    { ...annotation, note: '有图的第二条' },
+    { ...annotation, note: '有图的第三条' },
+  ];
+  const request = annotationPrompt(notes, true, [false, true, true]);
+  assert.match(request, /"screenshotIndex": 1/);
+  assert.match(request, /"screenshotIndex": 2/);
+  assert.deepEqual(readAnnotationPrompt(request), notes);
+  assert.equal(
+    readAnnotationPrompt(request.replace('"screenshotIndex": 2', '"screenshotIndex": 3')),
+    null,
+  );
+});

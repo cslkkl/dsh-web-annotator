@@ -197,8 +197,10 @@ function Queue(props: QueueProps) {
   const storage = useStore((state) => state.storage);
   const [preview, setPreview] = useState(false);
   const [delivery, setDelivery] = useState<AnnotationDelivery>('image');
-  const hasImages = notes.length > 0 && notes.every(({ annotation }) => !!annotation.screenshot);
-  const effectiveDelivery = hasImages ? delivery : 'details';
+  const imageCount = notes.filter(({ annotation }) => !!annotation.screenshot).length;
+  const hasImages = notes.length > 0 && imageCount === notes.length;
+  const effectiveDelivery =
+    (delivery === 'both' && imageCount > 0) || hasImages ? delivery : 'details';
   const [busy, setBusy] = useState(false);
   const [feedback, setFeedback] = useState<AnnotationCopyKey>();
   const epoch = useRef(0);
@@ -219,7 +221,11 @@ function Queue(props: QueueProps) {
       prompt =
         effectiveDelivery === 'image'
           ? annotationImagePrompt(annotations)
-          : annotationPrompt(annotations, effectiveDelivery === 'both');
+          : annotationPrompt(
+              annotations,
+              effectiveDelivery === 'both',
+              effectiveDelivery === 'both' ? annotations.map((x) => !!x.screenshot) : undefined,
+            );
     } catch {
       tooLarge = true;
     }
@@ -235,7 +241,9 @@ function Queue(props: QueueProps) {
     try {
       await submitAnnotations(
         prompt,
-        effectiveDelivery === 'details' ? [] : notes.map((x) => x.annotation.screenshot!),
+        effectiveDelivery === 'details'
+          ? []
+          : notes.flatMap((x) => (x.annotation.screenshot ? [x.annotation.screenshot] : [])),
       );
       actions.sent(capturedUrl, ids);
       if (epoch.current === generation) setFeedback('sent');
@@ -293,7 +301,7 @@ function Queue(props: QueueProps) {
                     {t('image')}
                   </option>
                   <option value="details">{t('details')}</option>
-                  <option value="both" disabled={!hasImages}>
+                  <option value="both" disabled={!imageCount}>
                     {t('both')}
                   </option>
                 </select>
@@ -322,14 +330,16 @@ function Queue(props: QueueProps) {
             {preview && (
               <>
                 {effectiveDelivery !== 'details' &&
-                  notes.map(({ id, annotation }) => (
-                    <img
-                      key={id}
-                      className="lc-image-preview"
-                      alt={t('image')}
-                      src={`data:image/jpeg;base64,${annotation.screenshot!.data}`}
-                    />
-                  ))}
+                  notes
+                    .filter(({ annotation }) => annotation.screenshot)
+                    .map(({ id, annotation }) => (
+                      <img
+                        key={id}
+                        className="lc-image-preview"
+                        alt={t('image')}
+                        src={`data:image/jpeg;base64,${annotation.screenshot!.data}`}
+                      />
+                    ))}
                 <textarea className="lc-preview" readOnly aria-label={t('queue')} value={prompt} />
               </>
             )}

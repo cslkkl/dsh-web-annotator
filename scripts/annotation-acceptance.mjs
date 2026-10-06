@@ -50,7 +50,13 @@ try {
         : resolve('integration/layout-provider'),
     tarball: process.env.LAYOUT_CARE_TARBALL,
     previewTarball: process.env.LAYOUT_CARE_PREVIEW_TARBALL,
-    responses: [reply, '图片批注已收到。', '图片和定位资料已收到。', '普通消息已收到。'],
+    responses: [
+      reply,
+      '图片批注已收到。',
+      '图片和定位资料已收到。',
+      '混合图片批注已收到。',
+      '普通消息已收到。',
+    ],
   });
   const installedRoot = process.env.LAYOUT_CARE_TARBALL
     ? resolve(
@@ -486,7 +492,7 @@ try {
       });
       const send = MessagePort.prototype.postMessage;
       MessagePort.prototype.postMessage = function (value, transfer) {
-        if (value?.selection && value?.note) {
+        if (value?.selection && value?.note && !window.skipAnnotationScreenshot) {
           send.call(this, { ...value, screenshot }, transfer);
         } else send.call(this, value, transfer);
       };
@@ -547,6 +553,40 @@ try {
   assert.equal(await page.locator('.lc-message-evidence').last().getAttribute('open'), null);
   await page.screenshot({ path: join(artifacts, 'image-submitted.png') });
   passed('Combined mode keeps real image attachments and collapses DOM evidence');
+  await frame.locator('body').evaluate(() => {
+    window.skipAnnotationScreenshot = true;
+  });
+  await start();
+  await clickAt('#heading');
+  await save('这条批注没有截图');
+  await frame.locator('body').evaluate(() => {
+    window.skipAnnotationScreenshot = false;
+  });
+  await start();
+  await clickAt('#heading');
+  await save('第二条保留截图');
+  await page.getByRole('combobox', { name: '发送方式', exact: true }).selectOption('both');
+  if (!(await page.getByRole('textbox', { name: '发送内容', exact: true }).isVisible()))
+    await button('预览发送内容').click();
+  const mixedPrompt = await page
+    .getByRole('textbox', { name: '发送内容', exact: true })
+    .inputValue();
+  assert.match(mixedPrompt, /"screenshotIndex": 1/);
+  assert.equal(await page.locator('.lc-image-preview').count(), 1);
+  await button('发送到当前会话').click();
+  await page.getByText('混合图片批注已收到。', { exact: true }).waitFor();
+  const mixedJournal = await readDurableJournal(fixture, targetSession);
+  const mixedMessage = mixedJournal.events.find(
+    (event) =>
+      event.type === 'user/message' &&
+      event.data.content.some((part) => part.type === 'text' && part.text === mixedPrompt),
+  );
+  assert.ok(mixedMessage);
+  assert.equal(mixedMessage.data.content.filter((part) => part.type === 'image').length, 1);
+  assert.equal(await page.locator('.lc-message-evidence').last().getAttribute('open'), null);
+  passed(
+    'Mixed batches retain both notes and the available image, with exact attachment correspondence',
+  );
   assert.ok(targetSession);
   await fixture.api.sendPrompt(targetSession, '普通用户消息');
   await page.getByText('普通用户消息', { exact: true }).waitFor();
