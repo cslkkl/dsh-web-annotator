@@ -56,6 +56,7 @@ try {
       '图片和定位资料已收到。',
       '混合图片批注已收到。',
       '普通消息已收到。',
+      '分批发送已收到。',
     ],
   });
   const installedRoot = process.env.LAYOUT_CARE_TARBALL
@@ -626,6 +627,73 @@ try {
   await page.getByText('普通消息已收到。', { exact: true }).waitFor();
   passed('The additive text chain retains ordinary user message rendering');
   await verifyFullscreen('active');
+  // Fill the durable queue through the storage boundary, then exercise the real packed UI.
+  await page.evaluate(
+    async ({ url, sessionId }) => {
+      const annotation = {
+        intent: 'question',
+        note: '满队列待发送',
+        url,
+        title: 'Queue limit regression',
+        viewport: { width: 800, height: 600 },
+        selection: {
+          kind: 'point',
+          rect: { x: 20, y: 20, width: 0, height: 0 },
+          viewportRect: { x: 20, y: 20, width: 0, height: 0 },
+          scroll: { x: 0, y: 0 },
+          candidates: [],
+        },
+      };
+      const database = await new Promise((resolve, reject) => {
+        const request = indexedDB.open('dsh-web-annotator', 1);
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+      try {
+        await new Promise((resolve, reject) => {
+          const transaction = database.transaction('queues', 'readwrite');
+          transaction.objectStore('queues').put(
+            {
+              byUrl: {
+                [url]: Array.from({ length: 32 }, (_, index) => ({
+                  id: `limit-${index}`,
+                  annotation: { ...annotation, note: `满队列待发送 ${index + 1}` },
+                })),
+              },
+            },
+            `dsh.layout-care.browser-annotations.v1.${sessionId}`,
+          );
+          transaction.oncomplete = resolve;
+          transaction.onabort = () => reject(transaction.error);
+        });
+      } finally {
+        database.close();
+      }
+    },
+    { url: demoUrl, sessionId: targetSession },
+  );
+  await page.reload();
+  await page.getByText('普通消息已收到。', { exact: true }).waitFor();
+  await button('批注网页').first().click();
+  await address.fill(demoUrl);
+  await address.press('Enter');
+  await frame.locator('#heading').waitFor();
+  await page.getByText('满队列待发送 32', { exact: true }).waitFor();
+  assert.equal(await button('添加批注').isDisabled(), true);
+  const fullQueueChecks = await page.getByRole('checkbox', { name: /^选择批注 / }).all();
+  assert.equal(fullQueueChecks.length, 32);
+  for (const checkbox of fullQueueChecks.slice(1)) await checkbox.uncheck();
+  await button('发送到当前会话').click();
+  await page.getByText('分批发送已收到。', { exact: true }).waitFor();
+  await page
+    .locator('.lc-note')
+    .getByText('满队列待发送 1', { exact: true })
+    .waitFor({ state: 'hidden' });
+  assert.equal(await page.locator('.lc-note').count(), 31);
+  assert.equal(await button('添加批注').isDisabled(), false);
+  passed(
+    'Full queues block picking before a draft can be lost; sending one selected note retains the other 31 and re-enables picking',
+  );
   assert.deepEqual(errors, []);
   await page.screenshot({ path: join(artifacts, 'submitted.png') });
   await writeFile(

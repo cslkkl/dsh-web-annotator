@@ -132,6 +132,8 @@ function Toolbar({
   t,
 }: ToolbarProps) {
   const storage = useStore((state) => state.storage);
+  const stored = useStore((state) => state.byUrl?.[url || '']);
+  const full = readAnnotations(stored).length >= 32;
   const [active, setActive] = useState(false);
   const [error, setError] = useState<AnnotationCopyKey>();
   const epoch = useRef(0);
@@ -146,6 +148,10 @@ function Toolbar({
   async function start() {
     if (active) {
       cancelAnnotation();
+      return;
+    }
+    if (readAnnotations(stored).length >= 32) {
+      setError('limit');
       return;
     }
     const generation = epoch.current;
@@ -163,7 +169,7 @@ function Toolbar({
   }
   return (
     <>
-      <Tooltip label={t(active ? 'stop' : 'start')} side="bottom">
+      <Tooltip label={t(full ? 'limit' : active ? 'stop' : 'start')} side="bottom">
         <Button
           type="button"
           size="sm"
@@ -171,7 +177,7 @@ function Toolbar({
           icon={<IconInspectOutlineRegular />}
           aria-label={t(active ? 'stop' : 'start')}
           aria-pressed={active}
-          disabled={!url || loading || storage === 'loading'}
+          disabled={!url || loading || storage === 'loading' || (!active && full)}
           style={{ whiteSpace: 'nowrap', flexShrink: 0 }}
           onClick={() => {
             void start();
@@ -412,7 +418,7 @@ function Queue(props: QueueProps) {
               </>
             )}
             {!!selectedNotes.length && !hasImages && <p className="lc-muted">{t('noImage')}</p>}
-            {tooLarge && (
+            {(tooLarge || notes.length >= 32) && (
               <p role="alert" className="lc-error">
                 {t('limit')}
               </p>
