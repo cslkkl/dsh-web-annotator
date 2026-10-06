@@ -106,6 +106,7 @@ export function annotatePage(
     .editor.expanded{width:min(420px,calc(100vw - 24px));border-radius:24px;padding:0}
     .expanded>.row{padding:12px 14px;flex:none}
     .expanded>.row>.save{display:none}
+    .expanded textarea{max-height:min(66px,20vh)}
     .editor:focus-within{box-shadow:0 0 0 .5px ${options.dark ? '#85868b' : '#bfc4cc'},0 2px 8px #00000014}
     .row{display:flex;align-items:center;gap:10px}
     button,select,textarea{font:inherit;color:inherit}

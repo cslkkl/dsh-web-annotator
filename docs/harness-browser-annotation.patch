@@ -447,10 +447,10 @@ index 0000000..867e819
 +}
 diff --git a/packages/client/ui-sidebar-browser/src/client/annotation/page-inspector.ts b/packages/client/ui-sidebar-browser/src/client/annotation/page-inspector.ts
 new file mode 100644
-index 0000000..3a517b9
+index 0000000..54b93a3
 --- /dev/null
 +++ b/packages/client/ui-sidebar-browser/src/client/annotation/page-inspector.ts
-@@ -0,0 +1,914 @@
+@@ -0,0 +1,915 @@
 +/** Data returned by one explicit, in-page annotation gesture. */
 +export interface BrowserAnnotation {
 +  /** Provider-captured viewport with the saved area marked; never part of DOM evidence. */
@@ -559,6 +559,7 @@ index 0000000..3a517b9
 +    .editor.expanded{width:min(420px,calc(100vw - 24px));border-radius:24px;padding:0}
 +    .expanded>.row{padding:12px 14px;flex:none}
 +    .expanded>.row>.save{display:none}
++    .expanded textarea{max-height:min(66px,20vh)}
 +    .editor:focus-within{box-shadow:0 0 0 .5px ${options.dark ? '#85868b' : '#bfc4cc'},0 2px 8px #00000014}
 +    .row{display:flex;align-items:center;gap:10px}
 +    button,select,textarea{font:inherit;color:inherit}

@@ -378,6 +378,10 @@ try {
   const narrowCard = await composer.boundingBox();
   const narrowFrame = await frameElement.boundingBox();
   assert.ok(
+    (await optionsPanel.boundingBox()).height >= 70,
+    'Long comments leave enough space to scroll through property fields',
+  );
+  assert.ok(
     narrowCard && narrowFrame && narrowCard.x >= narrowFrame.x && narrowCard.y >= narrowFrame.y,
   );
   assert.ok(narrowCard.x + narrowCard.width <= narrowFrame.x + narrowFrame.width + 1);
