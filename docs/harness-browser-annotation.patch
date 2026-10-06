@@ -447,7 +447,7 @@ index 0000000..867e819
 +}
 diff --git a/packages/client/ui-sidebar-browser/src/client/annotation/page-inspector.ts b/packages/client/ui-sidebar-browser/src/client/annotation/page-inspector.ts
 new file mode 100644
-index 0000000..2f03296
+index 0000000..3a517b9
 --- /dev/null
 +++ b/packages/client/ui-sidebar-browser/src/client/annotation/page-inspector.ts
 @@ -0,0 +1,914 @@
@@ -822,7 +822,7 @@ index 0000000..2f03296
 +    field.input.addEventListener(
 +      'keydown',
 +      (event) => {
-+        if (event.key === 'Enter') {
++        if (event.key === 'Enter' && !event.isComposing && event.keyCode !== 229) {
 +          event.preventDefault();
 +          event.stopPropagation();
 +          submit(event);

@@ -217,6 +217,13 @@ try {
   assert.ok(panelBounds.x >= ownerBounds.x && panelBounds.y >= ownerBounds.y);
   assert.ok(panelBounds.x + panelBounds.width <= ownerBounds.x + ownerBounds.width);
   assert.ok(panelBounds.y + panelBounds.height <= ownerBounds.y + ownerBounds.height);
+  const colorField = optionsPanel.getByRole('textbox', { name: '文本颜色', exact: true });
+  await colorField.dispatchEvent('keydown', {
+    key: 'Enter',
+    code: 'Enter',
+    keyCode: 229,
+    isComposing: true,
+  });
   assert.equal(
     await optionsPanel.getByRole('textbox', { name: '文本颜色', exact: true }).inputValue(),
     await frame.locator('#counter').evaluate((el) => getComputedStyle(el).color),

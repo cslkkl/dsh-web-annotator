@@ -369,7 +369,7 @@ export function annotatePage(
     field.input.addEventListener(
       'keydown',
       (event) => {
-        if (event.key === 'Enter') {
+        if (event.key === 'Enter' && !event.isComposing && event.keyCode !== 229) {
           event.preventDefault();
           event.stopPropagation();
           submit(event);
