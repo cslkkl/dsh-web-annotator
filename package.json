@@ -67,7 +67,8 @@
     "build:host": "npm run build:browser-provider && npm run build:chat-provider && npm run build:layout-provider && node scripts/collect-licenses.mjs && node scripts/package-host.mjs",
     "prepack": "node scripts/check-package.mjs",
     "typecheck:chat-provider": "node scripts/typecheck-browser-provider.mjs --chat",
-    "typecheck:browser-provider": "node scripts/typecheck-browser-provider.mjs"
+    "typecheck:browser-provider": "node scripts/typecheck-browser-provider.mjs",
+    "test:storage": "node scripts/annotation-storage-acceptance.mjs"
   },
   "dependencies": {
     "@babel/parser": "7.28.5",

@@ -121,7 +121,17 @@ function pickerOptions(t: ToolbarProps['t']): BrowserAnnotationOptions {
     copy,
   };
 }
-function Toolbar({ annotate, cancelAnnotation, url, tabId, loading, actions, t }: ToolbarProps) {
+function Toolbar({
+  annotate,
+  cancelAnnotation,
+  url,
+  tabId,
+  loading,
+  useStore,
+  actions,
+  t,
+}: ToolbarProps) {
+  const storage = useStore((state) => state.storage);
   const [active, setActive] = useState(false);
   const [error, setError] = useState<AnnotationCopyKey>();
   const epoch = useRef(0);
@@ -161,7 +171,7 @@ function Toolbar({ annotate, cancelAnnotation, url, tabId, loading, actions, t }
           icon={<IconInspectOutlineRegular />}
           aria-label={t(active ? 'stop' : 'start')}
           aria-pressed={active}
-          disabled={!url || loading}
+          disabled={!url || loading || storage === 'loading'}
           style={{ whiteSpace: 'nowrap', flexShrink: 0 }}
           onClick={() => {
             void start();
@@ -184,6 +194,7 @@ function Queue(props: QueueProps) {
   const { url, useStore, actions, t, submitAnnotations } = props;
   const stored = useStore((state) => state.byUrl?.[url || '']);
   const notes = readAnnotations(stored).filter((item) => item.annotation.url === url);
+  const storage = useStore((state) => state.storage);
   const [preview, setPreview] = useState(false);
   const [delivery, setDelivery] = useState<AnnotationDelivery>('image');
   const hasImages = notes.length > 0 && notes.every(({ annotation }) => !!annotation.screenshot);
@@ -331,6 +342,14 @@ function Queue(props: QueueProps) {
           </details>
         </section>
       )}
+      {notes.length > 0 && (storage === 'saving' || storage === 'failed') && (
+        <div
+          role={storage === 'failed' ? 'alert' : 'status'}
+          className={`lc-feedback ${storage === 'failed' ? 'lc-error' : ''}`}
+        >
+          {t(storage === 'failed' ? 'storageFailed' : 'saving')}
+        </div>
+      )}
       {feedback && (
         <div
           role={feedback === 'sent' ? 'status' : 'alert'}
@@ -363,7 +382,11 @@ export function apply(ctx: Context): void {
   ctx.effect(() =>
     ctx.slots.inject('conversation.input.left', () =>
       ctx.slots.register(
-        { name: 'conversation.input.left', id: 'layout-care.open-browser', locale: NS },
+        {
+          name: 'conversation.input.left',
+          id: 'layout-care.open-browser',
+          locale: NS,
+        },
         ({ t }: PropsRuntime<'conversation.input.left'> & PropsLocale<typeof NS>) => (
           <Button
             type="button"
