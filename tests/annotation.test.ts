@@ -140,3 +140,18 @@ test('mixed screenshot requests preserve every note and map attachments without 
     null,
   );
 });
+
+test('image-only batches are independent of the unused DOM payload size', () => {
+  const picture = {
+    ...annotation,
+    screenshot: { mediaType: 'image/jpeg' as const, data: 'AA==', width: 800, height: 600 },
+  };
+  const notes = Array.from({ length: 32 }, () => ({
+    ...picture,
+    url: annotation.url + 'a'.repeat(3000),
+    title: '长'.repeat(300),
+    note: '问'.repeat(1000),
+  }));
+  assert.throws(() => annotationPrompt(notes), /annotation-limit/);
+  assert.ok(annotationImagePrompt(notes).length < 64000);
+});
