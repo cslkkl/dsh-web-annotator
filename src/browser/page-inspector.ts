@@ -482,7 +482,7 @@ export function annotatePage(
     if (selection?.kind === 'element' && !target?.isConnected) {
       outline.classList.add('hidden');
       showError(options.copy.targetGone);
-      save.disabled = true;
+      save.disabled = expandedSave.disabled = true;
       return;
     }
     save.disabled = expandedSave.disabled =

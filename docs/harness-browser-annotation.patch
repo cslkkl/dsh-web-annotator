@@ -935,7 +935,7 @@ index 0000000..3a517b9
 +    if (selection?.kind === 'element' && !target?.isConnected) {
 +      outline.classList.add('hidden');
 +      showError(options.copy.targetGone);
-+      save.disabled = true;
++      save.disabled = expandedSave.disabled = true;
 +      return;
 +    }
 +    save.disabled = expandedSave.disabled =

@@ -182,7 +182,14 @@ try {
   };
   const clickAt = async (id) => {
     const b = await box(id);
-    await page.mouse.click(b.x + b.width / 2, b.y + b.height / 2);
+    const viewport = await frameElement.boundingBox();
+    assert.ok(viewport);
+    const left = Math.max(b.x, viewport.x);
+    const top = Math.max(b.y, viewport.y);
+    const right = Math.min(b.x + b.width, viewport.x + viewport.width);
+    const bottom = Math.min(b.y + b.height, viewport.y + viewport.height);
+    assert.ok(right > left && bottom > top, 'Target has a visible clickable area');
+    await page.mouse.click((left + right) / 2, (top + bottom) / 2);
   };
 
   await start();
@@ -353,6 +360,46 @@ try {
   await page.keyboard.press('Escape');
   await page.locator('body').evaluate((el) => el.removeAttribute('data-ds-dark-theme'));
   passed('Light and dark annotation screenshots captured');
+
+  await page.setViewportSize({ width: 820, height: 540 });
+  await frame.locator('body').evaluate((el) => {
+    el.style.zoom = '1.5';
+  });
+  await start();
+  await clickAt('#heading');
+  await note.fill('窄窗口长批注\n'.repeat(30));
+  await optionsButton.click();
+  const narrowCard = await composer.boundingBox();
+  const narrowFrame = await frameElement.boundingBox();
+  assert.ok(
+    narrowCard && narrowFrame && narrowCard.x >= narrowFrame.x && narrowCard.y >= narrowFrame.y,
+  );
+  assert.ok(narrowCard.x + narrowCard.width <= narrowFrame.x + narrowFrame.width + 1);
+  assert.ok(narrowCard.y + narrowCard.height <= narrowFrame.y + narrowFrame.height + 1);
+  await composer.screenshot({ path: join(artifacts, 'expanded-narrow.png') });
+  await frame.locator('#heading').evaluate((el) => {
+    window.removedHeading = { el, next: el.nextSibling, parent: el.parentNode };
+    el.remove();
+  });
+  await page.clock.fastForward(50);
+  assert.equal(
+    await frame
+      .getByRole('button', { name: '保存批注', exact: true })
+      .filter({ visible: true })
+      .isDisabled(),
+    true,
+  );
+  await frame.locator('body').evaluate(() => {
+    const { el, next, parent } = window.removedHeading;
+    parent.insertBefore(el, next);
+    document.body.style.zoom = '';
+  });
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('Escape');
+  await page.setViewportSize({ width: 1600, height: 1000 });
+  passed(
+    'Expanded editor fits a narrow resized viewport with enlarged page content; removed targets disable saving',
+  );
 
   // Navigation isolates retained queues, and restores them when returning.
   await address.fill(demoUrl + '?other-page=1');
