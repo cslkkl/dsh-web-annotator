@@ -17,6 +17,9 @@ const content = await readFile(patch, 'utf8');
 const files = [...content.matchAll(/^diff --git a\/(.+) b\/(.+)$/gm)].map((match) => match[2]);
 await mkdir('integration', { recursive: true });
 const temporary = await mkdtemp(resolve('integration/patch-check-'));
+// Without an isolated Git root, apply from this subdirectory silently skips
+// patch paths as outside the parent plugin repository's current prefix.
+execFileSync('git', ['init', '--quiet', temporary]);
 for (const file of files) {
   if (!tracked.has(file)) continue;
   const target = join(temporary, file);
