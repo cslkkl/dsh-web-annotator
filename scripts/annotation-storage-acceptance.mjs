@@ -52,9 +52,7 @@ try {
     window.legacyKey = 'dsh.layout-care.browser-annotations.v1.migration';
     localStorage.setItem(
       legacyKey,
-      JSON.stringify({
-        byUrl: { [annotation.url]: [{ id: 'legacy', annotation }] },
-      }),
+      JSON.stringify({ byUrl: { [annotation.url]: [{ id: 'legacy', annotation }] } }),
     );
     window.migrated = AnnotationStoreTest.createAnnotationStore().create('migration');
   });
@@ -104,11 +102,7 @@ try {
       legacyRejected = error.name === 'QuotaExceededError';
     }
     window.large = AnnotationStoreTest.createAnnotationStore().create('large');
-    return {
-      bytes: value.length,
-      imageCharacters: picture.screenshot.data.length,
-      legacyRejected,
-    };
+    return { bytes: value.length, imageCharacters: picture.screenshot.data.length, legacyRejected };
   });
   assert.ok(
     size.bytes > 6_000_000 && size.imageCharacters <= 4_000_000 && size.legacyRejected,
@@ -117,10 +111,7 @@ try {
   await ready('large');
   await page.evaluate(() => {
     for (let i = 0; i < 3; i++)
-      large.actions.add(annotation.url, {
-        id: `large-${i}`,
-        annotation: picture,
-      });
+      large.actions.add(annotation.url, { id: `large-${i}`, annotation: picture });
     large.actions.edit(annotation.url, 'large-1', '保存后修改的批注');
     window.originalImage = picture.screenshot.data;
   });

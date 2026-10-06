@@ -25,7 +25,7 @@ Layout 提供方用 `npm run build:layout-provider` 构建，`npm run typecheck:
 
 ## 单包分发与独立验收
 
-三个提供方构建完成后，运行 `npm run build:host` 将它们放入主包的 `lib/host`，然后运行 `npm pack`。一个 `dsh-web-annotator-0.2.0-alpha.7.tgz` 同时包含插件、宿主扩展和许可证，无需用户额外编译。可用 `DSH_HOST_CHECKOUT` 指定其他位置的同一精确基线检出。
+三个提供方构建完成后，运行 `npm run build:host` 将它们放入主包的 `lib/host`，然后运行 `npm pack`。一个 `dsh-web-annotator-0.2.0-alpha.8.tgz` 同时包含插件、宿主扩展和许可证，无需用户额外编译。可用 `DSH_HOST_CHECKOUT` 指定其他位置的同一精确基线检出。
 
 安装包自己的 `cordis.patch.yml` 禁用 stock Browser、Chat 和 Layout 行，再插入包内扩展提供方。Loader 的按 ID patch 中 `name` 只能断言已有名称，不能重命名，因此使用新的行 ID。卸载整个 bundle 后这些替换随 bundle 层撤销。
 

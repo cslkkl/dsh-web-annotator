@@ -6,6 +6,7 @@
 
 ```powershell
 npm run check
+npm run test:storage
 npm run build:browser-provider
 npm run typecheck:browser-provider
 npm run build:chat-provider
@@ -14,7 +15,7 @@ npm run build:layout-provider
 npm run typecheck:layout-provider
 npm run build:host
 npm pack
-$env:LAYOUT_CARE_TARBALL = (Resolve-Path ./dsh-web-annotator-0.2.0-alpha.7.tgz).Path
+$env:LAYOUT_CARE_TARBALL = (Resolve-Path ./dsh-web-annotator-0.2.0-alpha.8.tgz).Path
 $env:WEB_ANNOTATOR_BUNDLED_HOST = '1'
 npm run test:acceptance
 ```
@@ -39,6 +40,12 @@ npm run test:acceptance
 
 2026-10-04 验收 `dsh-web-annotator@0.2.0-alpha.7` 单包产物：42 项常规检查和 18 项真实 Harness Web 验收通过。在没有宿主 `node_modules` 的源码副本中构建三套提供方，补充明确的 token-meter 开发依赖，避免构建依赖本机全局安装。独立 Profile 只安装一个 tgz，不挂载源码提供方；全部运行文件及 bundle patch 与已验收包逐字节一致。随后通过官方 CLI 卸载这个包，确认三套官方行恢复启用，并冷启动 Harness 成功读取会话列表。
 
-这一版本的单包验证覆盖 Windows Web composition；当前日常 Desktop 仍安装旧名 alpha.6，alpha.7 没有重新进行原生 Desktop 验收。预览包通过 GitHub Release 分发；npm 和市场收录尚未发布，市场中搜索和一键安装未验证。
+alpha.7 当时的单包验证覆盖 Windows Web composition，未重新进行原生 Desktop 验收。预览包通过 GitHub Release 分发；npm 和市场收录尚未发布，市场中搜索和一键安装未验证。
 
 Desktop 原生图片提交和模型识图、其他远程页面、真实模型修改源码，以及完整官方 monorepo 的覆盖率 / 平台门禁均未验证。这里的宿主类型检查覆盖 Browser、Chat 和 Layout Client，并使用安装的 rc.2 声明及精确基线的 Client 构建环境类型；不等同于官方全仓检查。当前稀疏检出使用已发布 CLI 的依赖目录，未提供 vitest，不能运行官方全仓 GUI 门禁。发布稳定版前应完成这些检查。
+
+## alpha.8 发布前检查
+
+2026-10-06：常规检查包含 44 项单元与真实 Vite 测试。`npm run test:storage` 另在实际 Chromium 中验证旧草稿迁移、约 8.4 MB 的真实 JPEG 队列重载、会话隔离、写入失败保留和恢复、只移除本次发送的 ID，以及明确删除持久数据。原先同一队列会触发 localStorage 配额错误。CI 在 Windows 与 Linux 中运行这些存储回归。
+
+单包产物通过 24 项真实 Harness Web 验收，另覆盖属性框中文输入法确认、保存后编辑、分批勾选预览、窄窗口和放大内容、目标删除后的确认按钮、混合队列的图片序号与真实附件入库，以及满队列时分批发送一条后保留其他 31 条并重新启用添加。Electron 截图边界沿用测试替代，未重新验收此版本的原生 Desktop 或真实模型。Docker 在本机不可用，本轮未运行容器发布冒烟。

@@ -2,7 +2,7 @@
 
 ## 当前状态
 
-2026-10-04：包名 `dsh-web-annotator`，版本 `0.2.0-alpha.7`。源码位于 [cslkkl/dsh-web-annotator](https://github.com/cslkkl/dsh-web-annotator)，预构建包通过 [GitHub Release](https://github.com/cslkkl/dsh-web-annotator/releases/tag/v0.2.0-alpha.7) 分发，面向精确 Harness **0.2.0-rc.2**，无需用户编译。npm 尚未发布，也尚未被任何市场收录。预览 Release 不等于市场上架完成。
+2026-10-06：包名 `dsh-web-annotator`，版本 `0.2.0-alpha.8`。源码位于 [cslkkl/dsh-web-annotator](https://github.com/cslkkl/dsh-web-annotator)，预构建包通过 [GitHub Release](https://github.com/cslkkl/dsh-web-annotator/releases/tag/v0.2.0-alpha.8) 分发，面向精确 Harness **0.2.0-rc.2**，无需用户编译。npm 尚未发布，也尚未被任何市场收录。预览 Release 不等于市场上架完成。
 
 安装包带有 Browser、Chat、Layout 的派生提供方。整个 bundle 的启用、禁用或卸载由官方插件管理负责；要恢复官方界面，卸载整个 bundle 后重启。不要单独禁用其中一个组件，因为主插件需要它们提供的接口。旧 Layout Care 两个预览包应先移除，再安装新包。
 
@@ -37,3 +37,7 @@ DSH 有多个社区市场，规则不同；发布 GitHub 仓库不会立即出�
 - [dshmarket 的 Submit your plugin](https://github.com/dsh-market/dsh-market#submit-your-plugin)
 - [awesome-dsh-plugin 贡献指南](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin/blob/main/contributing.md)
 - [Desktop Community Market 安装规则](https://github.com/anywhere-labs/dsh-desktop/blob/master/dsh-community-market/docs/install-and-uninstall.zh.md)
+
+## alpha.8 草稿迁移
+
+更新后会把原 localStorage 中的批注和截图迁移到 IndexedDB，提交成功后才清除旧值；迁移失败会保留旧值并提示。旧 alpha.7 无法读取新数据库，若要降级，请先发送需要保留的草稿。卸载插件不会自动删除 IndexedDB 中的未发送批注。

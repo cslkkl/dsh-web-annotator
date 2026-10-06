@@ -1,6 +1,6 @@
 {
   "name": "dsh-web-annotator",
-  "version": "0.2.0-alpha.7",
+  "version": "0.2.0-alpha.8",
   "description": "Click or drag to annotate pages in the existing DeepSeek Harness Browser and ask the current agent.",
   "license": "MIT",
   "type": "module",
@@ -60,6 +60,7 @@
     "test:browser": "node scripts/annotation-acceptance.mjs",
     "test:harness": "node scripts/harness-replay-test.mjs",
     "test:acceptance": "node scripts/annotation-acceptance.mjs",
+    "test:storage": "node scripts/annotation-storage-acceptance.mjs",
     "build:browser-provider": "node scripts/build-browser-provider.mjs",
     "build:chat-provider": "node scripts/build-chat-provider.mjs",
     "build:layout-provider": "node scripts/build-layout-provider.mjs",
@@ -67,8 +68,7 @@
     "build:host": "npm run build:browser-provider && npm run build:chat-provider && npm run build:layout-provider && node scripts/collect-licenses.mjs && node scripts/package-host.mjs",
     "prepack": "node scripts/check-package.mjs",
     "typecheck:chat-provider": "node scripts/typecheck-browser-provider.mjs --chat",
-    "typecheck:browser-provider": "node scripts/typecheck-browser-provider.mjs",
-    "test:storage": "node scripts/annotation-storage-acceptance.mjs"
+    "typecheck:browser-provider": "node scripts/typecheck-browser-provider.mjs"
   },
   "dependencies": {
     "@babel/parser": "7.28.5",
