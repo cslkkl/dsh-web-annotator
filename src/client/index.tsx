@@ -33,7 +33,7 @@ type QueueProps = PropsRuntime<'sidebar.right.tab.browser.annotations'> &
   Shared & {
     submitAnnotations: (text: string, images: readonly BrowserAnnotationImage[]) => Promise<void>;
   };
-const css = `.lc-annotations{flex:none;border-top:.5px solid var(--dsw-alias-border-l3);padding:8px 10px;color:var(--dsw-alias-label-primary);font:var(--dsw-font-xxs-12);max-height:40%;overflow:auto}.lc-annotations summary{cursor:pointer;font-weight:500}.lc-annotations p{margin:6px 0;white-space:pre-wrap;overflow-wrap:anywhere}.lc-note{display:flex;gap:8px;align-items:start;border-bottom:.5px solid var(--dsw-alias-border-l3);padding:8px 0}.lc-note>div{flex:1;min-width:0}.lc-muted{color:var(--dsw-alias-label-secondary)}.lc-actions{display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap}.lc-preview{width:100%;min-height:140px;max-height:260px;resize:vertical;background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-primary);border:.5px solid var(--dsw-alias-border-l2);border-radius:var(--dsw-radius-sm);padding:8px;box-sizing:border-box;font:var(--dsw-font-xxs-12)}.lc-feedback{padding:8px 10px;flex:none;color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxs-12);overflow-wrap:anywhere}.lc-error{color:var(--dsw-alias-state-error-primary)}`;
+const css = `.lc-annotations{flex:none;border-top:.5px solid var(--dsw-alias-border-l3);padding:8px 10px;color:var(--dsw-alias-label-primary);font:var(--dsw-font-xxs-12);max-height:40%;overflow:auto}.lc-annotations summary{cursor:pointer;font-weight:500}.lc-annotations p{margin:6px 0;white-space:pre-wrap;overflow-wrap:anywhere}.lc-note{display:flex;gap:8px;align-items:start;border-bottom:.5px solid var(--dsw-alias-border-l3);padding:8px 0}.lc-note>div{flex:1;min-width:0;overflow-wrap:anywhere}.lc-muted{color:var(--dsw-alias-label-secondary)}.lc-actions{display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap}.lc-preview{width:100%;min-height:140px;max-height:260px;resize:vertical;background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-primary);border:.5px solid var(--dsw-alias-border-l2);border-radius:var(--dsw-radius-sm);padding:8px;box-sizing:border-box;font:var(--dsw-font-xxs-12)}.lc-feedback{padding:8px 10px;flex:none;color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxs-12);overflow-wrap:anywhere}.lc-error{color:var(--dsw-alias-state-error-primary)}`;
 
 function AnnotationMessage({
   matched,
@@ -195,6 +195,7 @@ function Queue(props: QueueProps) {
   const stored = useStore((state) => state.byUrl?.[url || '']);
   const notes = readAnnotations(stored).filter((item) => item.annotation.url === url);
   const storage = useStore((state) => state.storage);
+  const [editing, setEditing] = useState<{ id: string; text: string }>();
   const [preview, setPreview] = useState(false);
   const [delivery, setDelivery] = useState<AnnotationDelivery>('image');
   const imageCount = notes.filter(({ annotation }) => !!annotation.screenshot).length;
@@ -209,6 +210,7 @@ function Queue(props: QueueProps) {
     setPreview(false);
     setFeedback(undefined);
     setBusy(false);
+    setEditing(undefined);
     return () => {
       epoch.current++;
     };
@@ -274,14 +276,62 @@ function Queue(props: QueueProps) {
                         ? t('point')
                         : annotation.selection.candidates[0]?.selector}
                   </span>
-                  <p>{annotation.note}</p>
+                  {editing?.id === id ? (
+                    <>
+                      <textarea
+                        className="lc-preview"
+                        aria-label={t('edit')}
+                        maxLength={1000}
+                        value={editing.text}
+                        onChange={(event) => setEditing({ id, text: event.target.value })}
+                      />
+                      <div className="lc-actions">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          disabled={!editing.text.trim()}
+                          onClick={() => {
+                            actions.edit(url!, id, editing.text);
+                            setEditing(undefined);
+                          }}
+                        >
+                          {t('save')}
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="toolbar"
+                          onClick={() => setEditing(undefined)}
+                        >
+                          {t('cancel')}
+                        </Button>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <p>{annotation.note}</p>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="toolbar"
+                        disabled={busy}
+                        onClick={() => setEditing({ id, text: annotation.note })}
+                      >
+                        {t('edit')}
+                      </Button>
+                    </>
+                  )}
                 </div>
                 <Button
                   type="button"
                   size="sm"
                   variant="toolbar"
                   disabled={busy}
-                  onClick={() => actions.remove(url!, id)}
+                  onClick={() => {
+                    actions.remove(url!, id);
+                    if (editing?.id === id) setEditing(undefined);
+                  }}
                   aria-label={t('remove')}
                 >
                   ×
@@ -319,7 +369,7 @@ function Queue(props: QueueProps) {
                 type="button"
                 size="sm"
                 variant="primary"
-                disabled={busy || tooLarge}
+                disabled={busy || tooLarge || !!editing}
                 onClick={() => {
                   void send();
                 }}

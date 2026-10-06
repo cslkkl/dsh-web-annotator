@@ -345,6 +345,15 @@ try {
   await clickAt('#inside');
   await note.waitFor();
   await save('Shadow DOM 元素的样式在哪里？');
+  await button('编辑批注').last().click();
+  const savedNoteEditor = page.getByRole('textbox', { name: '编辑批注', exact: true });
+  await savedNoteEditor.fill('Shadow DOM 元素的样式在哪里？（补充）');
+  assert.equal(await button('发送到当前会话').isDisabled(), true);
+  await button('保存批注').click();
+  await page.getByText('Shadow DOM 元素的样式在哪里？（补充）', { exact: true }).waitFor();
+  passed(
+    'Saved notes can be edited without picking again; unsaved edits cannot be sent accidentally',
+  );
   await button('预览发送内容').click();
   await button('预览发送内容').click();
   assert.match(

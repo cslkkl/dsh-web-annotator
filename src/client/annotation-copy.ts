@@ -48,6 +48,7 @@ export const zh = {
   both: '图片＋定位资料',
   evidence: '查看定位资料',
   noImage: '部分批注没有截图，可发送定位资料，或选择图片＋定位资料保留可用截图',
+  edit: '编辑批注',
   saving: '正在保存批注…',
   storageFailed: '批注暂时无法保存在本机，刷新或关闭前请先发送',
 } as const;
@@ -104,6 +105,7 @@ export const en: Record<AnnotationCopyKey, string> = {
   evidence: 'View location details',
   noImage:
     'Some annotations have no screenshot. Send location details, or combine available images with details.',
+  edit: 'Edit annotation',
   saving: 'Saving annotations…',
   storageFailed:
     'Annotations could not be saved on this device. Send them before reloading or closing.',
