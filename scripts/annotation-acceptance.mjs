@@ -238,6 +238,12 @@ try {
     isComposing: true,
   });
   assert.equal(
+    await note.isVisible(),
+    true,
+    'IME confirmation in a property field must not save the annotation',
+  );
+  passed('Chinese IME confirmation in property fields preserves the editor');
+  assert.equal(
     await optionsPanel.getByRole('textbox', { name: '文本颜色', exact: true }).inputValue(),
     await frame.locator('#counter').evaluate((el) => getComputedStyle(el).color),
   );
@@ -375,6 +381,20 @@ try {
   await page.keyboard.press('Escape');
   await page.locator('body').evaluate((el) => el.removeAttribute('data-ds-dark-theme'));
   passed('Light and dark annotation screenshots captured');
+  const selected = page.getByRole('checkbox', { name: '选择批注 5', exact: true });
+  await selected.uncheck();
+  if (!(await page.getByRole('textbox', { name: '发送内容', exact: true }).isVisible()))
+    await button('预览发送内容').click();
+  assert.doesNotMatch(
+    await page.getByRole('textbox', { name: '发送内容', exact: true }).inputValue(),
+    /Shadow DOM 元素/,
+  );
+  await selected.check();
+  assert.match(
+    await page.getByRole('textbox', { name: '发送内容', exact: true }).inputValue(),
+    /Shadow DOM 元素/,
+  );
+  passed('Individual selection previews a smaller batch while retaining unchecked notes');
 
   await page.setViewportSize({ width: 820, height: 540 });
   await frame.locator('body').evaluate((el) => {

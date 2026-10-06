@@ -196,10 +196,12 @@ function Queue(props: QueueProps) {
   const notes = readAnnotations(stored).filter((item) => item.annotation.url === url);
   const storage = useStore((state) => state.storage);
   const [editing, setEditing] = useState<{ id: string; text: string }>();
+  const [excluded, setExcluded] = useState<string[]>([]);
+  const selectedNotes = notes.filter((item) => !excluded.includes(item.id));
   const [preview, setPreview] = useState(false);
   const [delivery, setDelivery] = useState<AnnotationDelivery>('image');
-  const imageCount = notes.filter(({ annotation }) => !!annotation.screenshot).length;
-  const hasImages = notes.length > 0 && imageCount === notes.length;
+  const imageCount = selectedNotes.filter(({ annotation }) => !!annotation.screenshot).length;
+  const hasImages = selectedNotes.length > 0 && imageCount === selectedNotes.length;
   const effectiveDelivery =
     (delivery === 'both' && imageCount > 0) || hasImages ? delivery : 'details';
   const [busy, setBusy] = useState(false);
@@ -211,15 +213,16 @@ function Queue(props: QueueProps) {
     setFeedback(undefined);
     setBusy(false);
     setEditing(undefined);
+    setExcluded([]);
     return () => {
       epoch.current++;
     };
   }, [url]);
   let prompt = '';
   let tooLarge = false;
-  if (notes.length) {
+  if (selectedNotes.length) {
     try {
-      const annotations = notes.map((x) => x.annotation);
+      const annotations = selectedNotes.map((x) => x.annotation);
       prompt =
         effectiveDelivery === 'image'
           ? annotationImagePrompt(annotations)
@@ -236,7 +239,7 @@ function Queue(props: QueueProps) {
     if (!url || !prompt || sending.current) return;
     const generation = epoch.current;
     const capturedUrl = url;
-    const ids = notes.map((x) => x.id);
+    const ids = selectedNotes.map((x) => x.id);
     sending.current = true;
     setBusy(true);
     setFeedback(undefined);
@@ -245,7 +248,9 @@ function Queue(props: QueueProps) {
         prompt,
         effectiveDelivery === 'details'
           ? []
-          : notes.flatMap((x) => (x.annotation.screenshot ? [x.annotation.screenshot] : [])),
+          : selectedNotes.flatMap((x) =>
+              x.annotation.screenshot ? [x.annotation.screenshot] : [],
+            ),
       );
       actions.sent(capturedUrl, ids);
       if (epoch.current === generation) setFeedback('sent');
@@ -265,8 +270,21 @@ function Queue(props: QueueProps) {
             <summary>
               {t('notes')} · {notes.length}
             </summary>
-            {notes.map(({ id, annotation }) => (
+            {notes.map(({ id, annotation }, index) => (
               <div className="lc-note" key={id}>
+                <input
+                  type="checkbox"
+                  aria-label={`${t('selectNote')} ${index + 1}`}
+                  checked={!excluded.includes(id)}
+                  disabled={busy}
+                  onChange={(event) =>
+                    setExcluded(
+                      event.target.checked
+                        ? excluded.filter((item) => item !== id)
+                        : [...excluded, id],
+                    )
+                  }
+                />
                 <div>
                   <span className="lc-muted">
                     {t(annotation.intent)} ·{' '}
@@ -361,7 +379,7 @@ function Queue(props: QueueProps) {
                 size="sm"
                 variant="outline"
                 onClick={() => setPreview(!preview)}
-                disabled={tooLarge}
+                disabled={tooLarge || !selectedNotes.length}
               >
                 {t('preview')}
               </Button>
@@ -369,7 +387,7 @@ function Queue(props: QueueProps) {
                 type="button"
                 size="sm"
                 variant="primary"
-                disabled={busy || tooLarge || !!editing}
+                disabled={busy || tooLarge || !!editing || !selectedNotes.length}
                 onClick={() => {
                   void send();
                 }}
@@ -380,7 +398,7 @@ function Queue(props: QueueProps) {
             {preview && (
               <>
                 {effectiveDelivery !== 'details' &&
-                  notes
+                  selectedNotes
                     .filter(({ annotation }) => annotation.screenshot)
                     .map(({ id, annotation }) => (
                       <img
@@ -393,7 +411,7 @@ function Queue(props: QueueProps) {
                 <textarea className="lc-preview" readOnly aria-label={t('queue')} value={prompt} />
               </>
             )}
-            {!hasImages && <p className="lc-muted">{t('noImage')}</p>}
+            {!!selectedNotes.length && !hasImages && <p className="lc-muted">{t('noImage')}</p>}
             {tooLarge && (
               <p role="alert" className="lc-error">
                 {t('limit')}
@@ -442,11 +460,7 @@ export function apply(ctx: Context): void {
   ctx.effect(() =>
     ctx.slots.inject('conversation.input.left', () =>
       ctx.slots.register(
-        {
-          name: 'conversation.input.left',
-          id: 'layout-care.open-browser',
-          locale: NS,
-        },
+        { name: 'conversation.input.left', id: 'layout-care.open-browser', locale: NS },
         ({ t }: PropsRuntime<'conversation.input.left'> & PropsLocale<typeof NS>) => (
           <Button
             type="button"
