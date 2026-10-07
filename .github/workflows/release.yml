@@ -191,17 +191,20 @@ jobs:
           $tag = $env:RELEASE_TAG
           $version = $tag -replace '^v', ''
           $dir = 'integration/release-assets'
+          # 正文与附件分开：附件目录里的**每一个文件**都会被挂上去，
+          # 所以正文写在目录外，免得 Release 上多出一个 `release-notes.md`。
+          $notes = 'integration/release-notes.md'
           # 幂等：重跑时 Release 可能已存在，那就更新正文与附件，而不是报错退出 ——
           # 否则「补正文」「补附件」这两个最常见的诉求反而修不了。
           gh release view $tag --json tagName 2>$null | Out-Null
           if ($LASTEXITCODE -eq 0) {
             Write-Output "release $tag already exists - updating notes"
-            gh release edit $tag --notes-file "$dir/release-notes.md"
+            gh release edit $tag --notes-file $notes
           } else {
             # `--verify-tag`：不让 gh 去猜或新建标签，标签必须已存在。
             # `--prerelease`：alpha 是预览版，不能冒充稳定版。
             gh release create $tag --title "DSH 网页批注 $version" `
-              --notes-file "$dir/release-notes.md" --verify-tag --prerelease
+              --notes-file $notes --verify-tag --prerelease
           }
           foreach ($asset in (Get-ChildItem $dir -File)) {
             gh release upload $tag $asset.FullName --clobber

@@ -12,11 +12,16 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { copyFile, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+/** Everything in here is uploaded as a Release asset, so nothing else may live here
+ * (the notes are the Release *body* and are written outside this directory).
+ */
 const OUTPUT = 'integration/release-assets';
+/** The Release body, read by the workflow's `gh release --notes-file`. */
+const NOTES = 'integration/release-notes.md';
 
 function escapeVersion(version) {
   return version.replaceAll(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -162,8 +167,13 @@ async function main() {
   };
   const verificationName = `dsh-web-annotator-verification-${version}.json`;
   await writeFile(join(OUTPUT, verificationName), JSON.stringify(verification, null, 2) + '\n');
+  // ⚠️ **安装包本身必须进附件目录。** 它是由 `npm pack` 生成在仓库根目录的，而上传逻辑
+  // 只挂附件目录里的东西 —— 少了这一步，Release 会带着源码与验证记录**却没有可安装的包**，
+  // 而 workflow 照绿：第一次发 alpha.10 就是这么发出去了一个下不到包的 Release。
+  const staged = join(OUTPUT, tarballName);
+  if (resolve(tarball) !== resolve(staged)) await copyFile(tarball, staged);
   await writeFile(
-    join(OUTPUT, 'release-notes.md'),
+    NOTES,
     releaseNotes({
       section,
       version,
@@ -176,11 +186,20 @@ async function main() {
     }),
   );
 
+  // "The Release looks fine" and "the Release has the installable package" must not be
+  // the same observation: assert the asset set rather than trusting the upload loop.
+  for (const name of [tarballName, sourceArchive, verificationName]) {
+    const present = await readFile(join(OUTPUT, name)).catch(() => undefined);
+    assert.ok(present, `发布附件缺失：${name}（上传逻辑只挂 ${OUTPUT}/ 里的文件）`);
+  }
+
   console.log(`Release ${tag} (commit ${commit})`);
-  console.log(`tarball      ${tarballName}  sha256=${sha256}  bytes=${String(bytes.length)}`);
+  console.log(
+    `tarball      ${join(OUTPUT, tarballName)}  sha256=${sha256}  bytes=${String(bytes.length)}`,
+  );
   console.log(`source       ${join(OUTPUT, sourceArchive)}`);
   console.log(`verification ${join(OUTPUT, verificationName)}`);
-  console.log(`notes        ${join(OUTPUT, 'release-notes.md')}`);
+  console.log(`notes        ${NOTES}`);
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) await main();
