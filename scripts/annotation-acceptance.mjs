@@ -82,7 +82,10 @@ try {
     channel: process.env.WEB_ANNOTATOR_BROWSER_CHANNEL || 'msedge',
     headless: true,
   });
-  page = await browser.newPage({ viewport: { width: 1600, height: 1000 } });
+  // ⚠️ **语言必须钉住。** Harness 的界面语言取自 `navigator.languages`，而本脚本断言的是
+  // 中文按钮（`选择工作区`）。在 en-US 的机器上界面渲染成英文，第一个 `waitFor` 就会超时 ——
+  // 而页面**没有任何报错**，失败看起来像界面坏了，而不是少了一个语言设置。
+  page = await browser.newPage({ viewport: { width: 1600, height: 1000 }, locale: 'zh-CN' });
   await page.clock.install();
   page.on('pageerror', (error) => errors.push(error.message));
   page.on('console', (message) => {

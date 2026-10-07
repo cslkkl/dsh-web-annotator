@@ -170,6 +170,16 @@ jobs:
           $env:WEB_ANNOTATOR_TARBALL = (Resolve-Path "./dsh-web-annotator-$version.tgz").Path
           npm run verify:delivery
 
+      # 失败时留下验收证据：少了它，runner 上的失败只剩一行超时，
+      # 看不出界面到底渲染成了什么（第一轮就吃过这个亏）。
+      - name: Upload the acceptance evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: acceptance-artifacts
+          path: integration/annotation-artifacts
+          if-no-files-found: ignore
+
       - name: Assemble the release assets
         run: npm run release:assets
 
