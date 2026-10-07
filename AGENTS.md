@@ -32,13 +32,20 @@
 ## 常用命令
 
 ```powershell
-npm run check              # 提交前跑这个：格式 → lint → 分层 → 文档路径 → build → typecheck → test
+npm run check              # 提交前跑这个：格式 → lint → 分层 → 文档路径 → build → typecheck → 产物断言 → test
 npm run format             # prettier --write
 npm run demo               # 起 examples/responsive-demo（仅本机）
 npm run test:storage       # 真实 Chromium 的 IndexedDB 回归
 npm run build:host         # 构建三个宿主提供方并放入 lib/host
 npm pack                   # 触发 prepack 完整性断言
 ```
+
+`check` 的顺序有依赖：`build` 必须在 `typecheck` 与 `verify:artifacts` 之前（两者都读 `lib/`）。
+改顺序前先看 [scripts/README.md](scripts/README.md)。
+
+检查选择：代码 → `npm run check`；文档 → `npm run check:doc-paths` 加人工过链接；
+配置 / 契约 → `npm run check:layering` 与相邻模块测试。加本地钩子之后，
+「钩子绿了」不等于「门禁绿了」——钩子只跑格式与 lint。
 
 验收脚本需要精确版本 Harness 与已安装 Chromium，见 [验证说明](docs/verification.md)。
 

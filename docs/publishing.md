@@ -30,11 +30,15 @@ Harness 安装，属于发版前的本机验收，见 [验证说明](verificatio
 
 | 层              | 时机        | 做什么                                                                   |
 | --------------- | ----------- | ------------------------------------------------------------------------ |
-| `npm run check` | 提交前 / CI | format → lint → 分层 → 文档路径 → build → typecheck → 测试               |
+| `npm run check` | 提交前 / CI | format → lint → 分层 → 文档路径 → build → typecheck → 产物断言 → 测试    |
 | CI              | push / PR   | 上面全部，另加真实 Chromium 存储回归、补丁基线校验、宿主提供方构建与打包 |
+
+`check` 的顺序有依赖：`build` 必须在 `typecheck` 与 `verify:artifacts` 之前，
+因为两者都读 `lib/`（类型检查读 `lib/vite.d.ts`，产物断言读 `lib/client.js`）。
+调整顺序前先看 [../scripts/README.md](../scripts/README.md) 的依赖说明。
 
 ## 变更影响路由
 
 - 改任一 workflow → 同步本文件与 [分发说明](distribution.md)。
-- 改 `npm run check` 的内容 → 同步根 [AGENTS.md](../AGENTS.md) 的常用命令与
-  [../scripts/README.md](../scripts/README.md)。
+- 改 `npm run check` 的内容或顺序 → 同步根 [AGENTS.md](../AGENTS.md) 的常用命令、
+  [../scripts/README.md](../scripts/README.md) 与本案的门禁分工表。

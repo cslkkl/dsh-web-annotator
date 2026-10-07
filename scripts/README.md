@@ -5,12 +5,28 @@
 
 ## 门禁（随 `npm run check`）
 
-| 脚本                  | npm               | 做什么                                                                                          |
-| --------------------- | ----------------- | ----------------------------------------------------------------------------------------------- |
-| `check-layering.mjs`  | `check:layering`  | 依赖方向、picker 自包含、退休名字。规则见 [../docs/architecture.md](../docs/architecture.md) §6 |
-| `check-doc-paths.mjs` | `check:doc-paths` | Markdown 相对链接是否还在；文档里的 `npm run <脚本名>` 是否存在                                 |
-| `check-package.mjs`   | `prepack`         | `npm pack` 前断言产物齐全、版本与补丁哈希一致                                                   |
-| `build.mjs`           | `build`           | 四个产物：`lib/index.js`、`lib/client.js`、`lib/bridge.js`、`lib/vite.js`                       |
+`check` 的顺序是**有依赖的**，不是随手排的：
+
+```
+format:check → lint → check:layering → check:doc-paths → build → typecheck → verify:artifacts → test
+```
+
+`build` 必须在 `typecheck` **之前**：`examples/responsive-demo/vite.config.ts` 与
+`tests/vite.integration.test.ts` 都 `import '../../lib/vite.js'`，类型检查读的是
+`lib/vite.d.ts`。没有 `lib/` 时类型检查会报 `TS2307`。
+`verify:artifacts` 也读 `lib/`，所以同样在 `build` 之后。
+
+| 脚本                   | npm                | 做什么                                                                                          |
+| ---------------------- | ------------------ | ----------------------------------------------------------------------------------------------- |
+| `check-layering.mjs`   | `check:layering`   | 依赖方向、picker 自包含、退休名字。规则见 [../docs/architecture.md](../docs/architecture.md) §6 |
+| `check-doc-paths.mjs`  | `check:doc-paths`  | Markdown 相对链接是否还在；文档里的 `npm run <脚本名>` 是否存在；首页 README 有没有被顶掉       |
+| `verify-artifacts.mjs` | `verify:artifacts` | 用宿主加载器的方式**执行** `lib/client.js` 与 `lib/bridge.js`，断言导出面与注册行为             |
+| `check-package.mjs`    | `prepack`          | `npm pack` 前断言产物齐全、版本与补丁哈希一致                                                   |
+| `build.mjs`            | `build`            | 四个产物：`lib/index.js`、`lib/client.js`、`lib/bridge.js`、`lib/vite.js`                       |
+
+`verify-artifacts.mjs` 断言的是**行为**不是子串：它用替身 `__ModuleLoader__` 求值客户端产物、
+真的调一次 `apply(ctx)`，再看注册了哪些插槽；暴露的 `inject` 列表少一项，插件在宿主里
+**静默不出现**，那是别的门禁看不到的。
 
 ## 宿主提供方
 
