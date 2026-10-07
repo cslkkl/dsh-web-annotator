@@ -17,7 +17,7 @@ function Demo() {
       </header>
 
       <section className="intro" aria-labelledby="page-title">
-        <p className="eyebrow">LAYOUT CARE · LIVE DEMO</p>
+        <p className="eyebrow">WEB ANNOTATOR · LIVE DEMO</p>
         <h1 id="page-title">
           一处修改，
           <br />
@@ -32,7 +32,9 @@ function Demo() {
         <div>
           <span className={`status-dot ${repaired ? 'good' : ''}`} aria-hidden="true" />
           <strong>{repaired ? '已应用示例修复' : '等待检查手机布局'}</strong>
-          <p>在 DSH Web Annotator 中使用 390 px 视口，扫描后选择下方卡片；把页眉设为保留区域。</p>
+          <p>
+            在 Harness 的批注网页里用 390 px 视口点选下方卡片并写下要求，再点选页眉说明需要保留。
+          </p>
         </div>
         <button
           id="repair-toggle"

@@ -1,44 +1,94 @@
-# Browser 集成预览
+# Browser 集成
 
-原版 Harness rc.2 没有 Browser 批注插槽。此仓库配套的补丁扩展 `packages/client/ui-sidebar-browser` 与 `packages/client/ui-chat`：Browser 增加批注插槽、受限 picker 和桌面截图；Chat 声明用户正文 chain，让插件折叠自己识别的批注消息。它尚未合入官方 Harness。
+原版 Harness rc.2 不声明批注插槽。本包配套的补丁扩展三个包：
 
-批注按钮位于原有 Browser 工具栏中，紧挨“刷新”按钮左侧。点击后在当前网页里点选或框选，并就地输入评论或问题。
+| 包                                   | 补丁做什么                                                                                                                  |
+| ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
+| `packages/client/ui-sidebar-browser` | 声明 `sidebar.right.tab.browser.toolbar` 与 `...annotations` 子插槽；工具栏贡献渲染在“刷新”左侧；新增受限 picker 与桌面截图 |
+| `packages/client/ui-chat`            | 声明增量 `conversation.message.user-text` chain，让插件折叠自己识别的批注消息                                               |
+| `packages/client/ui-layout`          | 右栏全屏时隐藏并将后方主内容设为 inert，避免壁纸玻璃层叠让聊天输入框浮到网页上方                                            |
 
-[下载 / 审阅配套补丁](harness-browser-annotation.patch)。补丁也更新 Browser 包和 Sidebar 子系统的中英文说明。
+补丁尚未合入官方 Harness。这是当前安装会替换官方三行的原因。
 
-## 源码基线与构建
+## 补丁是什么
 
-在插件目录旁检出 `harness-browser-integration`，使用官方 tag `dsh-v0.2.0-rc.2`（commit `639ed015397290b3745d163aafe02ffee4aa3f84`）。在该检出里应用 `harness-browser-annotation.patch`，不要对其他版本直接套用。
+[docs/harness-browser-annotation.patch](harness-browser-annotation.patch) 是宿主检出的 `git diff HEAD`，
+基线 commit 记在 [../scripts/shared-modules.mjs](../scripts/shared-modules.mjs)（`HOST_BASE_COMMIT`）。
+
+它是**生成物**，不要手改。重新生成：
+
+```powershell
+git -C ../harness-browser-integration diff HEAD --output docs/harness-browser-annotation.patch
+npm run verify:browser-patch
+```
+
+`verify:browser-patch` 会在独立的临时 Git root 里把补丁应用到精确基线，
+再与宿主检出逐字节比对。不这么做时 `git apply` 会静默跳过路径，看不出问题。
+
+## 应用与构建
+
+在插件目录旁检出 `harness-browser-integration`，切到基线 commit：
 
 ```sh
 git apply --check /absolute/path/to/harness-browser-annotation.patch
 git apply /absolute/path/to/harness-browser-annotation.patch
 ```
 
-回到插件目录运行 `npm run build:browser-provider`，生成 `integration/browser-provider`。这个局部构建不修改已安装的 Harness，CSS 跟随提供方的插件生命周期。改动共同 picker 后运行 `node scripts/sync-browser-provider.mjs`，重新审查补丁；构建会拒绝不同步的共同模块。
+回到插件目录：
 
-Chat 提供方用 `npm run build:chat-provider` 构建，`npm run typecheck:chat-provider` 做局部类型检查；它保留原有消息容器、附件与操作，只增加正文呈现 chain。
+```powershell
+npm run sync:browser-provider      # 改了共享 picker 模块之后必须跑
+npm run build:browser-provider     # 比对四份共享模块，再从宿主检出构建
+npm run build:chat-provider
+npm run build:layout-provider
+npm run typecheck:browser-provider
+npm run typecheck:chat-provider
+npm run typecheck:layout-provider
+npm run build:host                 # 三个提供方 + 许可证 → lib/host
+```
 
-Layout 提供方用 `npm run build:layout-provider` 构建，`npm run typecheck:layout-provider` 做局部类型检查。它只在右栏全屏时隐藏并将主内容设为 inert，保持组件及尺寸，避免玻璃主题创建的层叠上下文让聊天输入框覆盖网页。退出全屏恢复原有草稿。
+构建脚本读 `DSH_HOST_CHECKOUT`（默认 `../harness-browser-integration`），
+CI 用这个变量指向 `.host-source`。
 
-完整官方构建请按 Harness 仓库说明进行。当前预览脚本不是完整 monorepo 发布管线。精确声明的局部检查可用 `npm run typecheck:browser-provider`，不能替代官方检查。
+四份共享模块在本包与宿主副本之间必须逐字节相同（只有 import 后缀不同），
+清单在 [../scripts/shared-modules.mjs](../scripts/shared-modules.mjs)。
+`build-browser-provider` 会在不一致时直接失败。同步方向是单向的：本包是事实源。
 
-## 单包分发与独立验收
+局部类型检查针对已安装 rc.2 声明，不能替代官方 monorepo 的全仓检查。
 
-三个提供方构建完成后，运行 `npm run build:host` 将它们放入主包的 `lib/host`，然后运行 `npm pack`。一个 `dsh-web-annotator-0.2.0-alpha.8.tgz` 同时包含插件、宿主扩展和许可证，无需用户额外编译。可用 `DSH_HOST_CHECKOUT` 指定其他位置的同一精确基线检出。
+## 单包分发
 
-安装包自己的 `cordis.patch.yml` 禁用 stock Browser、Chat 和 Layout 行，再插入包内扩展提供方。Loader 的按 ID patch 中 `name` 只能断言已有名称，不能重命名，因此使用新的行 ID。卸载整个 bundle 后这些替换随 bundle 层撤销。
+三个提供方就绪后 `npm pack`。`prepack` 检查产物齐全、版本一致、补丁哈希一致，
+缺失或过期时拒绝打包。`lib/host/bundle.json` 记录宿主来源与逐文件哈希。
 
-`prepack` 检查三套提供方、主包入口、精确版本和补丁哈希，缺少或过期时拒绝打包。`lib/host/bundle.json` 记录宿主来源与产物哈希，保留原始 MIT 许可证和 bundle 依赖的许可证。这是本项目的预览分发包，不是官方 Harness 发行版。
+包内 [cordis.patch.yml](../cordis.patch.yml) 禁用官方三行，再插入包内提供方。
+Loader 的按 ID patch 里 `name` 只能断言已有名称、不能重命名，因此用新的行 ID。
+卸载整个 bundle 后这些替换随 bundle 层撤销。
 
-验收使用独立 Profile、官方 replay 模型和临时会话日志。设置 `WEB_ANNOTATOR_BUNDLED_HOST=1` 后，脚本只安装这个打包产物，不挂载源码路径的提供方。测试配置禁用真实模型，不能复制到日常 Profile。
+## 开发页连接
 
-在日常 Profile 中试用时，通过官方 `dsh plugin --profile <profile> add --ignore-scripts <插件tgz绝对路径>` 安装，并正常退出后重开 Desktop。由旧的本地 Layout Care 预览包迁移时，先通过官方插件管理移除 `dsh-layout-care` 和 `dsh-layout-care-browser-preview`，再安装新包，避免同时挂载两套提供方。已有批注的存储键和页面连接协议保持兼容；Vite 项目可改用新包的 `webAnnotator`，新包也提供旧 `layoutCare` 函数别名。
+Web 侧只向 Browser 自己拥有的 iframe 发送有界请求。目标页面需要启用本包的 Vite 连接：
 
-GitHub 源码没有提交 `lib`；市场安装应使用发布到 npm 的预构建包或 GitHub Release 的 `.tgz`，不能把需要旁边宿主检出的源码 URL 当作可直接安装包。市场收录见 [分发说明](distribution.md)。
+```ts
+import { defineConfig } from 'vite';
+import { webAnnotator } from 'dsh-web-annotator/vite';
 
-## Web 与 Desktop
+export default defineConfig({ plugins: [webAnnotator()] });
+```
 
-Web 提供方只向 Browser 自己拥有的 iframe 发送有界请求。目标页面需启用本包的 Vite 开发连接，并允许 Harness 的精确来源；iframe 的嵌入政策仍然生效。
+插件只在 `serve` 阶段生效：托管 `__web-annotator__/bridge.js`、内联允许的父来源、
+给 JSX 原生标签加 `data-web-annotator-source` 提示。生产构建不注入连接脚本或标记。
 
-Desktop 提供方针对 main 已批准的 webview，执行固定 picker 的编译函数，并在保存后调用 guest 的 `capturePage()`。图片经 Canvas 标注与缩放，以 JPEG 附件发送；导航、视口或滚动位置变化会拒绝混用截图，捕获失败保留定位资料。Web 不提供原生视口捕获，因此没有截图时只提供定位资料。此实现还需要真实 DSH Desktop 的 guest / 导航 / 关闭 / 快捷键验收，不能依据 Web 测试声称任意远程页面已经支持。
+连接默认允许 HTTP loopback 来源；其他来源通过 `allowedParentOrigins` 指定精确 HTTP(S) origin。
+
+## Web 与 Desktop 的差别
+
+|                          | Web                           | Desktop                             |
+| ------------------------ | ----------------------------- | ----------------------------------- |
+| picker                   | iframe 内由本包的开发连接提供 | 宿主执行 `annotatePage` 的编译体    |
+| 截图                     | 无原生捕获                    | 保存后调用 guest 的 `capturePage()` |
+| 图片经 Canvas 标注与缩放 | —                             | 是                                  |
+| 导航 / 视口 / 滚动变化   | 拒绝混用                      | 拒绝混用截图                        |
+| 捕获失败                 | —                             | 保留定位资料                        |
+
+Desktop 的 guest / 导航 / 关闭 / 快捷键仍需真机验收，不能用 Web 结果代替。

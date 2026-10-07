@@ -1,51 +1,93 @@
 # 验证
 
-常规 `npm run check` 执行格式、构建、类型与单元 / 真实 Vite 测试。请求快照保存在 `tests/snapshots/annotation-request.zh.txt`。它不能替代 Browser 集成验收。
+分三层：常规门禁、存储回归、真实宿主验收。三者不可互相替代。
 
-完整验收需要精确版本 Harness 0.2.0-rc.2、配套 Browser 提供方，以及 Microsoft Edge（或通过 `LAYOUT_CARE_BROWSER_CHANNEL` 指定已安装 Chromium）。先按照 [Browser 接入](browser-integration.md) 构建本地扩展。
+## 一、常规门禁
 
 ```powershell
 npm run check
-npm run test:storage
-npm run build:browser-provider
-npm run typecheck:browser-provider
-npm run build:chat-provider
-npm run typecheck:chat-provider
-npm run build:layout-provider
-npm run typecheck:layout-provider
-npm run build:host
-npm pack
-$env:LAYOUT_CARE_TARBALL = (Resolve-Path ./dsh-web-annotator-0.2.0-alpha.8.tgz).Path
-$env:WEB_ANNOTATOR_BUNDLED_HOST = '1'
-npm run test:acceptance
 ```
 
-`DSH_CLI_ENTRY` 可指定 Harness `lib/bin.js` 的绝对路径；默认使用当前机器安装的 CLI。脚本在仓库旁 `work/` 创建独立 Harness home，通过正式 `dsh plugin` 安装一个打包产物，用包内提供方运行原有 Browser，并从已安装产物加载 Vite 连接。单包模式不挂载源码目录的提供方，也不安装第二个预览 bundle。它不改变个人 Profile。
+格式 → lint → 分层 → 文档路径 → build → typecheck → 单元与真实 Vite 测试。
+不读个人 Profile、不联网。覆盖范围见 [../tests/README.md](../tests/README.md)。
+请求快照保存在 `tests/snapshots/annotation-request.zh.txt`。
 
-验收检查元素点选不会触发网页按钮、评论里的空格能正常输入、按住空格能操作网页、松开恢复选取、真实拖动矩形、空白位置、Shadow DOM、滚动与 Escape、明暗主题、页面隔离、失败重试，以及预览的请求是否精确进入会话持久化日志。
+## 二、存储回归（真实 Chromium）
 
-属性卡片另外检查 CSS 值校验、修改要求保留、取消前不改写页面、真实字段与明暗截图。`expanded-light.png` 与 `expanded-dark.png` 展示展开卡片。
+```powershell
+$env:WEB_ANNOTATOR_BROWSER_CHANNEL = 'msedge'   # 或 chrome
+npm run test:storage
+```
 
-草稿生命周期验收通过浏览器时钟模拟超过两分钟的编辑时间，确认草稿和选择仍在，之后能保存或取消。修复前该检查会因为编辑器自动关闭而失败；连接握手仍有三秒超时。
+覆盖：旧键迁移只在新键提交后删除、超过 localStorage 配额的真实 JPEG 队列重载、
+逐条编辑与会话隔离、写入失败保留并重试、只移除本次发送的 ID、显式删除持久数据。
 
-全屏验收分别覆盖首页和已有对话，在普通样式与实际壁纸插件的玻璃层叠边界下检查网页命中、网页输入可用、后方聊天不可见且不能获取焦点，以及退出后同一输入组件与草稿恢复。修复前玻璃场景的点击会命中后方输入框；修复后命中 Browser 的 iframe。截图为 `fullscreen-hero-glass.png` 与 `fullscreen-active-glass.png`。
+结果写到 `integration/storage-verification.json`。
 
-简洁编辑浮层另外检查空内容无法保存、换行自动增高、选项面板的边界、Esc 和点击外部关闭面板后保留草稿。`composer-light.png` 与 `composer-dark.png` 是真实注入浮层的截图。
+## 三、真实宿主验收
 
-模型端使用官方 `dsh-llm-replay@0.2.0-rc.2`，不会调用真实模型。`integration/annotation-artifacts/` 保存截图、检查结果、发送内容和真实日志生成的 transcript；报告含打包产物 SHA256。人工审阅截图后才能判断布局质量。
+需要精确版本 Harness 0.2.0-rc.2、配套提供方、已安装 Chromium，以及一个打包产物。
 
-图片验收使用真实浏览器捕获的网页像素，运行实际标注代码，在测试的 MessagePort 边界提供这些图片以替代 Electron 捕获。随后走正式 Client 提交、Host 图片验证与持久化附件引用，分别验收图片和混合模式。Chat 验收覆盖默认折叠、展开、页面刷新与普通用户消息回退；`message-collapsed.png` 与 `image-submitted.png` 展示实际聊天输出。
+```powershell
+npm run build                      # 先产出 lib/
+npm run build:host                 # 三个宿主提供方 → lib/host
+npm pack
+$env:WEB_ANNOTATOR_TARBALL = (Resolve-Path ./dsh-web-annotator-<版本>.tgz).Path
+$env:WEB_ANNOTATOR_BUNDLED_HOST = '1'
+npm run test:acceptance            # 真实 Browser + 打包产物 + replay 模型
+```
 
-2026-10-03 将插件及 Browser / Chat 配套扩展安装到实际 DSH Desktop，校验安装后的运行文件并通过应用菜单正常重启。在 `https://github.com/cslkkl?tab=repositories` 人工验证原生元素点选、展开属性卡片、保存批注后的真实视口截图与蓝框，以及图片、定位资料和混合发送选项。图片预览只含网页 URL、批注文字与简短对应说明。测试批注未提交给真实模型。
+测试 home 落在**仓库父目录**的 `work/`，由脚本创建并清理；不写个人 Profile。
+`session/list` 的线上参数是 `_request`。
 
-2026-10-04 验收 `dsh-web-annotator@0.2.0-alpha.7` 单包产物：42 项常规检查和 18 项真实 Harness Web 验收通过。在没有宿主 `node_modules` 的源码副本中构建三套提供方，补充明确的 token-meter 开发依赖，避免构建依赖本机全局安装。独立 Profile 只安装一个 tgz，不挂载源码提供方；全部运行文件及 bundle patch 与已验收包逐字节一致。随后通过官方 CLI 卸载这个包，确认三套官方行恢复启用，并冷启动 Harness 成功读取会话列表。
+覆盖：工具栏挂载位置、点选不触发网页按钮、评论中的空格、按住空格操作网页、
+真实拖动矩形、空白位置、Shadow DOM、滚动与 Escape、明暗主题、页面隔离、失败重试、
+全屏与壁纸玻璃下的命中与恢复、属性框中文输入法确认、保存后编辑、分批勾选预览、
+窄窗口、目标删除后的确认按钮、混合队列的图片序号与附件入库、满队列分批发送。
 
-alpha.7 当时的单包验证覆盖 Windows Web composition，未重新进行原生 Desktop 验收。预览包通过 GitHub Release 分发；npm 和市场收录尚未发布，市场中搜索和一键安装未验证。
+结果写到 `integration/annotation-artifacts/`（截图、请求正文、transcript、`report.json`）。
 
-Desktop 原生图片提交和模型识图、其他远程页面、真实模型修改源码，以及完整官方 monorepo 的覆盖率 / 平台门禁均未验证。这里的宿主类型检查覆盖 Browser、Chat 和 Layout Client，并使用安装的 rc.2 声明及精确基线的 Client 构建环境类型；不等同于官方全仓检查。当前稀疏检出使用已发布 CLI 的依赖目录，未提供 vitest，不能运行官方全仓 GUI 门禁。发布稳定版前应完成这些检查。
+### 只验 replay 的部分
 
-## alpha.8 发布前检查
+模型端使用官方 `dsh-llm-replay`，不调用真实模型。
+replay 证明的是**请求路由与持久化日志**，不是模型真的改了源码。
 
-2026-10-06：常规检查包含 44 项单元与真实 Vite 测试。`npm run test:storage` 另在实际 Chromium 中验证旧草稿迁移、约 8.4 MB 的真实 JPEG 队列重载、会话隔离、写入失败保留和恢复、只移除本次发送的 ID，以及明确删除持久数据。原先同一队列会触发 localStorage 配额错误。CI 在 Windows 与 Linux 中运行这些存储回归。
+## 四、打包一致性
 
-单包产物通过 24 项真实 Harness Web 验收，另覆盖属性框中文输入法确认、保存后编辑、分批勾选预览、窄窗口和放大内容、目标删除后的确认按钮、混合队列的图片序号与真实附件入库，以及满队列时分批发送一条后保留其他 31 条并重新启用添加。Electron 截图边界沿用测试替代，未重新验收此版本的原生 Desktop 或真实模型。Docker 在本机不可用，本轮未运行容器发布冒烟。
+```powershell
+npm run verify:delivery
+```
+
+把当前 tgz 逐文件与验收时安装的运行时比对：`lib/**` 与 `cordis.patch.yml` 必须逐字节相同，
+`package.json` 除 `devDependencies` 外必须相同。需要先跑过 `test:acceptance`。
+
+## 五、验到了什么 / 没验什么
+
+按版本记录的结论在 `integration/*.json`，不抄进本文档。以下边界在任何版本都成立：
+
+| 项目                                            | 状态                                   |
+| ----------------------------------------------- | -------------------------------------- |
+| 带扩展的真实 Harness Web 中的批注流程           | 已验证                                 |
+| 元素点选、矩形框选、空白位置、空格临时操作      | 已验证                                 |
+| 图片与详细资料折叠、真实附件入库                | 已验证（截图边界用测试替代 Electron）  |
+| 真实 DSH Desktop 的元素点选、属性卡片、原生截图 | 人工验证过，未随每次发布复验           |
+| **真实模型据此修改源码**                        | **未验证**                             |
+| **Electron 原生截图边界的自动化验收**           | **未验证**（Web 测试替代了该边界）     |
+| 其他远程页面、跨源与嵌套 iframe 内部            | 逐个页面分别验收                       |
+| 官方 monorepo 的覆盖率与平台门禁                | 未运行；本包的窄范围类型检查不等同于它 |
+| 市场 UI 中的搜索与一键安装                      | 未验证                                 |
+
+不要用单测绿色代替真实宿主验收，也不要用 Web 结果代替 Desktop 结果。
+
+## 六、手工验收清单（无自动化时）
+
+无法跑脚本时的最小手工路径：
+
+1. 安装打包 tgz，重启 Desktop。
+2. 打开 Browser，确认工具栏出现“批注网页”，且位于“刷新”左侧。
+3. 点选一个元素，确认网页自身的按钮没有触发。
+4. 框选一块区域，确认矩形与选区一致。
+5. 输入中文并切换输入法确认，确认不会误保存。
+6. 按住空格操作网页，松开回到批注。
+7. 发送到当前会话，确认聊天里只显示批注正文，资料可展开。
+8. 卸载 bundle，重启，确认官方 Browser 恢复。
