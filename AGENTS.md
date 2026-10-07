@@ -58,7 +58,7 @@ npm pack                   # 触发 prepack 完整性断言
 | 各目录怎么改             | [src/README.md](src/README.md)                             |
 | 测试覆盖与运行           | [tests/README.md](tests/README.md)                         |
 | 脚本做什么、何时跑       | [scripts/README.md](scripts/README.md)                     |
-| 发布链路                 | [.github/README.md](.github/README.md)                     |
+| 发布链路与 CI            | [docs/publishing.md](docs/publishing.md)                   |
 | 当时为什么这么定         | [.agents/notes/](.agents/notes/)                           |
 
 ## 事实来源（只查不抄）
@@ -114,3 +114,9 @@ npm pack                   # 触发 prepack 完整性断言
   但测试 home 必须落在工作区，别把 `DSH_HOME` 指到日常目录。
 - **浏览器 `page.evaluate` 里的代码在页面里执行** —— ESLint 的 `no-undef` 会看见它，
   两个验收脚本因此同时声明了 Node 与 browser 全局。
+- **`.github/` 下不许放 `README.md`** —— GitHub 解析仓库首页 README 的顺序是
+  `.github/README.md` → 根 `README.md` → `docs/README.md`。放了前者，访客看到的是内部
+  发布手册而不是门面，而 CI、lint、分层与文档门禁**全绿**。判据：`npm run check:doc-paths`
+  的 `homepageFailures`（它同时断言根 README 存在）。
+- **PowerShell 变量名大小写不敏感** —— `$docs` 会覆盖 `$Docs`；且 `$Host` / `$HOME`
+  等是只读自动变量，给它们赋值**静默失败**（脚本会带着空配置继续跑）。写维护脚本时变量名要真正区分开。

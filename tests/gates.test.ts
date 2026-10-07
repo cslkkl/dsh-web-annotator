@@ -6,6 +6,7 @@ import test from 'node:test';
 import { RULES, listSources, specifiersOf, stripComments } from '../scripts/check-layering.mjs';
 import {
   brokenReferences,
+  homepageFailures,
   listDocuments,
   listWorkflows,
   localTarget,
@@ -100,6 +101,31 @@ test('the doc gate reads Markdown, workflows and only in-repository link targets
   assert.equal(localTarget('https://example.com/x'), undefined);
   assert.equal(localTarget('#section'), undefined);
   assert.equal(localTarget('mailto:a@b.c'), undefined);
+});
+
+test('the doc gate refuses a .github index that would displace the repository homepage', async () => {
+  // This repository has no such file; the guard exists because the failure is invisible:
+  // the homepage changes while every gate stays green.
+  assert.deepEqual(homepageFailures(root), []);
+  assert.ok(!listDocuments(root).some((file) => file.endsWith(join('.github', 'README.md'))));
+
+  const directory = await mkdtemp(join(tmpdir(), 'web-annotator-home-'));
+  try {
+    await mkdir(join(directory, '.github'), { recursive: true });
+    // A missing facade is a failure too: a bare docs tree has no user-facing entry.
+    assert.deepEqual(
+      homepageFailures(directory).map((failure) => failure.rel),
+      ['README.md'],
+    );
+    await writeFile(join(directory, 'README.md'), '# facade\n');
+    assert.deepEqual(homepageFailures(directory), []);
+    await writeFile(join(directory, '.github', 'README.md'), '# internal handbook\n');
+    const [shadowing] = homepageFailures(directory);
+    assert.equal(shadowing?.rel, '.github/README.md');
+    assert.match(shadowing?.reason ?? '', /顶掉仓库首页/);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
 });
 
 test('the doc gate fails on a renamed file and on a removed npm script', async () => {

@@ -10,4 +10,8 @@
 - **Node 版本只从 [../.node-version](../.node-version) 读**，不要在两处各写一遍。
 - **CI 用的宿主检出路径通过 `DSH_HOST_CHECKOUT` 传给脚本**，
   脚本必须认这个变量，否则 CI 看不到 `.host-source`。
-- 有哪些 workflow、各跑什么见 [README.md](README.md)。
+- ⚠️ **本目录不许放 `README.md`** —— GitHub 的首页 README 解析顺序是
+  `.github/README.md` → 根 `README.md` → `docs/README.md`，放了前者会把面向用户的
+  根 README 顶掉，而 CI 与全部门禁照绿。判据：`npm run check:doc-paths` 的
+  `homepageFailures`；规则原文见根 [AGENTS.md](../AGENTS.md) 活跃坑。
+- 有哪些 workflow、各跑什么见 [../docs/publishing.md](../docs/publishing.md)。

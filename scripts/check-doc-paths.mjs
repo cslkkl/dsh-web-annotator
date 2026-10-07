@@ -83,17 +83,45 @@ export function brokenReferences(root, scripts) {
   return { failures, scanned: files.length, documents: documents.length };
 }
 
+/**
+ * GitHub resolves the repository's homepage README as
+ * `.github/README.md` → `README.md` → `docs/README.md`.
+ *
+ * So a maintainer-facing `.github/README.md` silently replaces the user-facing
+ * facade on the repository page: nothing in the build, the tests or the docs
+ * gate notices, and the only visible symptom is that visitors read the wrong
+ * document. The reference repository hit exactly this and deleted its copy.
+ *
+ * @param root - repository root.
+ * @returns failures for a missing facade or a shadowing `.github/README.md`.
+ */
+export function homepageFailures(root) {
+  const failures = [];
+  if (!existsSync(join(root, 'README.md')))
+    failures.push({ rel: 'README.md', line: 1, reason: '缺少根 README —— 仓库首页没有门面' });
+  if (existsSync(join(root, '.github', 'README.md')))
+    failures.push({
+      rel: '.github/README.md',
+      line: 1,
+      reason: '它会顶掉仓库首页的根 README（GitHub 解析顺序：.github/ → 根 → docs/）',
+    });
+  return failures;
+}
+
 export function main() {
   const manifest = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'));
   const scripts = new Set(Object.keys(manifest.scripts ?? {}));
   const { failures, scanned, documents } = brokenReferences(ROOT, scripts);
+  failures.push(...homepageFailures(ROOT));
   // "Scanned nothing" must not look identical to "passed".
   if (documents === 0) {
     console.error('没有扫到任何 .md 文档 —— 检查没有真的跑起来');
     process.exit(1);
   }
   if (failures.length === 0) {
-    console.log(`文档检查通过：${String(scanned)} 份文件，${String(scripts.size)} 个 npm script`);
+    console.log(
+      `文档检查通过：${String(scanned)} 份文件，${String(scripts.size)} 个 npm script，首页 README 未被顶掉`,
+    );
     return;
   }
   for (const failure of failures)

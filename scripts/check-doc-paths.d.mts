@@ -18,4 +18,5 @@ export declare function brokenReferences(
   root: string,
   scripts: ReadonlySet<string>,
 ): DocumentationScan;
+export declare function homepageFailures(root: string): BrokenReference[];
 export declare function main(): void;
