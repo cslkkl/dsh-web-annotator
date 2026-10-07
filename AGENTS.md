@@ -106,22 +106,18 @@ npm pack                   # 触发 prepack 完整性断言
 
 ## 活跃坑
 
-> 只放“不知道就会踩、而且踩了没有任何报错”的陷阱。模块级陷阱写在子树的 `AGENTS.md`。
+> 只放"不知道就会踩、而且踩了没有任何报错"的陷阱。模块级陷阱写在子树的 `AGENTS.md`。
+> **编号化的防错清单在 [架构 §8](docs/architecture.md)** —— 那条是索引，这里只留本仓最容易踩、
+> 且还没有编号的几条。
 
 - **`lib/` 不入库，但它才是宿主读的东西** —— 改完源码必须重建，否则跑的是旧产物。
   只改 `src/client/` 刷新页面即可；改宿主半端要重新构建并重启 DSH。
-- **共享模块不同步是静默的** —— 源码改了而宿主副本没改，只有到构建宿主提供方时才报错。
-  正确的顺序是：改源码 → `npm run sync:browser-provider` → 重新生成补丁 → 构建。
-- **改宿主补丁就要重生成** —— `docs/harness-browser-annotation.patch` 由宿主检出 `git diff HEAD` 生成；
-  手改补丁会让 `prepack` 的哈希断言失败，但**不会**告诉你哪一行错了。
-- **`prepack` 是唯一拦住“残缺包”的门** —— `npm pack` 之外的任何分发方式都绕过了它。
-- **`--from-default-profile` 读的是**shipped 模板**，不是个人 Profile**；
+  这条同时是 F10（残缺包）与 F20（`check` 顺序）的前提。
+- **共享模块不同步、补丁没重生成、产物残缺** —— 都是同一条链上的静默失败，
+  看 [架构 §8](docs/architecture.md) 的 F8–F13，别凭记忆走顺序。
+- **`--from-default-profile` 读的是 shipped 模板，不是个人 Profile**；
   但测试 home 必须落在工作区，别把 `DSH_HOME` 指到日常目录。
 - **浏览器 `page.evaluate` 里的代码在页面里执行** —— ESLint 的 `no-undef` 会看见它，
   两个验收脚本因此同时声明了 Node 与 browser 全局。
-- **`.github/` 下不许放 `README.md`** —— GitHub 解析仓库首页 README 的顺序是
-  `.github/README.md` → 根 `README.md` → `docs/README.md`。放了前者，访客看到的是内部
-  发布手册而不是门面，而 CI、lint、分层与文档门禁**全绿**。判据：`npm run check:doc-paths`
-  的 `homepageFailures`（它同时断言根 README 存在）。
 - **PowerShell 变量名大小写不敏感** —— `$docs` 会覆盖 `$Docs`；且 `$Host` / `$HOME`
   等是只读自动变量，给它们赋值**静默失败**（脚本会带着空配置继续跑）。写维护脚本时变量名要真正区分开。

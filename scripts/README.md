@@ -76,4 +76,4 @@ format:check → lint → check:layering → check:doc-paths → build → typec
 - 改共享模块清单 → [shared-modules.mjs](shared-modules.mjs) 一处；
   [../docs/architecture.md](../docs/architecture.md) §3.2 说明为什么要同步。
 - 改门禁规则 → [../tests/gates.test.ts](../tests/gates.test.ts) 与
-  [../docs/architecture.md](../docs/architecture.md) §6。
+  [../docs/architecture.md](../docs/architecture.md) §6（语义）、§8（编号防错清单）。

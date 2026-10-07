@@ -37,11 +37,12 @@ Browser 补丁声明两个**会话作用域 list** 子插槽，Owner props 相�
 
 ## 变更影响路由
 
-- 改四个共享模块 → 同步 → 重生成补丁 → `npm run build:host`。
+- 改四个共享模块 → 同步 → 重生成补丁 → `npm run build:host`（编号见[架构 §8](../../docs/architecture.md) 的 F8–F13）。
 - 改 `prompt.ts` → 快照 `../../tests/snapshots/annotation-request.zh.txt`（写入方式见 [../../tests/README.md](../../tests/README.md)）。
 - 改 `bridge.ts` 的来源规则 → `../../tests/bridge.test.ts` 与 `../../tests/vite.test.ts`。
 - 改插槽名或 props → 宿主补丁、[../../docs/architecture.md](../../docs/architecture.md)、真实宿主验收。
 - 改 `page-inspector.ts` 的对外行为 → `../../tests/picker-source.test.ts` 与打包产物验收。
+  它是 F1 的保护对象：**不要为了让别处复用而给它加 import**。
 
 ## 已知边界
 
