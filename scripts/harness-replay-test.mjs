@@ -40,7 +40,7 @@ function dependencyEntries(workspace) {
     } catch {
       replayEntry = join(
         workspace,
-        'work/layout-care-replay-testdeps/node_modules/@deepseek-ai/dsh-llm-replay/lib/index.js',
+        'work/web-annotator-replay-testdeps/node_modules/@deepseek-ai/dsh-llm-replay/lib/index.js',
       );
     }
   }
@@ -75,7 +75,7 @@ export async function launchReplayFixture({
   responses = [reply1, reply2],
   cliEntry,
   replayEntry,
-  tarball = process.env.LAYOUT_CARE_TARBALL,
+  tarball = process.env.WEB_ANNOTATOR_TARBALL,
   previewTarball,
   onLog,
   browserProviderRoot,
@@ -104,9 +104,9 @@ export async function launchReplayFixture({
   );
   const work = join(resolve(workspace), 'work');
   await mkdir(work, { recursive: true });
-  const runtime = await mkdtemp(join(work, 'layout-care-replay-runtime-'));
+  const runtime = await mkdtemp(join(work, 'web-annotator-replay-runtime-'));
   const testHome = join(runtime, 'home');
-  const profileRoot = join(testHome, 'profiles/layout-care-replay');
+  const profileRoot = join(testHome, 'profiles/web-annotator-replay');
   const sessionsRoot = join(runtime, 'sessions');
   const overrideFile = join(runtime, 'replay.override.json');
   await writeFile(overrideFile, JSON.stringify(responses.map(textStream), null, 2) + '\n');
@@ -132,7 +132,7 @@ export async function launchReplayFixture({
       [
         cliEntry,
         '--profile',
-        'layout-care-replay',
+        'web-annotator-replay',
         '--from-default-profile',
         'web',
         '--dump-config',
@@ -145,7 +145,7 @@ export async function launchReplayFixture({
         cliEntry,
         'plugin',
         '--profile',
-        'layout-care-replay',
+        'web-annotator-replay',
         'add',
         '--ignore-scripts',
         resolve(tarball),
@@ -172,31 +172,31 @@ export async function launchReplayFixture({
       (browserProviderRoot ? '- id: ui-sidebar-browser\n  disabled: true\n' : '') +
       (chatProviderRoot ? '- id: ui-chat\n  disabled: true\n' : '') +
       (layoutProviderRoot ? '- id: ui-layout\n  disabled: true\n' : '') +
-      '- id: agent-default-model\n  config:\n    provider: layout-care-replay\n    model: layout-care-test-model\n' +
+      '- id: agent-default-model\n  config:\n    provider: web-annotator-replay\n    model: web-annotator-test-model\n' +
       `- id: session-persistence-jsonl\n  config:\n    root: ${yamlString(sessionsRoot)}\n    compression: none\n` +
       '- insert:\n' +
       (browserProviderRoot
-        ? `    - id: layout-care-patched-browser\n      name: ${yamlString(join(browserProviderRoot, 'lib/index.js'))}\n`
+        ? `    - id: web-annotator-patched-browser\n      name: ${yamlString(join(browserProviderRoot, 'lib/index.js'))}\n`
         : '') +
       (chatProviderRoot
-        ? `    - id: layout-care-patched-chat\n      name: ${yamlString(join(chatProviderRoot, 'lib/index.js'))}\n`
+        ? `    - id: web-annotator-patched-chat\n      name: ${yamlString(join(chatProviderRoot, 'lib/index.js'))}\n`
         : '') +
       (layoutProviderRoot
-        ? `    - id: layout-care-patched-layout\n      name: ${yamlString(join(layoutProviderRoot, 'lib/index.js'))}\n`
+        ? `    - id: web-annotator-patched-layout\n      name: ${yamlString(join(layoutProviderRoot, 'lib/index.js'))}\n`
         : '') +
       (tarball
         ? ''
         : `    - id: cslkkl-web-annotator\n      name: ${yamlString(join(pluginRoot, 'lib/index.js'))}\n`) +
-      `    - id: layout-care-official-replay\n      name: ${yamlString(replayEntry)}\n      config:\n` +
+      `    - id: web-annotator-official-replay\n      name: ${yamlString(replayEntry)}\n      config:\n` +
       `        file: ${yamlString(overrideFile)}\n        overrideFile: ${yamlString(overrideFile)}\n` +
-      '        providers:\n          - id: layout-care-replay\n            name: DSH Web Annotator Test Replay\n            models:\n' +
-      '              - id: layout-care-test-model\n                name: Replay (no provider I/O)\n                contextWindow: 128000\n                inputModalities: [text, image]\n                imageRequestTokens: 100\n',
+      '        providers:\n          - id: web-annotator-replay\n            name: DSH Web Annotator Test Replay\n            models:\n' +
+      '              - id: web-annotator-test-model\n                name: Replay (no provider I/O)\n                contextWindow: 128000\n                inputModalities: [text, image]\n                imageRequestTokens: 100\n',
   );
   const host = await startHarness({
     cliEntry,
     workspace,
     testHome,
-    profile: 'layout-care-replay',
+    profile: 'web-annotator-replay',
     patch,
     port,
     initialize: !initialized,
@@ -290,7 +290,7 @@ export function transcriptSnapshot(events) {
 
 async function main() {
   const fixture = await launchReplayFixture({
-    port: Number(process.env.LAYOUT_CARE_REPLAY_PORT || 18470),
+    port: Number(process.env.WEB_ANNOTATOR_REPLAY_PORT || 18470),
   });
   if (process.argv.includes('--serve')) {
     const fixtureInfo = join(fixture.runtime, 'fixture-info.json');
@@ -329,7 +329,7 @@ async function main() {
   try {
     const catalog = await fixture.api.modelCatalog();
     assert.ok(
-      JSON.stringify(catalog).includes('layout-care-test-model'),
+      JSON.stringify(catalog).includes('web-annotator-test-model'),
       'Replay route must be discoverable.',
     );
     const { sessionId } = await fixture.api.createSession({

@@ -54,7 +54,7 @@ test('JSX source hints identify intrinsic nodes without rewriting component name
   const result = annotateJsxSource(code, 'src/View.tsx');
   assert.equal(result.annotations, 3);
   assert.match(result.code, /<Panel>/);
-  assert.match(result.code, /<section data-layout-care-source=\{"src\/View.tsx:3:27"\}/);
+  assert.match(result.code, /<section data-web-annotator-source=\{"src\/View.tsx:3:27"\}/);
   assert.match(result.code, /const text = "<div \/>";/);
   assert.match(result.code, /\/\/ <button \/>/);
   assert.doesNotThrow(() =>
@@ -66,10 +66,10 @@ test('JSX source hints identify intrinsic nodes without rewriting component name
 });
 
 test('existing markers survive, fragments work and quoted file paths remain valid JSX', () => {
-  const code = `<><div data-layout-care-source="existing"/><svg><path d="M0 0" /></svg><UI.Button /></>`;
+  const code = `<><div data-web-annotator-source="existing"/><svg><path d="M0 0" /></svg><UI.Button /></>`;
   const result = annotateJsxSource(code, 'src/quoted"name.tsx');
   assert.equal(result.annotations, 2);
-  assert.match(result.code, /data-layout-care-source="existing"/);
+  assert.match(result.code, /data-web-annotator-source="existing"/);
   assert.match(result.code, /<UI.Button \/>/);
   assert.doesNotThrow(() => parse(result.code, { plugins: ['jsx', 'typescript'] }));
 });
@@ -93,11 +93,11 @@ test('HTML bridge URL respects the Vite base and includes the exact configured o
       children?: string;
     }[]
   )();
-  assert.equal(tags[1].attrs?.src, '/preview/__layout-care__/bridge.js');
+  assert.equal(tags[1].attrs?.src, '/preview/__web-annotator__/bridge.js');
   assert.equal(tags[1].attrs?.defer, true);
   assert.equal(
     tags[0].children,
-    'window.__LAYOUT_CARE_CONFIG__={"allowedParentOrigins":["https://harness.example.com"]};',
+    'window.__WEB_ANNOTATOR_CONFIG__={"allowedParentOrigins":["https://harness.example.com"]};',
   );
 });
 

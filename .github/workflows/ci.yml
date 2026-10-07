@@ -29,7 +29,7 @@ jobs:
       - run: npm run check
       - run: npm run test:storage
         env:
-          LAYOUT_CARE_BROWSER_CHANNEL: chrome
+          WEB_ANNOTATOR_BROWSER_CHANNEL: chrome
       - uses: actions/checkout@v4
         with:
           repository: deepseek-ai/deepseek-harness

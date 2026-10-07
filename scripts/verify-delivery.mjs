@@ -7,11 +7,11 @@ import { resolve, join } from 'node:path';
 const report = JSON.parse(await readFile('integration/annotation-artifacts/report.json', 'utf8'));
 const packageVersion = JSON.parse(await readFile('package.json', 'utf8')).version;
 const tarball = resolve(
-  process.env.LAYOUT_CARE_TARBALL || `dsh-web-annotator-${packageVersion}.tgz`,
+  process.env.WEB_ANNOTATOR_TARBALL || `dsh-web-annotator-${packageVersion}.tgz`,
 );
 const installed = join(
   report.runtime,
-  'home/profiles/layout-care-replay/node_modules/dsh-web-annotator',
+  'home/profiles/web-annotator-replay/node_modules/dsh-web-annotator',
 );
 const files = execFileSync('tar', ['-tf', tarball], { encoding: 'utf8' })
   .split(/\r?\n/)

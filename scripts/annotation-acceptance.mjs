@@ -27,7 +27,7 @@ const errors = [];
 let artifacts = resolve('integration/annotation-artifacts');
 const bundledHost = process.env.WEB_ANNOTATOR_BUNDLED_HOST === '1';
 if (bundledHost)
-  assert.ok(process.env.LAYOUT_CARE_TARBALL, 'Bundled-host proof requires a tarball.');
+  assert.ok(process.env.WEB_ANNOTATOR_TARBALL, 'Bundled-host proof requires a tarball.');
 await mkdir(artifacts, { recursive: true });
 function passed(name) {
   checks.push(name);
@@ -37,19 +37,19 @@ try {
   fixture = await launchReplayFixture({
     workspace,
     browserProviderRoot:
-      bundledHost || process.env.LAYOUT_CARE_PREVIEW_TARBALL
+      bundledHost || process.env.WEB_ANNOTATOR_PREVIEW_TARBALL
         ? undefined
         : resolve('integration/browser-provider'),
     chatProviderRoot:
-      bundledHost || process.env.LAYOUT_CARE_PREVIEW_TARBALL
+      bundledHost || process.env.WEB_ANNOTATOR_PREVIEW_TARBALL
         ? undefined
         : resolve('integration/chat-provider'),
     layoutProviderRoot:
-      bundledHost || process.env.LAYOUT_CARE_PREVIEW_TARBALL
+      bundledHost || process.env.WEB_ANNOTATOR_PREVIEW_TARBALL
         ? undefined
         : resolve('integration/layout-provider'),
-    tarball: process.env.LAYOUT_CARE_TARBALL,
-    previewTarball: process.env.LAYOUT_CARE_PREVIEW_TARBALL,
+    tarball: process.env.WEB_ANNOTATOR_TARBALL,
+    previewTarball: process.env.WEB_ANNOTATOR_PREVIEW_TARBALL,
     responses: [
       reply,
       '图片批注已收到。',
@@ -59,7 +59,7 @@ try {
       '分批发送已收到。',
     ],
   });
-  const installedRoot = process.env.LAYOUT_CARE_TARBALL
+  const installedRoot = process.env.WEB_ANNOTATOR_TARBALL
     ? resolve(
         createRequire(join(fixture.profileRoot, 'package.json')).resolve(
           'dsh-web-annotator/package.json',
@@ -76,10 +76,10 @@ try {
   });
   await demo.listen();
   demoUrl = `${demo.resolvedUrls.local[0]}annotation-page.html`;
-  const servedBridge = await (await fetch(new URL('__layout-care__/bridge.js', demoUrl))).text();
+  const servedBridge = await (await fetch(new URL('__web-annotator__/bridge.js', demoUrl))).text();
   assert.equal(servedBridge, await readFile(join(installedRoot, 'lib/bridge.js'), 'utf8'));
   browser = await chromium.launch({
-    channel: process.env.LAYOUT_CARE_BROWSER_CHANNEL || 'msedge',
+    channel: process.env.WEB_ANNOTATOR_BROWSER_CHANNEL || 'msedge',
     headless: true,
   });
   page = await browser.newPage({ viewport: { width: 1600, height: 1000 } });
@@ -485,7 +485,7 @@ try {
   await writeFile(join(artifacts, 'sent-request.txt'), finalPrompt + '\n');
   await writeFile(join(artifacts, 'transcript.json'), JSON.stringify(transcript, null, 2));
   passed('Actual Client submission reaches the official replay adapter and exact durable journal');
-  const evidence = page.locator('.lc-message-evidence');
+  const evidence = page.locator('.wa-message-evidence');
   assert.equal(await evidence.getAttribute('open'), null);
   assert.equal(await page.getByText('逐条处理用户输入', { exact: false }).isVisible(), false);
   await evidence.locator('summary').click();
@@ -494,7 +494,7 @@ try {
   await page.screenshot({ path: join(artifacts, 'message-collapsed.png') });
   await page.reload();
   await page.getByText(reply, { exact: true }).waitFor();
-  assert.equal(await page.locator('.lc-message-evidence').getAttribute('open'), null);
+  assert.equal(await page.locator('.wa-message-evidence').getAttribute('open'), null);
   passed(
     'Detailed user messages stay compact, expand on demand, and survive a real session reload',
   );
@@ -549,7 +549,7 @@ try {
     .inputValue();
   assert.doesNotMatch(imagePrompt, /"selection"|"viewport"|"candidates"/);
   await page
-    .locator('.lc-image-preview')
+    .locator('.wa-image-preview')
     .screenshot({ path: join(artifacts, 'image-preview.png') });
   await button('发送到当前会话').click();
   await page.getByText('图片批注已收到。', { exact: true }).waitFor();
@@ -584,7 +584,7 @@ try {
   await page.getByRole('combobox', { name: '发送方式', exact: true }).selectOption('both');
   await button('发送到当前会话').click();
   await page.getByText('图片和定位资料已收到。', { exact: true }).waitFor();
-  assert.equal(await page.locator('.lc-message-evidence').last().getAttribute('open'), null);
+  assert.equal(await page.locator('.wa-message-evidence').last().getAttribute('open'), null);
   await page.screenshot({ path: join(artifacts, 'image-submitted.png') });
   passed('Combined mode keeps real image attachments and collapses DOM evidence');
   await frame.locator('body').evaluate(() => {
@@ -606,7 +606,7 @@ try {
     .getByRole('textbox', { name: '发送内容', exact: true })
     .inputValue();
   assert.match(mixedPrompt, /"screenshotIndex": 1/);
-  assert.equal(await page.locator('.lc-image-preview').count(), 1);
+  assert.equal(await page.locator('.wa-image-preview').count(), 1);
   await button('发送到当前会话').click();
   await page.getByText('混合图片批注已收到。', { exact: true }).waitFor();
   const mixedJournal = await readDurableJournal(fixture, targetSession);
@@ -617,7 +617,7 @@ try {
   );
   assert.ok(mixedMessage);
   assert.equal(mixedMessage.data.content.filter((part) => part.type === 'image').length, 1);
-  assert.equal(await page.locator('.lc-message-evidence').last().getAttribute('open'), null);
+  assert.equal(await page.locator('.wa-message-evidence').last().getAttribute('open'), null);
   passed(
     'Mixed batches retain both notes and the available image, with exact attachment correspondence',
   );
@@ -686,10 +686,10 @@ try {
   await button('发送到当前会话').click();
   await page.getByText('分批发送已收到。', { exact: true }).waitFor();
   await page
-    .locator('.lc-note')
+    .locator('.wa-note')
     .getByText('满队列待发送 1', { exact: true })
     .waitFor({ state: 'hidden' });
-  assert.equal(await page.locator('.lc-note').count(), 31);
+  assert.equal(await page.locator('.wa-note').count(), 31);
   assert.equal(await button('添加批注').isDisabled(), false);
   passed(
     'Full queues block picking before a draft can be lost; sending one selected note retains the other 31 and re-enables picking',
@@ -708,17 +708,17 @@ try {
         modelSourceEdits: 'unverified',
         screenshotAttachments: true,
         nativeCapture: 'unverified; Web test replaces only the Electron capture boundary',
-        packagedPlugin: !!process.env.LAYOUT_CARE_TARBALL,
-        packagedProviders: bundledHost || !!process.env.LAYOUT_CARE_PREVIEW_TARBALL,
-        singlePackageInstall: bundledHost && !process.env.LAYOUT_CARE_PREVIEW_TARBALL,
-        previewTarballSha256: process.env.LAYOUT_CARE_PREVIEW_TARBALL
+        packagedPlugin: !!process.env.WEB_ANNOTATOR_TARBALL,
+        packagedProviders: bundledHost || !!process.env.WEB_ANNOTATOR_PREVIEW_TARBALL,
+        singlePackageInstall: bundledHost && !process.env.WEB_ANNOTATOR_PREVIEW_TARBALL,
+        previewTarballSha256: process.env.WEB_ANNOTATOR_PREVIEW_TARBALL
           ? createHash('sha256')
-              .update(await readFile(process.env.LAYOUT_CARE_PREVIEW_TARBALL))
+              .update(await readFile(process.env.WEB_ANNOTATOR_PREVIEW_TARBALL))
               .digest('hex')
           : undefined,
-        tarballSha256: process.env.LAYOUT_CARE_TARBALL
+        tarballSha256: process.env.WEB_ANNOTATOR_TARBALL
           ? createHash('sha256')
-              .update(await readFile(process.env.LAYOUT_CARE_TARBALL))
+              .update(await readFile(process.env.WEB_ANNOTATOR_TARBALL))
               .digest('hex')
           : undefined,
       },

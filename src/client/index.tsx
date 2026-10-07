@@ -33,7 +33,7 @@ type QueueProps = PropsRuntime<'sidebar.right.tab.browser.annotations'> &
   Shared & {
     submitAnnotations: (text: string, images: readonly BrowserAnnotationImage[]) => Promise<void>;
   };
-const css = `.lc-annotations{flex:none;border-top:.5px solid var(--dsw-alias-border-l3);padding:8px 10px;color:var(--dsw-alias-label-primary);font:var(--dsw-font-xxs-12);max-height:40%;overflow:auto}.lc-annotations summary{cursor:pointer;font-weight:500}.lc-annotations p{margin:6px 0;white-space:pre-wrap;overflow-wrap:anywhere}.lc-note{display:flex;gap:8px;align-items:start;border-bottom:.5px solid var(--dsw-alias-border-l3);padding:8px 0}.lc-note>div{flex:1;min-width:0;overflow-wrap:anywhere}.lc-muted{color:var(--dsw-alias-label-secondary)}.lc-actions{display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap}.lc-preview{width:100%;min-height:140px;max-height:260px;resize:vertical;background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-primary);border:.5px solid var(--dsw-alias-border-l2);border-radius:var(--dsw-radius-sm);padding:8px;box-sizing:border-box;font:var(--dsw-font-xxs-12)}.lc-feedback{padding:8px 10px;flex:none;color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxs-12);overflow-wrap:anywhere}.lc-error{color:var(--dsw-alias-state-error-primary)}`;
+const css = `.wa-annotations{flex:none;border-top:.5px solid var(--dsw-alias-border-l3);padding:8px 10px;color:var(--dsw-alias-label-primary);font:var(--dsw-font-xxs-12);max-height:40%;overflow:auto}.wa-annotations summary{cursor:pointer;font-weight:500}.wa-annotations p{margin:6px 0;white-space:pre-wrap;overflow-wrap:anywhere}.wa-note{display:flex;gap:8px;align-items:start;border-bottom:.5px solid var(--dsw-alias-border-l3);padding:8px 0}.wa-note>div{flex:1;min-width:0;overflow-wrap:anywhere}.wa-muted{color:var(--dsw-alias-label-secondary)}.wa-actions{display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap}.wa-preview{width:100%;min-height:140px;max-height:260px;resize:vertical;background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-primary);border:.5px solid var(--dsw-alias-border-l2);border-radius:var(--dsw-radius-sm);padding:8px;box-sizing:border-box;font:var(--dsw-font-xxs-12)}.wa-feedback{padding:8px 10px;flex:none;color:var(--dsw-alias-label-secondary);font:var(--dsw-font-xxs-12);overflow-wrap:anywhere}.wa-error{color:var(--dsw-alias-state-error-primary)}`;
 
 function AnnotationMessage({
   matched,
@@ -42,18 +42,18 @@ function AnnotationMessage({
 }: PropsRuntime<'conversation.message.user-text'> &
   PropsLocale<typeof NS> & { matched: readonly BrowserAnnotation[] }) {
   return (
-    <div className="lc-message">
+    <div className="wa-message">
       <style>{messageCss}</style>
       {matched.map((note, i) => (
-        <div className="lc-message-note" key={i}>
+        <div className="wa-message-note" key={i}>
           {matched.length > 1 && (
-            <span className="lc-muted">
+            <span className="wa-muted">
               {i + 1}. {t(note.intent)}
             </span>
           )}
           <p>{note.note}</p>
           {note.styleChanges && (
-            <p className="lc-muted">
+            <p className="wa-muted">
               {Object.entries(note.styleChanges)
                 .map(([key, value]) => `${key}: ${value.after}`)
                 .join(' · ')}
@@ -61,7 +61,7 @@ function AnnotationMessage({
           )}
         </div>
       ))}
-      <details className="lc-message-evidence">
+      <details className="wa-message-evidence">
         <summary>
           {t('evidence')} · {matched.length}
         </summary>
@@ -70,7 +70,7 @@ function AnnotationMessage({
     </div>
   );
 }
-const messageCss = `.lc-message p{margin:0;white-space:pre-wrap;overflow-wrap:anywhere}.lc-message-note+.lc-message-note{margin-top:10px}.lc-message-evidence{margin-top:10px;font:var(--dsw-font-xxs-12);color:var(--dsw-alias-label-secondary)}.lc-message-evidence summary{cursor:pointer;user-select:none}.lc-message-evidence pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:300px;overflow:auto;padding:8px 0}.lc-delivery{display:flex;align-items:center;gap:6px}.lc-delivery select{background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-primary);border:.5px solid var(--dsw-alias-border-l2);border-radius:var(--dsw-radius-sm);padding:4px;font:inherit}.lc-image-preview{display:block;width:100%;max-height:240px;object-fit:contain;border-radius:var(--dsw-radius-sm);margin:8px 0}`;
+const messageCss = `.wa-message p{margin:0;white-space:pre-wrap;overflow-wrap:anywhere}.wa-message-note+.wa-message-note{margin-top:10px}.wa-message-evidence{margin-top:10px;font:var(--dsw-font-xxs-12);color:var(--dsw-alias-label-secondary)}.wa-message-evidence summary{cursor:pointer;user-select:none}.wa-message-evidence pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:300px;overflow:auto;padding:8px 0}.wa-delivery{display:flex;align-items:center;gap:6px}.wa-delivery select{background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-primary);border:.5px solid var(--dsw-alias-border-l2);border-radius:var(--dsw-radius-sm);padding:4px;font:inherit}.wa-image-preview{display:block;width:100%;max-height:240px;object-fit:contain;border-radius:var(--dsw-radius-sm);margin:8px 0}`;
 
 function readableError(error: unknown): AnnotationCopyKey {
   const code = error instanceof Error ? error.message : '';
@@ -188,7 +188,7 @@ function Toolbar({
       </Tooltip>
       {error && (
         <Tooltip label={t(error)} side="bottom">
-          <span role="alert" aria-label={t(error)} className="lc-error">
+          <span role="alert" aria-label={t(error)} className="wa-error">
             !
           </span>
         </Tooltip>
@@ -271,13 +271,13 @@ function Queue(props: QueueProps) {
     <>
       <style>{css + messageCss}</style>
       {!!notes.length && (
-        <section className="lc-annotations" aria-label={t('notes')}>
+        <section className="wa-annotations" aria-label={t('notes')}>
           <details open>
             <summary>
               {t('notes')} · {notes.length}
             </summary>
             {notes.map(({ id, annotation }, index) => (
-              <div className="lc-note" key={id}>
+              <div className="wa-note" key={id}>
                 <input
                   type="checkbox"
                   aria-label={`${t('selectNote')} ${index + 1}`}
@@ -292,7 +292,7 @@ function Queue(props: QueueProps) {
                   }
                 />
                 <div>
-                  <span className="lc-muted">
+                  <span className="wa-muted">
                     {t(annotation.intent)} ·{' '}
                     {annotation.selection.kind === 'region'
                       ? t('region')
@@ -303,13 +303,13 @@ function Queue(props: QueueProps) {
                   {editing?.id === id ? (
                     <>
                       <textarea
-                        className="lc-preview"
+                        className="wa-preview"
                         aria-label={t('edit')}
                         maxLength={1000}
                         value={editing.text}
                         onChange={(event) => setEditing({ id, text: event.target.value })}
                       />
-                      <div className="lc-actions">
+                      <div className="wa-actions">
                         <Button
                           type="button"
                           size="sm"
@@ -362,8 +362,8 @@ function Queue(props: QueueProps) {
                 </Button>
               </div>
             ))}
-            <div className="lc-actions">
-              <label className="lc-delivery">
+            <div className="wa-actions">
+              <label className="wa-delivery">
                 <span>{t('delivery')}</span>
                 <select
                   aria-label={t('delivery')}
@@ -409,17 +409,17 @@ function Queue(props: QueueProps) {
                     .map(({ id, annotation }) => (
                       <img
                         key={id}
-                        className="lc-image-preview"
+                        className="wa-image-preview"
                         alt={t('image')}
                         src={`data:image/jpeg;base64,${annotation.screenshot!.data}`}
                       />
                     ))}
-                <textarea className="lc-preview" readOnly aria-label={t('queue')} value={prompt} />
+                <textarea className="wa-preview" readOnly aria-label={t('queue')} value={prompt} />
               </>
             )}
-            {!!selectedNotes.length && !hasImages && <p className="lc-muted">{t('noImage')}</p>}
+            {!!selectedNotes.length && !hasImages && <p className="wa-muted">{t('noImage')}</p>}
             {(tooLarge || notes.length >= 32) && (
-              <p role="alert" className="lc-error">
+              <p role="alert" className="wa-error">
                 {t('limit')}
               </p>
             )}
@@ -429,7 +429,7 @@ function Queue(props: QueueProps) {
       {notes.length > 0 && (storage === 'saving' || storage === 'failed') && (
         <div
           role={storage === 'failed' ? 'alert' : 'status'}
-          className={`lc-feedback ${storage === 'failed' ? 'lc-error' : ''}`}
+          className={`wa-feedback ${storage === 'failed' ? 'wa-error' : ''}`}
         >
           {t(storage === 'failed' ? 'storageFailed' : 'saving')}
         </div>
@@ -437,7 +437,7 @@ function Queue(props: QueueProps) {
       {feedback && (
         <div
           role={feedback === 'sent' ? 'status' : 'alert'}
-          className={`lc-feedback ${feedback === 'sent' ? '' : 'lc-error'}`}
+          className={`wa-feedback ${feedback === 'sent' ? '' : 'wa-error'}`}
         >
           {t(feedback)}
         </div>
@@ -466,7 +466,7 @@ export function apply(ctx: Context): void {
   ctx.effect(() =>
     ctx.slots.inject('conversation.input.left', () =>
       ctx.slots.register(
-        { name: 'conversation.input.left', id: 'layout-care.open-browser', locale: NS },
+        { name: 'conversation.input.left', id: 'web-annotator.open-browser', locale: NS },
         ({ t }: PropsRuntime<'conversation.input.left'> & PropsLocale<typeof NS>) => (
           <Button
             type="button"
@@ -488,7 +488,7 @@ export function apply(ctx: Context): void {
       ctx.slots.register(
         {
           name: 'sidebar.right.tab.browser.toolbar',
-          id: 'layout-care.annotate',
+          id: 'web-annotator.annotate',
           locale: NS,
           store,
         },
@@ -501,7 +501,7 @@ export function apply(ctx: Context): void {
       ctx.slots.register(
         {
           name: 'sidebar.right.tab.browser.annotations',
-          id: 'layout-care.annotations',
+          id: 'web-annotator.annotations',
           locale: NS,
           store,
           inject: (sessionId) => ({

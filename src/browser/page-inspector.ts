@@ -825,8 +825,8 @@ export function annotatePage(
     ])
       styles[name] = computed.getPropertyValue(name).slice(0, 1000);
     const source = element
-      .closest('[data-layout-care-source]')
-      ?.getAttribute('data-layout-care-source')
+      .closest('[data-web-annotator-source]')
+      ?.getAttribute('data-web-annotator-source')
       ?.slice(0, 1000);
     return {
       ...where,

@@ -5,8 +5,8 @@ import { parse } from '@babel/parser';
 import MagicString from 'magic-string';
 import type { Plugin, ResolvedConfig } from 'vite';
 
-const bridgeRoute = '__layout-care__/bridge.js';
-const sourceAttribute = 'data-layout-care-source';
+const bridgeRoute = '__web-annotator__/bridge.js';
+const sourceAttribute = 'data-web-annotator-source';
 
 export interface WebAnnotatorOptions {
   /** Additional exact HTTP(S) origins allowed to connect. Loopback origins are allowed by the bridge. */
@@ -146,7 +146,7 @@ export function webAnnotator(options: WebAnnotatorOptions = {}): Plugin {
     configureServer(server) {
       const mountPath = `${server.config.base.replace(/\/$/, '')}/${bridgeRoute}`;
       server.middlewares.use(async (req, res, next) => {
-        const path = new URL(req.url ?? '/', 'http://layout-care.invalid').pathname;
+        const path = new URL(req.url ?? '/', 'http://web-annotator.invalid').pathname;
         if (path !== mountPath || !['GET', 'HEAD'].includes(req.method ?? 'GET')) return next();
         try {
           bridgeContents ??= readFile(
@@ -177,7 +177,7 @@ export function webAnnotator(options: WebAnnotatorOptions = {}): Plugin {
       return [
         {
           tag: 'script',
-          children: `window.__LAYOUT_CARE_CONFIG__=${serializeBridgeConfig(origins)};`,
+          children: `window.__WEB_ANNOTATOR_CONFIG__=${serializeBridgeConfig(origins)};`,
           injectTo: 'head-prepend',
         },
         {

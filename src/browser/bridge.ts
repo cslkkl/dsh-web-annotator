@@ -10,7 +10,7 @@ const allowed = (origin: string): boolean => {
         (url.hostname === 'localhost' ||
           url.hostname === '[::1]' ||
           /^127(?:\.\d{1,3}){3}$/.test(url.hostname))) ||
-      (window.__LAYOUT_CARE_CONFIG__?.allowedParentOrigins || []).includes(origin)
+      (window.__WEB_ANNOTATOR_CONFIG__?.allowedParentOrigins || []).includes(origin)
     );
   } catch {
     return false;
@@ -19,7 +19,7 @@ const allowed = (origin: string): boolean => {
 let current: MessagePort | undefined;
 declare global {
   interface Window {
-    __LAYOUT_CARE_CONFIG__?: { allowedParentOrigins?: string[] };
+    __WEB_ANNOTATOR_CONFIG__?: { allowedParentOrigins?: string[] };
     __DSH_PAGE_ANNOTATION_BRIDGE_DISPOSE__?: () => void;
   }
 }

@@ -17,7 +17,7 @@ const reactAliases = ['react/jsx-dev-runtime', 'react/jsx-runtime'].map((find) =
 async function fixture() {
   // Windows CI exposes TEMP through an 8.3 alias (RUNNER~1). Vite checks
   // canonical file paths, so its root must use the same canonical directory.
-  const directory = await realpath(await mkdtemp(join(tmpdir(), 'layout-care-vite-')));
+  const directory = await realpath(await mkdtemp(join(tmpdir(), 'web-annotator-vite-')));
   await mkdir(join(directory, 'src'));
   await writeFile(
     join(directory, 'index.html'),
@@ -47,22 +47,22 @@ test('packaged Vite entry serves its bridge and preserves TSX source hints acros
     const htmlResponse = await fetch(`${origin}/sandbox/`);
     assert.equal(htmlResponse.status, 200);
     const html = await htmlResponse.text();
-    assert.match(html, /window\.__LAYOUT_CARE_CONFIG__/);
+    assert.match(html, /window\.__WEB_ANNOTATOR_CONFIG__/);
     assert.match(html, /https:\/\/harness\.example\.com/);
-    assert.match(html, /\/sandbox\/__layout-care__\/bridge\.js/);
-    const bridge = await fetch(`${origin}/sandbox/__layout-care__/bridge.js`);
+    assert.match(html, /\/sandbox\/__web-annotator__\/bridge\.js/);
+    const bridge = await fetch(`${origin}/sandbox/__web-annotator__/bridge.js`);
     assert.equal(bridge.status, 200);
     assert.match(bridge.headers.get('content-type')!, /text\/javascript/);
     assert.equal(bridge.headers.get('cache-control'), 'no-store');
     assert.equal(bridge.headers.get('x-content-type-options'), 'nosniff');
     assert.match(await bridge.text(), /dsh-browser-annotation-v1/);
-    const head = await fetch(`${origin}/sandbox/__layout-care__/bridge.js`, { method: 'HEAD' });
+    const head = await fetch(`${origin}/sandbox/__web-annotator__/bridge.js`, { method: 'HEAD' });
     assert.equal(head.status, 200);
     assert.equal(await head.text(), '');
 
     const transformed = await server.transformRequest('/src/Card.tsx');
     assert.ok(transformed);
-    assert.match(transformed.code, /data-layout-care-source/);
+    assert.match(transformed.code, /data-web-annotator-source/);
     assert.match(transformed.code, /src\/Card\.tsx:4:10/);
     assert.ok(transformed.map, 'source hints must retain a sourcemap');
     await writeFile(join(directory, 'src', 'Card.tsx'), initialCard.replace("'before'", "'after'"));
@@ -72,7 +72,7 @@ test('packaged Vite entry serves its bridge and preserves TSX source hints acros
     assert.match(updated.code, /after/);
     assert.match(updated.code, /src\/Card\.tsx:4:10/);
     assert.equal(
-      (updated.code.match(/data-layout-care-source/g) ?? []).length,
+      (updated.code.match(/data-web-annotator-source/g) ?? []).length,
       3,
       're-transforming must not duplicate source hints',
     );
@@ -99,7 +99,7 @@ test('a real Vite production build excludes both bridge injection and source mar
       .join('\n');
     assert.doesNotMatch(
       published,
-      /__LAYOUT_CARE_CONFIG__|__layout-care__\/bridge|data-layout-care-source/,
+      /__WEB_ANNOTATOR_CONFIG__|__web-annotator__\/bridge|data-web-annotator-source/,
     );
     assert.equal(
       await readFile(join(directory, 'src', 'Card.tsx'), 'utf8'),

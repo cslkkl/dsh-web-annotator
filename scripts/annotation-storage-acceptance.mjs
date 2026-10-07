@@ -24,7 +24,7 @@ let browser;
 const checks = [];
 try {
   browser = await chromium.launch({
-    channel: process.env.LAYOUT_CARE_BROWSER_CHANNEL || 'msedge',
+    channel: process.env.WEB_ANNOTATOR_BROWSER_CHANNEL || 'msedge',
     headless: true,
   });
   const page = await browser.newPage();
