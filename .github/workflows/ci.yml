@@ -36,13 +36,16 @@ jobs:
           repository: deepseek-ai/deepseek-harness
           ref: 639ed015397290b3745d163aafe02ffee4aa3f84
           path: .host-source
+      # ⚠️ 顺序不能反：`verify:browser-patch` 比对的是「补丁打到精确基线」与
+      # 「宿主检出工作区」两份内容，所以检出**必须先打补丁**，否则它拿干净的基线
+      # 去比打了补丁的结果，在第一个文件上就必挂（换来一条看不出因果的红）。
+      - name: Apply the reviewed exact-version host patch
+        working-directory: .host-source
+        run: git -c core.autocrlf=false apply ../docs/harness-browser-annotation.patch
       - name: Verify the reviewed patch against its exact base
         run: npm run verify:browser-patch
         env:
           DSH_HOST_CHECKOUT: .host-source
-      - name: Apply the reviewed exact-version host patch
-        working-directory: .host-source
-        run: git -c core.autocrlf=false apply ../docs/harness-browser-annotation.patch
       - run: npm run build:host
         env:
           DSH_HOST_CHECKOUT: .host-source
