@@ -113,6 +113,18 @@ Chat 补丁声明增量 `conversation.message.user-text` chain。
 
 每条规则必须真的扫到文件，否则报 `rule-not-wired`：没扫到就等于没生效。
 
+### 6.1 两个类型检查项目
+
+依赖方向只靠脚本拦不够：类型系统也要能表达"这一半看不到那一半的全局"。
+
+| 项目                                            | 覆盖                                                 | `lib`                                               | 拦住什么                                           |
+| ----------------------------------------------- | ---------------------------------------------------- | --------------------------------------------------- | -------------------------------------------------- |
+| [tsconfig.json](../tsconfig.json)               | `src/index.ts`、`src/vite.ts`                        | `ES2022`（**无 DOM**）                              | 宿主半边用 `document` / `window`（报 `TS2584`）    |
+| [tsconfig.client.json](../tsconfig.client.json) | `src/browser/`、`src/client/`、`tests/`、`examples/` | `ES2022` + `DOM` + `DOM.Iterable`，`jsx: react-jsx` | 浏览器半边误用宿主模块（另由 `client-no-node` 拦） |
+
+`npm run typecheck` 依次跑两个项目。合成一个 program 时两边互相污染：
+宿主文件能用 DOM 全局、浏览器文件能 `import 'node:fs'`，而类型检查**都通过**。
+
 ## 七、分发
 
 - 一个预构建包同时包含插件与 Browser / Chat / Layout 三个派生提供方。
