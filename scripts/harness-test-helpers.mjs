@@ -31,13 +31,14 @@ function childOf(root, target) {
 
 /** Start an existing isolated profile with an optional workspace overlay.
  * Pass a .js CLI entry (the installed @deepseek-ai/dsh package's bin), not dsh.cmd.
+ * `initialize` copies the *shipped* profile template; no personal profile is read.
  * The returned launchUrl contains an authentication token; keep it in memory.
  */
 export async function startHarness({
   cliEntry,
   workspace,
   testHome,
-  profile = 'layout-care-test',
+  profile = 'web-annotator-test',
   patch,
   port = 0,
   initialize = false,
@@ -52,6 +53,7 @@ export async function startHarness({
   }
   if (!Number.isInteger(port) || port < 0 || port > 65535) throw new Error('Invalid port.');
   const args = [cliEntry, '--profile', profile];
+  // `--from-default-profile` seeds from the shipped template, never from a user profile.
   if (initialize) args.push('--from-default-profile', 'web');
   if (patch) args.push('--patch', resolve(patch));
   args.push('--no-open', '--port', String(port));

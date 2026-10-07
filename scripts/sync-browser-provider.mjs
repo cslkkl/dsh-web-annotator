@@ -1,17 +1,20 @@
-/** Update the three shared picker modules in the local, reviewable host patch. */
+/** Copy the shared picker modules into the local, reviewable host patch.
+ * The four files are duplicated by design: the Browser provider must build without
+ * this package, and `build-browser-provider.mjs` refuses to build when they differ.
+ */
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
-import { resolve, join } from 'node:path';
+import { join, resolve } from 'node:path';
+import { SHARED_ANNOTATION_MODULES, hostCheckout, toHostSource } from './shared-modules.mjs';
+
 const destination = resolve(
-  '../harness-browser-integration/packages/client/ui-sidebar-browser/src/client/annotation',
+  hostCheckout(resolve),
+  'packages/client/ui-sidebar-browser/src/client/annotation',
 );
 await mkdir(destination, { recursive: true });
-for (const file of ['page-inspector.ts', 'protocol.ts', 'iframe-annotation.ts', 'screenshot.ts']) {
+for (const file of SHARED_ANNOTATION_MODULES) {
   const source = await readFile(join('src/browser', file), 'utf8');
-  await writeFile(
-    join(destination, file),
-    source
-      .replaceAll("'./page-inspector'", "'./page-inspector.ts'")
-      .replaceAll("'./protocol'", "'./protocol.ts'"),
-  );
+  await writeFile(join(destination, file), toHostSource(source));
 }
-console.log('Shared Browser picker modules synchronized.');
+console.log(
+  `Shared Browser picker modules synchronized (${String(SHARED_ANNOTATION_MODULES.length)} files).`,
+);

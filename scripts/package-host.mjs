@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { cp, mkdir, readFile, writeFile, readdir } from 'node:fs/promises';
 import { resolve, join } from 'node:path';
 import { createHash } from 'node:crypto';
+import { HOST_BASE_COMMIT } from './shared-modules.mjs';
 
 const output = resolve('lib/host');
 const manifest = JSON.parse(await readFile('package.json', 'utf8'));
@@ -60,7 +61,7 @@ await writeFile(
       packageName: manifest.name,
       packageVersion: manifest.version,
       targetHarness: '0.2.0-rc.2',
-      upstreamCommit: '639ed015397290b3745d163aafe02ffee4aa3f84',
+      upstreamCommit: HOST_BASE_COMMIT,
       patchSha256: createHash('sha256')
         .update(await readFile('docs/harness-browser-annotation.patch'))
         .digest('hex'),

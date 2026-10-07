@@ -4,19 +4,20 @@
 import { build } from 'esbuild';
 import { cp, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { resolve, join } from 'node:path';
+import { SHARED_ANNOTATION_MODULES, hostCheckout, toHostSource } from './shared-modules.mjs';
 
-const root = resolve(process.env.DSH_HOST_CHECKOUT || '../harness-browser-integration');
+const root = hostCheckout(resolve);
 const source = join(root, 'packages/client/ui-sidebar-browser');
 const output = resolve('integration/browser-provider');
 await mkdir(join(output, 'lib'), { recursive: true });
-for (const file of ['page-inspector.ts', 'protocol.ts', 'iframe-annotation.ts', 'screenshot.ts']) {
+for (const file of SHARED_ANNOTATION_MODULES) {
   const canonical = await readFile(join('src/browser', file), 'utf8');
-  const target = canonical
-    .replaceAll("'./page-inspector'", "'./page-inspector.ts'")
-    .replaceAll("'./protocol'", "'./protocol.ts'");
+  const target = toHostSource(canonical);
   const hostCopy = await readFile(join(source, 'src/client/annotation', file), 'utf8');
   if (target !== hostCopy)
-    throw new Error(`Host annotation module differs: ${file}. Synchronize before building.`);
+    throw new Error(
+      `Host annotation module differs: ${file}. Run scripts/sync-browser-provider.mjs.`,
+    );
 }
 const manifest = JSON.parse(await readFile(join(source, 'package.json'), 'utf8'));
 manifest.peerDependencies = { '@deepseek-ai/cordis': '~4.0.4' };

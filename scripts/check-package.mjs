@@ -37,6 +37,11 @@ for (const file of [
   'lib/bridge.js',
   'lib/vite.js',
   'lib/THIRD_PARTY_LICENSES.md',
-])
-  await readFile(file);
+]) {
+  try {
+    await readFile(file);
+  } catch {
+    throw new Error(`Missing build artifact ${file}. Run npm run build and npm run build:host.`);
+  }
+}
 console.log('Complete prebuilt bundle verified; consumers need no build scripts.');

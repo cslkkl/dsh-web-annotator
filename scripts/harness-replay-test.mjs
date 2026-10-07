@@ -13,7 +13,8 @@ import { promisify } from 'node:util';
 import { connectHarness, startHarness } from './harness-test-helpers.mjs';
 
 const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const defaultWorkspace = resolve(packageRoot, '../..');
+/** The checkout's parent directory. Test homes live there, never in the package. */
+const defaultWorkspace = resolve(packageRoot, '..');
 const reply1 = 'DSH Web Annotator replay: received the responsive repair request.';
 const reply2 = 'DSH Web Annotator replay: preserved regions remain review conditions.';
 const prompts = [

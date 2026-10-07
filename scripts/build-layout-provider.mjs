@@ -2,11 +2,9 @@
 import { build } from 'esbuild';
 import { cp, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { resolve, join } from 'node:path';
+import { hostCheckout } from './shared-modules.mjs';
 
-const source = resolve(
-  process.env.DSH_HOST_CHECKOUT || '../harness-browser-integration',
-  'packages/client/ui-layout',
-);
+const source = join(hostCheckout(resolve), 'packages/client/ui-layout');
 const output = resolve('integration/layout-provider');
 await mkdir(join(output, 'lib'), { recursive: true });
 const manifest = JSON.parse(await readFile(join(source, 'package.json'), 'utf8'));

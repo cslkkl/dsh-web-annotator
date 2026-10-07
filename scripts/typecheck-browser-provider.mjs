@@ -1,15 +1,19 @@
-/** Narrow Client typecheck against installed rc.2 declarations, without a monorepo build. */
+/** Narrow Client typecheck against installed rc.2 declarations, without a monorepo build.
+ * `DSH_HOST_CHECKOUT` selects the Harness checkout, exactly as the provider builds do.
+ */
 import { readdir, readFile, writeFile } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import { join, resolve } from 'node:path';
 import { execFileSync } from 'node:child_process';
+import { hostCheckout } from './shared-modules.mjs';
+
 const target = process.argv.includes('--chat')
   ? 'chat'
   : process.argv.includes('--layout')
     ? 'layout'
     : 'browser';
-const source = resolve(
-  `../harness-browser-integration/packages/client/ui-${target === 'browser' ? 'sidebar-browser' : target}/src`,
-);
+const checkout = hostCheckout(resolve);
+const packageName = target === 'browser' ? 'sidebar-browser' : target;
+const source = join(checkout, `packages/client/ui-${packageName}/src`);
 const config = resolve(`integration/${target}-provider/tsconfig.check.json`);
 const paths = {
   react: [resolve('node_modules/@types/react/index.d.ts')],
@@ -43,10 +47,7 @@ await writeFile(
         noEmit: true,
         allowImportingTsExtensions: true,
         types: target === 'layout' ? ['client-build-environment'] : [],
-        typeRoots: [
-          resolve('../harness-browser-integration/scripts/types'),
-          resolve('node_modules/@types'),
-        ],
+        typeRoots: [join(checkout, 'scripts/types'), resolve('node_modules/@types')],
         paths,
       },
       include: [`${source}/**/*`],
