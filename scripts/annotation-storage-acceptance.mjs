@@ -1,4 +1,10 @@
-/** Real Chromium/IndexedDB regressions for large screenshot queues, migration and write failures. */
+/** Real Chromium/IndexedDB regressions for large screenshot queues, migration and write failures.
+ *
+ * Several `page.evaluate` bodies deliberately thread state through globals on the page
+ * (`window.annotation`, `window.large`, …) and read them back in later evaluations, so
+ * the names below are page globals rather than Node or browser built-ins.
+ */
+/* global AnnotationStoreTest, annotation, final, large, legacyKey, migrated, originalImage, other, picture, reloaded, transaction */
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { once } from 'node:events';
@@ -49,6 +55,7 @@ try {
         candidates: [],
       },
     };
+    // A queue written by the retired `dsh-layout-care` build must survive the rename.
     window.legacyKey = 'dsh.layout-care.browser-annotations.v1.migration';
     localStorage.setItem(
       legacyKey,
@@ -189,7 +196,7 @@ try {
         const request = db
           .transaction('queues')
           .objectStore('queues')
-          .get('dsh.layout-care.browser-annotations.v1.large');
+          .get('dsh.web-annotator.browser-annotations.v1.large');
         request.onsuccess = () => resolve(request.result === undefined);
       });
     } finally {

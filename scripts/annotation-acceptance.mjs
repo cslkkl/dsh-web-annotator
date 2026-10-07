@@ -661,7 +661,7 @@ try {
                 })),
               },
             },
-            `dsh.layout-care.browser-annotations.v1.${sessionId}`,
+            `dsh.web-annotator.browser-annotations.v1.${sessionId}`,
           );
           transaction.oncomplete = resolve;
           transaction.onabort = () => reject(transaction.error);

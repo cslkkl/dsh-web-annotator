@@ -1,15 +1,38 @@
-/** Session-scoped annotations shared by Browser toolbar and review slots. */
+/** Session-scoped annotations shared by the Browser toolbar and the queue slot. */
 import { defineStore } from '@deepseek-ai/dsh-client-store';
 import type { BrowserAnnotation } from '../browser/page-inspector';
 import { isAnnotationResult } from '../browser/protocol';
 import { annotationStorage } from './annotation-storage';
+import { legacyAnnotationKey } from './legacy-names';
 
-const persistenceKey = 'dsh.layout-care.browser-annotations.v1';
+const persistenceKey = 'dsh.web-annotator.browser-annotations.v1';
+
 function databaseAvailable(): boolean {
   try {
     return typeof indexedDB !== 'undefined';
   } catch {
     return false;
+  }
+}
+
+function scopedKey(prefix: string, scopeKey: string | undefined): string {
+  return scopeKey === undefined ? prefix : `${prefix}.${scopeKey}`;
+}
+
+function readLocalStorage(key: string): unknown {
+  try {
+    const stored = localStorage.getItem(key);
+    return stored === null ? undefined : JSON.parse(stored);
+  } catch {
+    return undefined;
+  }
+}
+
+function removeLocalStorage(key: string): void {
+  try {
+    localStorage.removeItem(key);
+  } catch {
+    /* Storage may be disabled. */
   }
 }
 
@@ -41,6 +64,20 @@ export function readAnnotations(value: unknown): SavedAnnotation[] {
     )
     .slice(0, 32);
 }
+
+/** Keep only queues whose key is still the page the annotation was saved on. */
+function readQueues(value: unknown): State['byUrl'] {
+  const byUrl: State['byUrl'] = {};
+  if (!value || typeof value !== 'object' || !('byUrl' in value)) return byUrl;
+  const raw = (value as { byUrl?: unknown }).byUrl;
+  if (!raw || typeof raw !== 'object') return byUrl;
+  for (const [url, items] of Object.entries(raw)) {
+    const notes = readAnnotations(items).filter((x) => x.annotation.url === url);
+    if (notes.length) byUrl[url] = notes;
+  }
+  return byUrl;
+}
+
 /** @returns a fresh store declaration; the renderer owns its instances. */
 export function createAnnotationStore() {
   const handle = defineStore({
@@ -74,17 +111,24 @@ export function createAnnotationStore() {
     spec: { ...handle.spec, persist: persistenceKey },
     create(scopeKey?: string) {
       const instance = handle.create(scopeKey);
-      const key = scopeKey === undefined ? persistenceKey : `${persistenceKey}.${scopeKey}`;
+      const key = scopedKey(persistenceKey, scopeKey);
+      const legacyKey = scopedKey(legacyAnnotationKey, scopeKey);
       let ready = false;
       let removed = false;
       let readable = databaseAvailable();
       let queue = Promise.resolve();
       let previous = instance.getSnapshot().byUrl;
       let revision = 0;
+      let legacyRetired = false;
       const status = (storage: State['storage']) =>
         instance.store.update((draft) => {
           draft.storage = storage;
         });
+      // The retired key is dropped only after the current key is durably committed.
+      const retireLegacy = () => {
+        removeLocalStorage(legacyKey);
+        void annotationStorage(legacyKey, 'delete').catch(() => {});
+      };
       const write = (byUrl: State['byUrl']) => {
         if (!readable) {
           status('failed');
@@ -96,12 +140,11 @@ export function createAnnotationStore() {
           if (removed) return;
           try {
             await annotationStorage(key, 'write', { byUrl });
-            // Migration only removes the legacy value after a committed durable copy.
-            try {
-              localStorage.removeItem(key);
-            } catch {
-              /* Storage may be disabled. */
+            if (!legacyRetired) {
+              legacyRetired = true;
+              retireLegacy();
             }
+            removeLocalStorage(key);
             if (current === revision) status('saved');
           } catch {
             if (current === revision) status('failed');
@@ -115,34 +158,26 @@ export function createAnnotationStore() {
         write(byUrl);
       });
       const hydrate = async () => {
-        let raw: unknown;
         let available = true;
+        let raw: unknown;
         try {
           raw = await annotationStorage(key, 'read');
         } catch {
           available = false;
         }
         if (removed) return;
-        if (raw === undefined) {
+        if (raw === undefined && available) {
+          // Drafts written before the rename live under the retired key.
           try {
-            raw = JSON.parse(localStorage.getItem(key) || 'null');
+            raw = await annotationStorage(legacyKey, 'read');
           } catch {
-            /* Keep an empty queue. */
+            /* Treat an unreadable legacy row as absent. */
           }
         }
-        const byUrl: State['byUrl'] = {};
-        if (
-          raw &&
-          typeof raw === 'object' &&
-          'byUrl' in raw &&
-          raw.byUrl &&
-          typeof raw.byUrl === 'object'
-        ) {
-          for (const [url, items] of Object.entries(raw.byUrl)) {
-            const notes = readAnnotations(items).filter((x) => x.annotation.url === url);
-            if (notes.length) byUrl[url] = notes;
-          }
+        if (raw === undefined) {
+          raw = readLocalStorage(key) ?? readLocalStorage(legacyKey);
         }
+        const byUrl = readQueues(raw);
         readable = available;
         instance.store.set({ byUrl, storage: available ? 'saved' : 'failed' });
         previous = byUrl;
@@ -155,12 +190,13 @@ export function createAnnotationStore() {
         ...instance,
         clearPersisted() {
           removed = true;
-          try {
-            localStorage.removeItem(key);
-          } catch {
-            /* Storage may be disabled. */
-          }
-          void queue.then(() => annotationStorage(key, 'delete')).catch(() => {});
+          removeLocalStorage(key);
+          removeLocalStorage(legacyKey);
+          void queue
+            .then(() => annotationStorage(key, 'delete'))
+            .catch(() => {})
+            .then(() => annotationStorage(legacyKey, 'delete'))
+            .catch(() => {});
         },
       };
     },
