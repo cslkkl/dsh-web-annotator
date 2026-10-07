@@ -28,7 +28,7 @@ const client = {
     '@deepseek-ai/dsh-client-ui-primitives',
     '@deepseek-ai/dsh-client-store',
   ],
-  jsx: 'transform',
+  jsx: 'automatic',
   sourcemap: true,
   banner: {
     js: "window.__ModuleLoader__.load({ id: 'dsh-web-annotator', factory: function(require) { var module = { exports: {} }; var exports = module.exports;",

@@ -14,11 +14,8 @@ export function annotationPrompt(
   images = false,
   imageNotes?: readonly boolean[],
 ): string {
-  if (
-    !annotations.length ||
-    annotations.length > 32 ||
-    annotations.some((x) => x.url !== annotations[0].url)
-  )
+  const first = annotations[0];
+  if (!first || annotations.length > 32 || annotations.some((x) => x.url !== first.url))
     throw new Error('annotation-limit');
   if (imageNotes && (!images || imageNotes.length !== annotations.length))
     throw new Error('annotation-limit');

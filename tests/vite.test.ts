@@ -93,10 +93,11 @@ test('HTML bridge URL respects the Vite base and includes the exact configured o
       children?: string;
     }[]
   )();
-  assert.equal(tags[1].attrs?.src, '/preview/__web-annotator__/bridge.js');
-  assert.equal(tags[1].attrs?.defer, true);
+  const [configTag, bridgeTag] = tags;
+  assert.equal(bridgeTag?.attrs?.src, '/preview/__web-annotator__/bridge.js');
+  assert.equal(bridgeTag?.attrs?.defer, true);
   assert.equal(
-    tags[0].children,
+    configTag?.children,
     'window.__WEB_ANNOTATOR_CONFIG__={"allowedParentOrigins":["https://harness.example.com"]};',
   );
 });
@@ -122,7 +123,7 @@ test('development source transform is scoped to project JSX and supports an expl
   assert.equal(run('const html = "<div />";', resolve(projectRoot, 'src/View.ts')), null);
   assert.equal(run('<div><span></div>', resolve(projectRoot, 'src/Broken.tsx')), null);
   assert.equal(warnings.length, 1);
-  assert.match(warnings[0], /source hints unavailable/);
+  assert.match(warnings[0] ?? '', /source hints unavailable/);
   const disabled = webAnnotator({ sourceAnnotations: false });
   assert.equal(
     (disabled.transform as typeof transform).call(

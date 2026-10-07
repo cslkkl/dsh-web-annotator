@@ -1,5 +1,5 @@
 /** DSH Web Annotator adds annotation controls to Harness's existing Browser slots. */
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Context } from '@deepseek-ai/cordis';
 import { Button, IconInspectOutlineRegular, Tooltip } from '@deepseek-ai/dsh-client-ui-primitives';
 import type { PropsLocale, PropsRuntime, PropsStore } from '@deepseek-ai/dsh-client-ui-slots';

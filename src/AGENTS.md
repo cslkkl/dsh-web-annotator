@@ -18,5 +18,12 @@ src/ 特有约束：
   才拿到 DOM 与 `jsx`。两个项目各跑一次 `tsc`，合成一个会互相污染。
 - **退休名字不得重新出现**：`layout-care` 系列名字已删除，只有
   [client/legacy-names.ts](client/legacy-names.ts) 允许保留旧的存储键用于一次性迁移。
+- **类型检查已开到最严档**：`noUncheckedIndexedAccess` / `exactOptionalPropertyTypes` /
+  `noUnusedLocals` / `noUnusedParameters` / `verbatimModuleSyntax` / `isolatedModules`
+  都在 [tsconfig.json](../tsconfig.json) 里。**为过检查而加 `any`、`!` 或 `as` 要修根因** ——
+  非空断言只在"此处上一行已保证"时使用，并在同一处说明理由。
+- **`jsx` 运行时两处必须一致**：类型检查用 `react-jsx`（自动运行时），
+  客户端构建 [scripts/build.mjs](../scripts/build.mjs) 必须给 `jsx: 'automatic'`；
+  写成 `transform` 会生成 `React.createElement`，而组件里已经不再导入 `React`。
 - **改完跑 `npm run check`**，不要只看构建通过。
 - 文件清单与“改哪”见 [README.md](README.md)，不写在这里。

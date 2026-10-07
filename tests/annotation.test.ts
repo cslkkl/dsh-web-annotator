@@ -51,19 +51,17 @@ test('session-scoped queues retain exact rectangles, isolate complete URLs, and 
   store.actions.add(annotation.url, { id: 'one', annotation });
   const another = { ...annotation, note: '稍后提交的评论', intent: 'comment' as const };
   store.actions.add(annotation.url, { id: 'two', annotation: another });
-  assert.deepEqual(
-    store.getSnapshot().byUrl[annotation.url][0].annotation.selection.rect,
-    annotation.selection.rect,
-  );
+  const [first] = store.getSnapshot().byUrl[annotation.url]!;
+  assert.deepEqual(first?.annotation.selection.rect, annotation.selection.rect);
   assert.equal(store.getSnapshot().byUrl['http://localhost:5173/products'], undefined);
   store.actions.sent(annotation.url, ['one']);
-  assert.equal(store.getSnapshot().byUrl[annotation.url][0].id, 'two');
+  assert.equal(store.getSnapshot().byUrl[annotation.url]?.[0]?.id, 'two');
   assert.equal(
     readAnnotations([{ id: 'poison', annotation: { ...annotation, note: '' } }]).length,
     0,
   );
   store.actions.remove(annotation.url, 'two');
-  assert.equal(store.getSnapshot().byUrl[annotation.url].length, 0);
+  assert.equal(store.getSnapshot().byUrl[annotation.url]?.length, 0);
 });
 
 test('annotation request snapshot preserves question intent, document rectangle and quoted page evidence', () => {

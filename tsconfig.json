@@ -4,11 +4,23 @@
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "lib": ["ES2022"],
-    "strict": true,
-    "skipLibCheck": true,
-    "esModuleInterop": true,
     "types": ["node"],
-    "noEmit": true
+    "noEmit": true,
+    // 从严：新代码直接开最严档，`any` 只在同一处注明理由时才允许出现。
+    "strict": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    // 两件与打包有关的事实：单文件转译必须自足（isolatedModules），
+    // 类型导入必须显式写 `import type`（verbatimModuleSyntax），
+    // 否则 esbuild 可能把只当类型用的导入留成运行期依赖。
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true
   },
   "include": ["src/index.ts", "src/vite.ts"]
 }

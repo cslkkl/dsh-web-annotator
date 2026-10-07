@@ -189,7 +189,9 @@ export function webAnnotator(options: WebAnnotatorOptions = {}): Plugin {
     },
     transform(code, id) {
       if (options.sourceAnnotations === false) return null;
-      const filePath = id.split('?')[0];
+      // The default is unreachable for a string input, but it keeps the value
+      // non-optional under `noUncheckedIndexedAccess` without an assertion.
+      const [filePath = id] = id.split('?');
       if (
         !/\.[jt]sx$/.test(filePath) ||
         /[/\\]node_modules[/\\]/.test(filePath) ||
