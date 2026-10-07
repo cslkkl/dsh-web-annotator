@@ -116,6 +116,25 @@ jobs:
       - name: Pack the prebuilt bundle
         run: npm pack
 
+      # ⚠️ **插件管理器是靠 `pnpm` 把 tgz 装进 profile 的**，不是 npm。
+      # runner 上没有 pnpm，`dsh plugin ... add` 会以 `'pnpm' is not recognized` 失败，
+      # 而那行错误只出现在 profile 内的 `pnpm.log` 里 —— 从 workflow 日志上只能看到
+      # 「验收挂了」。版本钉成本机验收时的同一个，两边的解析行为才是同一套。
+      - name: Install pnpm for the plugin manager
+        shell: pwsh
+        run: |
+          npm install --global --no-audit --no-fund pnpm@12.8.1
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+          # 插件管理器只认 PATH 上的 `pnpm`，而全局前缀不一定已经在 PATH 上。
+          $prefix = (npm prefix --global).Trim()
+          $prefix | Out-File -FilePath $env:GITHUB_PATH -Append
+          $env:PATH = "$env:PATH;$prefix"
+          if (-not (Get-Command pnpm -ErrorAction SilentlyContinue)) {
+            Write-Error "pnpm is not on PATH after installing it (prefix $prefix)"
+            exit 1
+          }
+          pnpm --version
+
       # ⚠️ **必须显式给 `DSH_CLI_ENTRY`。** 验收脚本找 CLI 的顺序是
       # 「本仓依赖 → `%APPDATA%\npm` → `DSH_CLI_ENTRY`」，而在 runner 上前两个都不成立：
       # `actions/setup-node` 会把全局前缀指到工具缓存，不是 `%APPDATA%\npm`。
