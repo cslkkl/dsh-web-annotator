@@ -1,6 +1,6 @@
 {
   "name": "dsh-web-annotator",
-  "version": "0.2.0-alpha.8",
+  "version": "0.2.0-alpha.9",
   "description": "Click or drag to annotate pages in the existing DeepSeek Harness Browser and ask the current agent.",
   "license": "MIT",
   "type": "module",

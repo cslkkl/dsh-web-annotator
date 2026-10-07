@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.2.0-alpha.9 — 清理 0.1 遗留层，补齐门禁
+
+- 删除 0.1 的布局扫描 / 保留区域整层：`src/bridge/`、`src/shared/`、`src/client/bridge-client.ts`、
+  `review-storage.ts`、`copy.ts`、`styles.ts`。`lib/bridge.js` 现在只包含开发页批注传输。
+- 运行时名字统一为 `web-annotator`。**接入 Vite 的项目需要同步改名**：
+  桥接路由 `__web-annotator__/bridge.js`、源码提示属性 `data-web-annotator-source`、
+  内联配置全局 `__WEB_ANNOTATOR_CONFIG__`。函数名 `webAnnotator` 不变，旧 `layoutCare` 别名保留。
+- 批注存储键改为 `dsh.web-annotator.browser-annotations.v1`。
+  旧的 `dsh.layout-care.browser-annotations.v1` 会读一次并自动迁移，新键提交成功后才删除旧值。
+- 新增质量门禁：ESLint、依赖分层检查、文档路径检查，均随 `npm run check` 运行。
+  `.node-version` 固定 Node 24.15.0，CI 改为从该文件读取版本。
+- 开发页传输层可注入拾取器，因此第一次有了覆盖来源白名单、通道生命周期与取消的单元测试。
+- 修复 `DSH_HOST_CHECKOUT` 对局部类型检查不生效（CI 里会看不到 `.host-source`）；
+  测试 home 改为落在仓库父目录，不再越级到上层目录；补丁校验的临时目录用后即删。
+- 文档网络重建：根维护索引、架构说明、各子树 `AGENTS.md` + `README.md`、决策记录。
+  示例页面与贡献说明不再描述已删除的扫描流程。
+
 ## 0.2.0-alpha.8 — 草稿可靠性与操作修复
 
 - 截图队列改用 IndexedDB，修复超过 localStorage 配额后刷新丢草稿的问题；自动迁移旧记录，显示保存失败提示。
