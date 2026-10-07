@@ -1,7 +1,12 @@
 /** DSH Web Annotator adds annotation controls to Harness's existing Browser slots. */
 import { useEffect, useRef, useState } from 'react';
 import type { Context } from '@deepseek-ai/cordis';
-import { Button, IconInspectOutlineRegular, Tooltip } from '@deepseek-ai/dsh-client-ui-primitives';
+import {
+  Button,
+  IconChevronDownOutlineRegular,
+  IconInspectOutlineRegular,
+  Tooltip,
+} from '@deepseek-ai/dsh-client-ui-primitives';
 import type { PropsLocale, PropsRuntime, PropsStore } from '@deepseek-ai/dsh-client-ui-slots';
 import type {} from '@deepseek-ai/dsh-client-ui-renderer/client';
 import type {} from '@deepseek-ai/dsh-client-ui-session/client';
@@ -15,14 +20,12 @@ import {
   readAnnotationPrompt,
   type AnnotationDelivery,
 } from '../browser/prompt';
-import type {
-  BrowserAnnotation,
-  BrowserAnnotationImage,
-  BrowserAnnotationOptions,
-} from '../browser/page-inspector';
+import type { BrowserAnnotation, BrowserAnnotationImage } from '../browser/page-inspector';
 import { en, zh } from './annotation-copy';
 import type { AnnotationCopyKey } from './annotation-copy';
 import { createAnnotationStore, readAnnotations, type AnnotationStore } from './annotation-store';
+import { annotationErrorKey, effectiveDelivery, pickerOptions } from './annotation-view';
+import { annotationTarget, badgeCaptures } from './annotation-thumbnail';
 
 const NS = 'webAnnotatorAnnotations';
 /** Browser slots and the current Session submission service. */
@@ -41,26 +44,50 @@ function AnnotationMessage({
   t,
 }: PropsRuntime<'conversation.message.user-text'> &
   PropsLocale<typeof NS> & { matched: readonly BrowserAnnotation[] }) {
+  const [open, setOpen] = useState(false);
+  const summary = t(matched.length === 1 ? 'annotationCountOne' : 'annotationCountMany', {
+    count: matched.length,
+  });
   return (
     <div className="wa-message">
       <style>{messageCss}</style>
-      {matched.map((note, i) => (
-        <div className="wa-message-note" key={i}>
-          {matched.length > 1 && (
-            <span className="wa-muted">
-              {i + 1}. {t(note.intent)}
-            </span>
-          )}
-          <p>{note.note}</p>
-          {note.styleChanges && (
-            <p className="wa-muted">
-              {Object.entries(note.styleChanges)
-                .map(([key, value]) => `${key}: ${value.after}`)
-                .join(' · ')}
-            </p>
-          )}
-        </div>
-      ))}
+      <button
+        type="button"
+        className="wa-message-chip"
+        aria-expanded={open}
+        aria-label={`${summary} · ${t('toggleNotes')}`}
+        onClick={() => setOpen(!open)}
+      >
+        <span className="wa-message-count">{summary}</span>
+        <IconChevronDownOutlineRegular size={14} className="wa-message-chevron" />
+      </button>
+      {open && (
+        <ol className="wa-message-cards">
+          {matched.map((note, i) => {
+            const target = annotationTarget(note);
+            const label = target ? `${target.tag} ${target.text}`.trim() : '';
+            return (
+              <li className="wa-message-card" key={i}>
+                <span className="wa-message-anchor">
+                  <span className="wa-message-index">{i + 1}</span>
+                  <span className="wa-message-target" title={label || undefined}>
+                    {label || t(note.selection.kind === 'region' ? 'region' : 'point')}
+                  </span>
+                  <span className="wa-message-intent">{t(note.intent)}</span>
+                </span>
+                <p className="wa-message-text">{note.note}</p>
+                {note.styleChanges && (
+                  <p className="wa-muted">
+                    {Object.entries(note.styleChanges)
+                      .map(([key, value]) => `${key}: ${value.after}`)
+                      .join(' · ')}
+                  </p>
+                )}
+              </li>
+            );
+          })}
+        </ol>
+      )}
       <details className="wa-message-evidence">
         <summary>
           {t('evidence')} · {matched.length}
@@ -70,56 +97,12 @@ function AnnotationMessage({
     </div>
   );
 }
-const messageCss = `.wa-message p{margin:0;white-space:pre-wrap;overflow-wrap:anywhere}.wa-message-note+.wa-message-note{margin-top:10px}.wa-message-evidence{margin-top:10px;font:var(--dsw-font-xxs-12);color:var(--dsw-alias-label-secondary)}.wa-message-evidence summary{cursor:pointer;user-select:none}.wa-message-evidence pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:300px;overflow:auto;padding:8px 0}.wa-delivery{display:flex;align-items:center;gap:6px}.wa-delivery select{background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-primary);border:.5px solid var(--dsw-alias-border-l2);border-radius:var(--dsw-radius-sm);padding:4px;font:inherit}.wa-image-preview{display:block;width:100%;max-height:240px;object-fit:contain;border-radius:var(--dsw-radius-sm);margin:8px 0}`;
+const messageCss = `.wa-message{display:flex;flex-direction:column;gap:8px;min-width:0}.wa-message p{margin:0;white-space:pre-wrap;overflow-wrap:anywhere}.wa-message-text{color:var(--dsw-alias-label-primary)}.wa-message-chip{display:inline-flex;align-items:center;gap:4px;align-self:flex-start;max-width:100%;background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-primary);border:.5px solid var(--dsw-alias-border-l2);border-radius:var(--dsw-radius-lg);padding:3px 10px;font:var(--dsw-font-xxs-12);cursor:pointer}.wa-message-chip:hover{background:var(--dsw-alias-bg-layer-2)}.wa-message-chip:focus-visible{outline:2px solid var(--dsw-alias-state-business-primary);outline-offset:2px}.wa-message-chevron{flex:none;color:var(--dsw-alias-label-secondary);transition:transform .15s ease}.wa-message-chip[aria-expanded='true'] .wa-message-chevron{transform:rotate(180deg)}.wa-message-cards{display:flex;flex-direction:column;gap:6px;margin:0;padding:0;list-style:none;min-width:0}.wa-message-card{display:flex;flex-direction:column;gap:4px;min-width:0;background:var(--dsw-alias-bg-layer-1);border:.5px solid var(--dsw-alias-border-l2);border-radius:var(--dsw-radius-md);padding:8px 10px}.wa-message-anchor{display:flex;align-items:center;gap:6px;min-width:0;font:var(--dsw-font-xxs-12);color:var(--dsw-alias-label-secondary)}.wa-message-index{display:inline-flex;align-items:center;justify-content:center;flex:none;width:16px;height:16px;border-radius:50%;background:var(--dsw-alias-state-business-primary);color:var(--dsw-alias-label-primary-foreground);font:var(--dsw-font-xxs-strong-12)}.wa-message-target{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.wa-message-intent{flex:none;background:var(--dsw-alias-bg-layer-3);border-radius:var(--dsw-radius-xs);padding:0 5px}.wa-message-evidence{font:var(--dsw-font-xxs-12);color:var(--dsw-alias-label-secondary)}.wa-message-evidence summary{cursor:pointer;user-select:none}.wa-message-evidence pre{white-space:pre-wrap;overflow-wrap:anywhere;max-height:300px;overflow:auto;padding:8px 0}.wa-delivery{display:flex;align-items:center;gap:6px}.wa-delivery select{background:var(--dsw-alias-bg-layer-1);color:var(--dsw-alias-label-primary);border:.5px solid var(--dsw-alias-border-l2);border-radius:var(--dsw-radius-sm);padding:4px;font:inherit}.wa-image-preview{display:block;width:100%;max-height:240px;object-fit:contain;border-radius:var(--dsw-radius-sm);margin:8px 0}`;
 
-function readableError(error: unknown): AnnotationCopyKey {
-  const code = error instanceof Error ? error.message : '';
-  return code === 'annotation-unavailable'
-    ? 'unavailable'
-    : code === 'annotation-timeout'
-      ? 'timeout'
-      : code === 'annotation-page-changed'
-        ? 'pageChanged'
-        : code === 'annotation-limit'
-          ? 'limit'
-          : 'failed';
-}
-function pickerOptions(t: ToolbarProps['t']): BrowserAnnotationOptions {
-  const keys = [
-    'select',
-    'comment',
-    'question',
-    'placeholder',
-    'settings',
-    'save',
-    'cancel',
-    'parent',
-    'child',
-    'targetGone',
-    'empty',
-    'region',
-    'point',
-    'interact',
-    'color',
-    'background',
-    'opacity',
-    'font',
-    'fontSize',
-    'fontWeight',
-    'spacing',
-    'elementOnly',
-    'invalidStyle',
-    'applyStyles',
-    'styleHint',
-  ] as const;
-  const copy = Object.fromEntries(
-    keys.map((key) => [key, t(key)]),
-  ) as BrowserAnnotationOptions['copy'];
-  return {
-    intent: 'question',
-    dark: document.body.getAttribute('data-ds-dark-theme') === 'true',
-    copy,
-  };
+/** Only the component can read the host's theme; the picker takes it as data.
+ * See [annotation-view.ts](annotation-view.ts) for why the rest is not here. */
+function hostIsDark(): boolean {
+  return document.body.getAttribute('data-ds-dark-theme') === 'true';
 }
 function Toolbar({
   annotate,
@@ -158,11 +141,11 @@ function Toolbar({
     setActive(true);
     setError(undefined);
     try {
-      const result = await annotate(pickerOptions(t));
+      const result = await annotate(pickerOptions(t, hostIsDark()));
       if (epoch.current !== generation || 'cancelled' in result) return;
       actions.add(result.url, { id: crypto.randomUUID(), annotation: result });
     } catch (failure) {
-      if (epoch.current === generation) setError(readableError(failure));
+      if (epoch.current === generation) setError(annotationErrorKey(failure));
     } finally {
       if (epoch.current === generation) setActive(false);
     }
@@ -206,14 +189,32 @@ function Queue(props: QueueProps) {
   const selectedNotes = notes.filter((item) => !excluded.includes(item.id));
   const [preview, setPreview] = useState(false);
   const [delivery, setDelivery] = useState<AnnotationDelivery>('image');
-  const imageCount = selectedNotes.filter(({ annotation }) => !!annotation.screenshot).length;
+  // The attachments in request order: the preview and the send path must agree on them.
+  const imageNotes = selectedNotes.filter(({ annotation }) => !!annotation.screenshot);
+  const imageCount = imageNotes.length;
   const hasImages = selectedNotes.length > 0 && imageCount === selectedNotes.length;
-  const effectiveDelivery =
-    (delivery === 'both' && imageCount > 0) || hasImages ? delivery : 'details';
+  const sendAs = effectiveDelivery(delivery, imageCount, selectedNotes.length);
   const [busy, setBusy] = useState(false);
   const [feedback, setFeedback] = useState<AnnotationCopyKey>();
+  const [previewImages, setPreviewImages] = useState<readonly BrowserAnnotationImage[]>();
   const epoch = useRef(0);
   const sending = useRef(false);
+  // Until the redraw resolves, the provider capture stands in for the same attachment.
+  const attachments = imageNotes.flatMap(({ id, annotation }, index) => {
+    const data = previewImages?.[index]?.data ?? annotation.screenshot?.data;
+    return data ? [{ key: id, data }] : [];
+  });
+  async function togglePreview() {
+    const next = !preview;
+    setPreview(next);
+    setPreviewImages(undefined);
+    if (!next || sendAs === 'details') return;
+    try {
+      setPreviewImages(await badgeCaptures(imageNotes.map((x) => x.annotation)));
+    } catch {
+      // The request itself reports a missing capture; the stored ones stay on screen.
+    }
+  }
   useEffect(() => {
     setPreview(false);
     setFeedback(undefined);
@@ -230,12 +231,12 @@ function Queue(props: QueueProps) {
     try {
       const annotations = selectedNotes.map((x) => x.annotation);
       prompt =
-        effectiveDelivery === 'image'
+        sendAs === 'image'
           ? annotationImagePrompt(annotations)
           : annotationPrompt(
               annotations,
-              effectiveDelivery === 'both',
-              effectiveDelivery === 'both' ? annotations.map((x) => !!x.screenshot) : undefined,
+              sendAs === 'both',
+              sendAs === 'both' ? annotations.map((x) => !!x.screenshot) : undefined,
             );
     } catch {
       tooLarge = true;
@@ -250,18 +251,14 @@ function Queue(props: QueueProps) {
     setBusy(true);
     setFeedback(undefined);
     try {
-      await submitAnnotations(
-        prompt,
-        effectiveDelivery === 'details'
-          ? []
-          : selectedNotes.flatMap((x) =>
-              x.annotation.screenshot ? [x.annotation.screenshot] : [],
-            ),
-      );
+      // Attachments carry the same index the request text names, in attachment order.
+      const images =
+        sendAs === 'details' ? [] : await badgeCaptures(imageNotes.map((x) => x.annotation));
+      await submitAnnotations(prompt, images);
       actions.sent(capturedUrl, ids);
       if (epoch.current === generation) setFeedback('sent');
     } catch (error) {
-      if (epoch.current === generation) setFeedback(readableError(error));
+      if (epoch.current === generation) setFeedback(annotationErrorKey(error));
     } finally {
       sending.current = false;
       if (epoch.current === generation) setBusy(false);
@@ -367,7 +364,7 @@ function Queue(props: QueueProps) {
                 <span>{t('delivery')}</span>
                 <select
                   aria-label={t('delivery')}
-                  value={effectiveDelivery}
+                  value={sendAs}
                   disabled={busy}
                   onChange={(event) => setDelivery(event.target.value as AnnotationDelivery)}
                 >
@@ -384,7 +381,9 @@ function Queue(props: QueueProps) {
                 type="button"
                 size="sm"
                 variant="outline"
-                onClick={() => setPreview(!preview)}
+                onClick={() => {
+                  void togglePreview();
+                }}
                 disabled={tooLarge || !selectedNotes.length}
               >
                 {t('preview')}
@@ -403,17 +402,15 @@ function Queue(props: QueueProps) {
             </div>
             {preview && (
               <>
-                {effectiveDelivery !== 'details' &&
-                  selectedNotes
-                    .filter(({ annotation }) => annotation.screenshot)
-                    .map(({ id, annotation }) => (
-                      <img
-                        key={id}
-                        className="wa-image-preview"
-                        alt={t('image')}
-                        src={`data:image/jpeg;base64,${annotation.screenshot!.data}`}
-                      />
-                    ))}
+                {sendAs !== 'details' &&
+                  attachments.map((attachment) => (
+                    <img
+                      key={attachment.key}
+                      className="wa-image-preview"
+                      alt={t('image')}
+                      src={`data:image/jpeg;base64,${attachment.data}`}
+                    />
+                  ))}
                 <textarea className="wa-preview" readOnly aria-label={t('queue')} value={prompt} />
               </>
             )}
