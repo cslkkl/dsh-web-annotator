@@ -5,7 +5,11 @@
 .github/ 特有约束：
 
 - **每个 workflow 显式声明 `permissions`**：默认值读不到，漏了声明的症状是 403。
-- **CI 只读**：不写回仓库、不发布、不推标签。
+- **`ci.yml` 只读**：不写回仓库、不发布、不推标签。
+  **`release.yml` 只写 Release**（`contents: write`），且只由 `v*` 标签或手动传标签触发；
+  它不改版本号、不打标签、不动分支 —— 版本号必须在打标签前已经在 `package.json` 里 bump 过。
+- **发布必须用验收过的那一份产物**：`release.yml` 自己构建、自己验收、自己发，
+  不把「在别处重建的同一份代码」当成同一个字节流（理由见 [../docs/publishing.md](../docs/publishing.md) 的发版节）。
 - **安装一律 frozen 模式**（`npm ci`），不在 CI 里解析新版本。
 - **Node 版本只从 [../.node-version](../.node-version) 读**，不要在两处各写一遍。
 - **CI 用的宿主检出路径通过 `DSH_HOST_CHECKOUT` 传给脚本**，

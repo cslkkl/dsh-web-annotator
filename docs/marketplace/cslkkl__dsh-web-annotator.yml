@@ -1,7 +1,7 @@
 url: https://github.com/cslkkl/dsh-web-annotator
 name: cslkkl/dsh-web-annotator
 category: browser
-tarball: https://github.com/cslkkl/dsh-web-annotator/releases/download/v0.2.0-alpha.9/dsh-web-annotator-0.2.0-alpha.9.tgz
+tarball: https://github.com/cslkkl/dsh-web-annotator/releases/download/v0.2.0-alpha.10/dsh-web-annotator-0.2.0-alpha.10.tgz
 description:
   en: Click or drag to annotate pages and ask the current agent inside the existing Harness Browser, with marked screenshots or location details on Harness 0.2.0-rc.2.
   zh: 在 Harness 0.2.0-rc.2 原有 Browser 中点选或框选网页并批注、提问，可发送标记截图或定位资料。

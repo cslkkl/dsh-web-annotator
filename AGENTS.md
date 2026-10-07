@@ -25,7 +25,7 @@
 | 存储键或迁移                                                                            | [架构 §3.5](docs/architecture.md)、[src/client/README.md](src/client/README.md)、`npm run test:storage`                                    |
 | 搬文件 / 改名 / 删模块                                                                  | 同批改掉文档里的旧路径 —— 代码里的旧路径当场报错，文档里的**零信号**；`npm run check:doc-paths` 兜底                                       |
 | 新增 / 改名 npm script                                                                  | [scripts/README.md](scripts/README.md) 与本文档；`npm run check:doc-paths` 会拦不存在的脚本名                                              |
-| `.github/workflows/**`                                                                  | [docs/browser-integration.md](docs/browser-integration.md) 的发布节；逐 workflow 显式声明 `permissions`                                    |
+| `.github/workflows/**`                                                                  | [docs/publishing.md](docs/publishing.md) 的 workflows 表与发版节；逐 workflow 显式声明 `permissions`                                       |
 | 版本号 / 对外契约                                                                       | `package.json` + 根 [README.md](README.md) + [CHANGELOG.md](CHANGELOG.md) + [docs/verification.md](docs/verification.md)                   |
 | 新增可维护目录                                                                          | 双件（`AGENTS.md` 规则层 + `README.md` 文档层）缺一不可，并回填本文档地图                                                                  |
 
@@ -38,6 +38,7 @@ npm run demo               # 起 examples/responsive-demo（仅本机）
 npm run test:storage       # 真实 Chromium 的 IndexedDB 回归
 npm run build:host         # 构建三个宿主提供方并放入 lib/host
 npm pack                   # 触发 prepack 完整性断言
+npm run release:assets     # 汇总发布产物与 Release 正文（需先 npm pack）
 ```
 
 `check` 的顺序有依赖：`build` 必须在 `typecheck` 与 `verify:artifacts` 之前（两者都读 `lib/`）。
@@ -84,9 +85,12 @@ npm pack                   # 触发 prepack 完整性断言
 
 - CI：[.github/workflows/ci.yml](.github/workflows/ci.yml) —— 只读，Ubuntu 与 Windows 双跑
   `npm run check` → 真实 Chromium 存储回归 → 补丁基线校验 → 构建宿主提供方 → 打包。数字不抄。
+- 发布：[.github/workflows/release.yml](.github/workflows/release.yml) —— 推 `v*` 标签触发，
+  自己构建、自己验收、自己发；**发出去的就是验收过的那一份**，步骤见
+  [发布链路](docs/publishing.md) 的发版节。
 - 本机门禁：`npm run check` 全绿（格式 / lint / 分层 7 条规则 / 文档路径 / build / typecheck / 单元测试）。
-- **alpha.9 已在真实宿主验收**：打包产物 + 包内提供方，24 项 Browser 检查通过；
-  存储回归 4 项、replay 集成 2 轮、打包一致性均通过。定性记录见
+- **alpha.10 的整条发布链路已在本机跑通**：打包产物 + 包内提供方，26 项 Browser 检查通过；
+  存储回归 4 项、交付逐字节一致。定性记录见
   [验证说明](docs/verification.md)，明细落在本地未入库的 `integration/*.json`。
 - 原生 Desktop 与真实模型**仍未**验收。逐项的边界见 [docs/verification.md](docs/verification.md)。
 

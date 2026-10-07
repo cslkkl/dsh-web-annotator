@@ -16,8 +16,10 @@
 ## 公开发布顺序
 
 1. 源码推到公开仓库，设置 `dsh-plugin` topic。
-2. 发布已验收的预构建 `.tgz` 至 GitHub Release，标明预览版与精确宿主版本。
-   alpha 的 npm 发布使用预览 dist-tag，不把预览冒充稳定版。
+2. bump `package.json` 的版本号与 `CHANGELOG.md` 的对应一节，推 `main`；再推 `v<版本>` 标签。
+   [release workflow](../.github/workflows/release.yml) 随后跑门禁、打包产物验收与交付一致性，
+   再建出挂着预构建 `.tgz`（外加源码 ZIP 与验证记录）的预览 Release，标明精确宿主版本与 SHA-256。
+   alpha 若发 npm，用预览 dist-tag，不把预览冒充稳定版。
 3. 完成稳定版所需的原生截图、真实模型与兼容验收后，发布稳定 npm 版本并设置 `latest`。
 4. 向社区目录提交 [marketplace 条目](marketplace/cslkkl__dsh-web-annotator.yml)。
    合并并被目录同步后，才能声明该市场可搜索、可安装。

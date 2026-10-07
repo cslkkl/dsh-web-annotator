@@ -1,6 +1,6 @@
 # Changelog
 
-## 未发布 — 聊天内批注呈现
+## 0.2.0-alpha.10 — 聊天内批注呈现
 
 - 本插件发出的批注消息不再平铺正文，改为默认显示“N 条注释”：展开后逐条给出序号、目标元素
   （最近候选元素的标签与文本，缺候选时回落到“框选区域”／“页面位置”）和你的评论或提问。
@@ -9,8 +9,10 @@
   并补齐所选范围的蓝框；拿不到 canvas 或重画失败时保留宿主截图，证据不因绘制失败而丢失。
 - 新增 `annotation-thumbnail.ts`（目标标签、徽标锚点、重画）与 `tests/annotation-message.test.ts`。
   序号只用于呈现：请求正文、`screenshotIndex` 与识别逻辑都不变，历史消息照旧折叠。
+- **0.2.0-alpha.9 的改动一并随本版发布**：那一版打好了包却从未发布过 Release，
+  留着就会出现一个用户下不到的版本号。条目见下，不另发。
 
-## 0.2.0-alpha.9 — 清理 0.1 遗留层，补齐门禁
+## 0.2.0-alpha.9 — 清理 0.1 遗留层，补齐门禁（未单独发布，内容并入 alpha.10）
 
 - 删除 0.1 的布局扫描 / 保留区域整层：`src/bridge/`、`src/shared/`、`src/client/bridge-client.ts`、
   `review-storage.ts`、`copy.ts`、`styles.ts`。`lib/bridge.js` 现在只包含开发页批注传输。

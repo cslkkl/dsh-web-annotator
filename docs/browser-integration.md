@@ -48,7 +48,7 @@ npm run build:host                 # 三个提供方 + 许可证 → lib/host
 ```
 
 构建脚本读 `DSH_HOST_CHECKOUT`（默认 `../harness-browser-integration`），
-CI 用这个变量指向 `.host-source`。
+CI 与发布链路用这个变量指向 `.host-source`。
 
 四份共享模块在本包与宿主副本之间必须逐字节相同（只有 import 后缀不同），
 清单在 [../scripts/shared-modules.mjs](../scripts/shared-modules.mjs)。

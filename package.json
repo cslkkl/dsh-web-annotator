@@ -1,6 +1,6 @@
 {
   "name": "dsh-web-annotator",
-  "version": "0.2.0-alpha.9",
+  "version": "0.2.0-alpha.10",
   "description": "Click or drag to annotate pages in the existing DeepSeek Harness Browser and ask the current agent.",
   "license": "MIT",
   "type": "module",
@@ -68,6 +68,7 @@
     "sync:browser-provider": "node scripts/sync-browser-provider.mjs",
     "verify:browser-patch": "node scripts/verify-browser-patch.mjs",
     "verify:delivery": "node scripts/verify-delivery.mjs",
+    "release:assets": "node scripts/release-assets.mjs",
     "build:browser-provider": "node scripts/build-browser-provider.mjs",
     "build:chat-provider": "node scripts/build-chat-provider.mjs",
     "build:layout-provider": "node scripts/build-layout-provider.mjs",

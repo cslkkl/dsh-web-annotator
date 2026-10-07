@@ -9,21 +9,48 @@ CI 与发布相关的事实都写在这里。
 
 ## workflows
 
-| 文件                                            | 触发                           | 做什么                                                                                                                                                                           |
-| ----------------------------------------------- | ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [workflows/ci.yml](../.github/workflows/ci.yml) | `push` / `pull_request` / 手动 | Ubuntu 与 Windows 双跑：`npm run check` → 真实 Chromium 存储回归 → 校验补丁基线 → 构建宿主提供方 → 窄范围类型检查 → `npm pack --dry-run --json`（经 `prepack` 做产物完整性断言） |
+| 文件                                                      | 触发                                  | 做什么                                                                                                                                                                               |
+| --------------------------------------------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| [workflows/ci.yml](../.github/workflows/ci.yml)           | `push` / `pull_request` / 手动        | Ubuntu 与 Windows 双跑：`npm run check` → 真实 Chromium 存储回归 → 校验补丁基线 → 构建宿主提供方 → 窄范围类型检查 → `npm pack --dry-run --json`（经 `prepack` 做产物完整性断言）     |
+| [workflows/release.yml](../.github/workflows/release.yml) | `push` 标签 `v*` / 手动（显式 `tag`） | 构建并验收**要发布的那个** tgz，再建 Release：`npm run check` → 存储回归 → 补丁校验 → 构建宿主提供方 → `npm pack` → 真实宿主验收 → `verify:delivery` → 挂上 tgz、源码 ZIP 与验证记录 |
 
 `ci.yml` 检出官方 Harness 的精确基线到 `.host-source`，并把该路径经 `DSH_HOST_CHECKOUT`
 交给构建与校验脚本。`.host-source/` 已被 `.gitignore` 忽略。
 Node 版本只从 [../.node-version](../.node-version) 读。
 
 CI 不跑 `test:acceptance` / `test:harness`：它们需要打包产物、真实 Chromium 与一个完整
-Harness 安装，属于发版前的本机验收，见 [验证说明](verification.md)。
+Harness 安装。**发布链路自己跑这一套** —— 那是发版门禁，不是日常门禁，见下。
+
+## 发版
+
+版本号必须在打标签**之前**已经在 `package.json` 里 bump 过，并且 `CHANGELOG.md` 里要有
+对应的一节：Release 正文就从那里取（`npm run release:assets`），
+**缺这一节时脚本直接失败**，不会退化成一份空正文。
+
+```powershell
+# 1. 改 package.json 的 version 与 CHANGELOG 的对应一节，提交并推 main
+# 2. 打标签再推 —— 这一下触发发布
+git tag v<版本>
+git push origin v<版本>
+```
+
+`release.yml` 随后在 Windows runner 上依次：核对标签与 `package.json` 一致 → `npm run check`
+→ 真实 Chromium 存储回归 → 打补丁并按精确基线校验 → `build:host` → 窄范围类型检查
+→ `npm pack` → 安装精确版本 Harness 并用**打包产物**跑 `test:acceptance` →
+`verify:delivery` → `npm run release:assets` → 建（或更新）Release 并挂附件。
+
+⚠️ **验收失败就不发。** 这是「交付的 tgz 与验收时安装的运行时逐字节一致」的唯一可靠路径：
+换一台机器、换一个检出目录名重建 provider，产物里的 sourcemap `sources` 会带上那个目录名
+（实测 `../../../../harness-browser-integration/packages/...` 会变成 `-alt` 版本，字节就不同了），
+所以发布必须用**验收用的那一份**，而不是另建一份。
+
+想在没有 Release 的情况下重来一遍，用 `workflow_dispatch` 传一个**已存在**的标签重跑；
+它是幂等的：Release 已存在就更新正文与附件。
 
 ## 不在这里的事
 
-- **发布**：本仓没有 `publish.yml`。分发走 GitHub Release 的预构建 tgz，
-  步骤见 [分发说明](distribution.md)。
+- **npm 发布**：本仓没有 npm 发布步骤，包也尚未发布到 npm。分发走 GitHub Release 的预构建 tgz，
+  由 [workflows/release.yml](../.github/workflows/release.yml) 在标签上建出，见 [分发说明](distribution.md)。
 - **分支保护**：在平台设置界面人工开启，不是仓库文件。
 
 ## 截图声明

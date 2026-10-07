@@ -53,21 +53,29 @@ format:check → lint → check:layering → check:doc-paths → build → typec
 | `harness-test-helpers.mjs`          | —                                  | 被上面两个脚本 import；启动隔离 home 的 Harness  |
 | `harness-replay-test.mjs`           | `test:harness`                     | 同上；官方 `dsh-llm-replay` 适配器               |
 | `verify-delivery.mjs`               | `verify:delivery`                  | 先跑过 `test:acceptance`，并保留当时的 tgz       |
+| `release-assets.mjs`                | `release:assets`                   | 打包产物；正文取自 `CHANGELOG.md` 的对应一节     |
+
+`release-assets.mjs` 是发布链路的最后一步：核对标签与 `package.json` 的版本号一致、从
+`CHANGELOG.md` 抽出该版本的正文（**缺这一节直接失败**，不发空白正文）、算 tgz 的 SHA-256、
+用 `git archive` 打出标签对应的源码 ZIP，并把 `integration/*.json` 汇总成一份验证记录。
+产物全部落在 `integration/release-assets/`（已忽略），由
+[release workflow](../.github/workflows/release.yml) 挂到 Release 上。
 
 测试 home 落在仓库的**父目录** `work/`（`defaultWorkspace`），不在包内。
 `work/` 与 `integration/` 都被 `.gitignore` 忽略。
 
 ## 环境变量
 
-| 变量                                         | 用途                                                |
-| -------------------------------------------- | --------------------------------------------------- |
-| `DSH_HOST_CHECKOUT`                          | 宿主检出路径，默认 `../harness-browser-integration` |
-| `DSH_CLI_ENTRY`                              | Harness `lib/bin.js` 绝对路径                       |
-| `DSH_REPLAY_ENTRY`                           | `dsh-llm-replay` 入口                               |
-| `WEB_ANNOTATOR_TARBALL` / `_PREVIEW_TARBALL` | 打包产物路径                                        |
-| `WEB_ANNOTATOR_BROWSER_CHANNEL`              | Chromium 通道，默认 `msedge`                        |
-| `WEB_ANNOTATOR_BUNDLED_HOST`                 | `1` = 只用包内提供方验收                            |
-| `WEB_ANNOTATOR_REPLAY_PORT`                  | replay 夹具端口，默认 `18470`                       |
+| 变量                                         | 用途                                                           |
+| -------------------------------------------- | -------------------------------------------------------------- |
+| `DSH_HOST_CHECKOUT`                          | 宿主检出路径，默认 `../harness-browser-integration`            |
+| `DSH_CLI_ENTRY`                              | Harness `lib/bin.js` 绝对路径                                  |
+| `DSH_REPLAY_ENTRY`                           | `dsh-llm-replay` 入口                                          |
+| `WEB_ANNOTATOR_TARBALL` / `_PREVIEW_TARBALL` | 打包产物路径                                                   |
+| `WEB_ANNOTATOR_BROWSER_CHANNEL`              | Chromium 通道，默认 `msedge`                                   |
+| `WEB_ANNOTATOR_BUNDLED_HOST`                 | `1` = 只用包内提供方验收                                       |
+| `RELEASE_TAG`                                | 发布的标签；`release:assets` 用它核对版本号并给源码 ZIP 定 ref |
+| `WEB_ANNOTATOR_REPLAY_PORT`                  | replay 夹具端口，默认 `18470`                                  |
 
 ## 变更影响路由
 
