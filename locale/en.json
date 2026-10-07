@@ -1,1 +1,6 @@
-{"meta":{"title":"DSH Web Annotator","description":"Select elements or regions in the built-in Browser, add comments and ask your current agent."}}
+{
+  "meta": {
+    "title": "DSH Web Annotator",
+    "description": "Select elements or regions in the built-in Browser, add comments and ask your current agent."
+  }
+}

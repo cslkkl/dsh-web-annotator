@@ -23,9 +23,10 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '24.15.0'
+          node-version-file: .node-version
           cache: npm
       - run: npm ci
+      # format → lint → layering → doc paths → build → typecheck → test.
       - run: npm run check
       - run: npm run test:storage
         env:
@@ -35,10 +36,17 @@ jobs:
           repository: deepseek-ai/deepseek-harness
           ref: 639ed015397290b3745d163aafe02ffee4aa3f84
           path: .host-source
+      - name: Verify the reviewed patch against its exact base
+        run: npm run verify:browser-patch
+        env:
+          DSH_HOST_CHECKOUT: .host-source
       - name: Apply the reviewed exact-version host patch
         working-directory: .host-source
         run: git -c core.autocrlf=false apply ../docs/harness-browser-annotation.patch
       - run: npm run build:host
+        env:
+          DSH_HOST_CHECKOUT: .host-source
+      - run: npm run typecheck:browser-provider
         env:
           DSH_HOST_CHECKOUT: .host-source
       - run: npm pack --dry-run --json

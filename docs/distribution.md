@@ -10,12 +10,12 @@
 
 DSH 有多个社区市场，规则不同；发布 GitHub 仓库不会立即出现在所有市场。
 
-| 渠道 | 当前查到的要求 | 本项目的发布方式 |
-| --- | --- | --- |
-| DSH 官方插件管理页 / CLI | 预构建包声明合法 `dsh.bundle.patch`，可安装 npm spec 或本地 tgz | 安装一个预构建包 |
-| `dshmarket`，使用 awesome-dsh-plugin 目录 | 向目录仓库提交插件 YAML，由维护者审阅合并；仓库至少创建满一天并带 `dsh-plugin` topic | 本项目条目通过 `tarball` 指向已发布的预构建 Release tgz，无需先发布 npm |
-| 按 GitHub topic 自动发现的市场 | 公开仓库带 `dsh-plugin` topic；实际安装方式取决于各市场 | 标签便于发现，不等于安装已验收 |
-| Desktop 的 `dsh-community-market` 新版实现 | 目录解析唯一 npm 包名，npm `latest` 是稳定精确版本，并带合法 bundle patch | alpha 不满足稳定版要求；先验收稳定版，再发布对应 `latest` |
+| 渠道                                       | 当前查到的要求                                                                       | 本项目的发布方式                                                        |
+| ------------------------------------------ | ------------------------------------------------------------------------------------ | ----------------------------------------------------------------------- |
+| DSH 官方插件管理页 / CLI                   | 预构建包声明合法 `dsh.bundle.patch`，可安装 npm spec 或本地 tgz                      | 安装一个预构建包                                                        |
+| `dshmarket`，使用 awesome-dsh-plugin 目录  | 向目录仓库提交插件 YAML，由维护者审阅合并；仓库至少创建满一天并带 `dsh-plugin` topic | 本项目条目通过 `tarball` 指向已发布的预构建 Release tgz，无需先发布 npm |
+| 按 GitHub topic 自动发现的市场             | 公开仓库带 `dsh-plugin` topic；实际安装方式取决于各市场                              | 标签便于发现，不等于安装已验收                                          |
+| Desktop 的 `dsh-community-market` 新版实现 | 目录解析唯一 npm 包名，npm `latest` 是稳定精确版本，并带合法 bundle patch            | alpha 不满足稳定版要求；先验收稳定版，再发布对应 `latest`               |
 
 以上是 2026-10-04 查阅的公开实现，未在市场 UI 实际安装本项目，其他版本或来源的行为需分别确认。
 

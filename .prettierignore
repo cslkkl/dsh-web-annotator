@@ -1,4 +1,8 @@
 node_modules/
 lib/
+integration/
+.host-source/
 .git/
 *.tgz
+package-lock.json
+docs/harness-browser-annotation.patch
