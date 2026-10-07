@@ -89,9 +89,10 @@ npm run release:assets     # 汇总发布产物与 Release 正文（需先 npm p
   自己构建、自己验收、自己发；**发出去的就是验收过的那一份**，步骤见
   [发布链路](docs/publishing.md) 的发版节。
 - 本机门禁：`npm run check` 全绿（格式 / lint / 分层 7 条规则 / 文档路径 / build / typecheck / 单元测试）。
-- **alpha.10 的整条发布链路已在本机跑通**：打包产物 + 包内提供方，26 项 Browser 检查通过；
-  存储回归 4 项、交付逐字节一致。定性记录见
-  [验证说明](docs/verification.md)，明细落在本地未入库的 `integration/*.json`。
+- **alpha.10 已由发布链在标签上构建、验收并发布**：Release 带安装包、源码 ZIP 与验证记录
+  （26 项 Browser 检查通过、0 个页面错误、交付的 tgz 与验收时安装的运行时逐字节一致）；
+  本机也跑过同一套命令。定性记录见 [验证说明](docs/verification.md)，
+  明细落在本地未入库的 `integration/*.json`。
 - 原生 Desktop 与真实模型**仍未**验收。逐项的边界见 [docs/verification.md](docs/verification.md)。
 
 ## 待办

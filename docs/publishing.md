@@ -47,6 +47,17 @@ git push origin v<版本>
 想在没有 Release 的情况下重来一遍，用 `workflow_dispatch` 传一个**已存在**的标签重跑；
 它是幂等的：Release 已存在就更新正文与附件。
 
+⚠️ **runner 与开发机不一样。** 第一次跑通之前会依次踩到三处差别：Harness CLI 的安装位置
+（`setup-node` 把全局前缀指到工具缓存，不是 `%APPDATA%\npm`）、插件管理器装 tgz 要靠
+`pnpm`（runner 上没有）、界面语言取自 `navigator.languages`（en-US 的机器上渲染成英文，
+而验收断言的是中文按钮）。三处都写在 [release.yml](../.github/workflows/release.yml)
+对应步骤的注释里 —— 症状都是「验收挂了」，而真正的原因都不在报错里。
+
+⚠️ **别只看 workflow 的颜色。** 第一次发 alpha.10 时 workflow 全绿，Release 上却**没有安装包**
+（`npm pack` 的产物在仓库根目录，而上传只挂附件目录），所以
+[`npm run release:assets`](../scripts/README.md) 现在自己断言附件齐不齐；复核时也要亲眼看一下
+Release 的附件列表。
+
 ## 不在这里的事
 
 - **npm 发布**：本仓没有 npm 发布步骤，包也尚未发布到 npm。分发走 GitHub Release 的预构建 tgz，
