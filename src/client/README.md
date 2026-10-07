@@ -46,6 +46,7 @@
 - 改聊天侧卡片或徽标 → [../../docs/architecture.md](../../docs/architecture.md) 的 §3.3 / §3.6、
   本文的“注册的插槽”，以及 `tests/annotation-message.test.ts`（目标标签、徽标锚点、无 canvas 回退）。
 - 改文案键 → `annotation-copy.ts` 的 `en` 必须同步补齐（类型会强制）。
+  **加键要同时接上使用它的生产代码**，没有引用的键会被删掉；判据 `tests/annotation-copy.test.ts`。
 - 改 picker 的字段表 → `tests/annotation-view.test.ts` 会逐字段比对
   `src/browser/protocol.ts` 的跨进程校验；两边漂开就在那里报红，不必改那个同步模块。
 - 改错误码 → `annotation-view.ts` 的 `ERROR_COPY`；未登记的码一律落到 `failed`，
