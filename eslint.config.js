@@ -33,10 +33,7 @@ export default [
   {
     // These two scripts drive a real browser: their `page.evaluate` bodies are browser
     // code evaluated in the page, so both global sets are legitimate in one file.
-    files: [
-      'scripts/annotation-acceptance.mjs',
-      'scripts/annotation-storage-acceptance.mjs',
-    ],
+    files: ['scripts/annotation-acceptance.mjs', 'scripts/annotation-storage-acceptance.mjs'],
     languageOptions: { globals: { ...globals.browser, ...globals.node } },
   },
   {

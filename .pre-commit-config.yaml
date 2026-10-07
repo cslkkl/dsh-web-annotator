@@ -1,0 +1,39 @@
+# 本地提交钩子：只跑「秒级」检查，能自动修的直接修；修不掉的才拦下提交。
+#
+# 用 `npx --no-install` 而不是 `npx`：走仓内已装的那一份 prettier / eslint，
+# **不联网下载**，与 CI 用的是同一棵树。
+#
+# 设计取舍：
+#   - 只跑格式化与 lint（秒级）。typecheck / 构建 / 产物断言 / 测试留给 `npm run check`。
+#   - 自动修复（`--write` / `--fix`）会让文件在工作树里变化，**需要重新 `git add`**。
+#   - 钩子按**暂存文件**跑，`npm run check` 跑全量 —— 所以「钩子绿了」不等于「门禁绿了」。
+#
+# ⚠️ **下面 prettier 钩子的 `files:` 与 `package.json` 的 `format:check` glob 是两个家。**
+# 它们必须满足「门禁 ⊇ 钩子」：钩子是更宽的那个，且它只跑暂存文件 ——
+# 被钩子漏掉的扩展名连本地都没人管。判据 `tests/format-scope.test.ts` 钉住这个方向。
+# 改任何一处都要同时改另一处。
+#
+# 启用（每个 clone 执行一次）：
+#   pre-commit install
+# 全量跑一次：
+#   pre-commit run --all-files
+# 临时跳过：
+#   git commit --no-verify
+repos:
+  - repo: local
+    hooks:
+      - id: prettier
+        name: prettier --write (npx --no-install)
+        entry: npx --no-install prettier --write
+        language: system
+        files: \.(ts|tsx|mts|js|mjs|cjs|json|md|yml|yaml|css|html)$
+        exclude: ^(node_modules/|lib/|integration/|\.host-source/)
+        require_serial: true
+
+      - id: eslint
+        name: eslint --fix (npx --no-install)
+        entry: npx --no-install eslint --fix
+        language: system
+        files: \.(ts|tsx|mts|js|mjs|cjs)$
+        exclude: ^(node_modules/|lib/|integration/|\.host-source/|eslint\.config\.js$)
+        require_serial: true

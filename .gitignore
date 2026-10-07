@@ -1,8 +1,29 @@
+# 依赖目录
 node_modules/
-*.tgz
-test-results/
-.DS_Store
+
+# 构建产物：宿主读的是它们，但它们由 scripts/build.mjs 生成，不入库
 lib/
+
+# 宿主提供方与验收证据：由 integration/ 下的脚本生成，含本机路径与产物哈希
 integration/
-playwright-report/
+
+# CI 用的官方 Harness 检出（由 workflow 拉取）
 .host-source/
+
+# 打包产物
+*.tgz
+
+# 测试与报告产物
+test-results/
+playwright-report/
+coverage/
+
+# 工具缓存
+.eslintcache
+*.tsbuildinfo
+
+# 编辑器 / 系统噪音
+.DS_Store
+Thumbs.db
+*.log
+*.bak

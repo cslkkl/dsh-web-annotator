@@ -28,17 +28,24 @@ Harness 安装，属于发版前的本机验收，见 [验证说明](verificatio
 
 ## 门禁的分工
 
-| 层              | 时机        | 做什么                                                                   |
-| --------------- | ----------- | ------------------------------------------------------------------------ |
-| `npm run check` | 提交前 / CI | format → lint → 分层 → 文档路径 → build → typecheck → 产物断言 → 测试    |
-| CI              | push / PR   | 上面全部，另加真实 Chromium 存储回归、补丁基线校验、宿主提供方构建与打包 |
+| 层              | 时机        | 做什么                                                                                              |
+| --------------- | ----------- | --------------------------------------------------------------------------------------------------- |
+| 本地 pre-commit | 提交前      | 只跑秒级的格式化与 lint，能自动修的自动修，见 [.pre-commit-config.yaml](../.pre-commit-config.yaml) |
+| `npm run check` | 提交前 / CI | format → lint → 分层 → 文档路径 → build → typecheck → 产物断言 → 测试                               |
+| CI              | push / PR   | 上面全部，另加真实 Chromium 存储回归、补丁基线校验、宿主提供方构建与打包                            |
 
 `check` 的顺序有依赖：`build` 必须在 `typecheck` 与 `verify:artifacts` 之前，
 因为两者都读 `lib/`（类型检查读 `lib/vite.d.ts`，产物断言读 `lib/client.js`）。
 调整顺序前先看 [../scripts/README.md](../scripts/README.md) 的依赖说明。
+
+钩子按**暂存文件**跑，`check` 跑全量 —— 「钩子绿了」不等于「门禁绿了」。
+钩子的 `files:` 与 `package.json` 的 `format:check` glob 是两个家，
+由 `tests/format-scope.test.ts` 钉住「门禁 ⊇ 钩子」这个方向。
 
 ## 变更影响路由
 
 - 改任一 workflow → 同步本文件与 [分发说明](distribution.md)。
 - 改 `npm run check` 的内容或顺序 → 同步根 [AGENTS.md](../AGENTS.md) 的常用命令、
   [../scripts/README.md](../scripts/README.md) 与本案的门禁分工表。
+- 改钩子的 `files:` 或 `format:check` 的 glob → 另一处必须同步；
+  判据 `tests/format-scope.test.ts` 会拦。
