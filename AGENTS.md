@@ -78,8 +78,10 @@ npm pack                   # 触发 prepack 完整性断言
 - CI：[.github/workflows/ci.yml](.github/workflows/ci.yml) —— 只读，Ubuntu 与 Windows 双跑
   `npm run check` → 真实 Chromium 存储回归 → 补丁基线校验 → 构建宿主提供方 → 打包。数字不抄。
 - 本机门禁：`npm run check` 全绿（格式 / lint / 分层 7 条规则 / 文档路径 / build / typecheck / 单元测试）。
-- 已发布预览版经真实 Harness Web 验收；原生 Desktop 与真实模型**未**验收。
-  逐项的边界见 [docs/verification.md](docs/verification.md)。
+- **alpha.9 已在真实宿主验收**：打包产物 + 包内提供方，24 项 Browser 检查通过；
+  存储回归 4 项、replay 集成 2 轮、打包一致性均通过。定性记录见
+  [验证说明](docs/verification.md)，明细落在本地未入库的 `integration/*.json`。
+- 原生 Desktop 与真实模型**仍未**验收。逐项的边界见 [docs/verification.md](docs/verification.md)。
 
 ## 待办
 
