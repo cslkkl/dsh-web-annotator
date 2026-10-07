@@ -485,6 +485,24 @@ try {
   await writeFile(join(artifacts, 'sent-request.txt'), finalPrompt + '\n');
   await writeFile(join(artifacts, 'transcript.json'), JSON.stringify(transcript, null, 2));
   passed('Actual Client submission reaches the official replay adapter and exact durable journal');
+  // The chat message hides its notes behind one disclosure; opening it names every target.
+  const noteCount = transcript
+    .filter((x) => x.role === 'user' && x.text === finalPrompt)
+    .flatMap(() => [...finalPrompt.matchAll(/\n\n\d+\. (?:提问|评论)\n用户输入：/g)]).length;
+  const chip = page.locator('.wa-message-chip').last();
+  assert.match(await chip.innerText(), new RegExp(`^${noteCount} 条注释`));
+  assert.equal(await page.locator('.wa-message-card').count(), 0);
+  await chip.click();
+  assert.equal(await page.locator('.wa-message-card').count(), noteCount);
+  assert.equal(await page.locator('.wa-message-card .wa-message-index').first().innerText(), '1');
+  assert.match(
+    await page.locator('.wa-message-card .wa-message-target').first().innerText(),
+    /^\S+/,
+  );
+  await page.screenshot({ path: join(artifacts, 'message-expanded.png') });
+  await chip.click();
+  assert.equal(await page.locator('.wa-message-card').count(), 0);
+  passed('Chat notes collapse to one count chip and open into per-note target cards');
   const evidence = page.locator('.wa-message-evidence');
   assert.equal(await evidence.getAttribute('open'), null);
   assert.equal(await page.getByText('逐条处理用户输入', { exact: false }).isVisible(), false);
@@ -577,6 +595,72 @@ try {
   passed(
     'Image mode uploads actual marked pixels through official admission and durable image references',
   );
+
+  // The chat redraw runs in this same page; prove the index badge lands on the note's anchor.
+  const thumbnailModule = await build({
+    entryPoints: ['src/client/annotation-thumbnail.ts'],
+    bundle: true,
+    format: 'iife',
+    globalName: 'WebAnnotatorThumbnail',
+    platform: 'browser',
+    write: false,
+  });
+  const hostCapture = await page.screenshot();
+  const redraw = await page.evaluate(
+    async ({ script, capture }) => {
+      const api = new Function(script + '; return WebAnnotatorThumbnail;')();
+      const data = capture.split(',')[1];
+      const [image] = await api.badgeCaptures([
+        {
+          intent: 'question',
+          note: '这个是什么',
+          url: location.href,
+          title: document.title,
+          viewport: { width: innerWidth, height: innerHeight },
+          screenshot: { mediaType: 'image/png', data, width: innerWidth, height: innerHeight },
+          selection: {
+            kind: 'element',
+            rect: { x: 400, y: 900, width: 160, height: 40 },
+            viewportRect: { x: 400, y: 300, width: 160, height: 40 },
+            scroll: { x: 0, y: 0 },
+            candidates: [],
+          },
+        },
+      ]);
+      const picture = new Image();
+      picture.src = `data:${image.mediaType};base64,${image.data}`;
+      await picture.decode();
+      const canvas = document.createElement('canvas');
+      canvas.width = picture.naturalWidth;
+      canvas.height = picture.naturalHeight;
+      const context = canvas.getContext('2d');
+      context.drawImage(picture, 0, 0);
+      // Count the accent-blue pixels a badge-sized window holds, against a control window.
+      const accentPixels = (left, top) => {
+        const { data: pixels } = context.getImageData(left, top, 40, 40);
+        let count = 0;
+        for (let i = 0; i < pixels.length; i += 4)
+          if (pixels[i + 2] - pixels[i] > 80 && pixels[i + 2] > 150) count++;
+        return count;
+      };
+      return {
+        redrawn: image.data !== data,
+        size: [image.width, image.height],
+        // The frame's top-left corner sits one badge radius inside the capture.
+        onBadge: accentPixels(367, 267),
+        offBadge: accentPixels(60, 60),
+      };
+    },
+    {
+      script: thumbnailModule.outputFiles[0].text,
+      capture: 'data:image/png;base64,' + hostCapture.toString('base64'),
+    },
+  );
+  assert.equal(redraw.redrawn, true);
+  assert.deepEqual(redraw.size, [1600, 1000]);
+  assert.ok(redraw.onBadge > 250, `badge window held ${redraw.onBadge} accent pixels`);
+  assert.equal(redraw.offBadge, 0);
+  passed('Chat attachments are redrawn in-page with an index badge on the note anchor');
 
   await start();
   await clickAt('#heading');
