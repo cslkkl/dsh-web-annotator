@@ -116,9 +116,23 @@ jobs:
       - name: Pack the prebuilt bundle
         run: npm pack
 
-      # 验收脚本认 APPDATA 下的 CLI；这个装法正是它回落时找的那个位置。
+      # ⚠️ **必须显式给 `DSH_CLI_ENTRY`。** 验收脚本找 CLI 的顺序是
+      # 「本仓依赖 → `%APPDATA%\npm` → `DSH_CLI_ENTRY`」，而在 runner 上前两个都不成立：
+      # `actions/setup-node` 会把全局前缀指到工具缓存，不是 `%APPDATA%\npm`。
+      # 少了这一行，验收会在读 `@deepseek-ai/dsh/package.json` 时 ENOENT ——
+      # 全局装是成功的，所以从日志上看只像是「验收挂了」。
       - name: Install the exact Harness for the acceptance run
-        run: npm install --global @deepseek-ai/dsh@0.2.0-rc.2
+        shell: pwsh
+        run: |
+          npm install --global --no-audit --no-fund @deepseek-ai/dsh@0.2.0-rc.2
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+          $cli = Join-Path (npm root -g).Trim() '@deepseek-ai/dsh/lib/bin.js'
+          if (-not (Test-Path $cli)) {
+            Write-Error "global Harness CLI not found at $cli"
+            exit 1
+          }
+          "DSH_CLI_ENTRY=$cli" | Out-File -FilePath $env:GITHUB_ENV -Append
+          Write-Output "DSH_CLI_ENTRY=$cli"
 
       - name: Real host acceptance against the packed artifact
         shell: pwsh
