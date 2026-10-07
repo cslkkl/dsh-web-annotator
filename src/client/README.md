@@ -10,7 +10,7 @@
 | `index.tsx`               | 注册四个插槽：工具栏按钮、批注队列、聊天内折叠视图、输入条入口               | `inject`、`apply`                                                                | `lib/client.js`（CJS + `__ModuleLoader__` 包装，React 外部化） |
 | `annotation-store.ts`     | 声明会话级 store，附加异步持久化与旧键迁移                                   | `createAnnotationStore`、`readAnnotations`、`SavedAnnotation`、`AnnotationStore` | 同上                                                           |
 | `annotation-storage.ts`   | IndexedDB 单键读 / 写 / 删；事务结束即关连接                                 | `annotationStorage`                                                              | 同上                                                           |
-| `annotation-view.ts`      | 从 tsx 里抽出的纯逻辑：picker 选项、错误码到文案、实际可用的发送方式         | `pickerOptions`、`annotationErrorKey`、`effectiveDelivery`、`PICKER_COPY_KEYS`   | 同上                                                           |
+| `annotation-view.ts`      | 从 tsx 里抽出的纯逻辑：picker 选项、错误码到文案、实际可用的发送方式         | `pickerOptions`、`annotationErrorKey`、`effectiveDelivery`、`PICKER_COPY_KEYS`   | 同上；改后必测 `tests/annotation-view.test.ts`                 |
 | `annotation-thumbnail.ts` | 聊天侧呈现用的纯逻辑与实际落笔：目标元素标签、徽标锚点、带序号徽标的截图重画 | `annotationTarget`、`annotationMark`、`badgeCaptures`                            | 同上                                                           |
 | `annotation-copy.ts`      | 中英文文案与 `LocaleNamespaceMap` 增强                                       | `zh`、`en`、`AnnotationCopyKey`                                                  | 同上                                                           |
 | `legacy-names.ts`         | alpha.8 及更早的持久化键，只读一次                                           | `legacyAnnotationKey`                                                            | 同上                                                           |
@@ -46,6 +46,10 @@
 - 改聊天侧卡片或徽标 → [../../docs/architecture.md](../../docs/architecture.md) 的 §3.3 / §3.6、
   本文的“注册的插槽”，以及 `tests/annotation-message.test.ts`（目标标签、徽标锚点、无 canvas 回退）。
 - 改文案键 → `annotation-copy.ts` 的 `en` 必须同步补齐（类型会强制）。
+- 改 picker 的字段表 → `tests/annotation-view.test.ts` 会逐字段比对
+  `src/browser/protocol.ts` 的跨进程校验；两边漂开就在那里报红，不必改那个同步模块。
+- 改错误码 → `annotation-view.ts` 的 `ERROR_COPY`；未登记的码一律落到 `failed`，
+  不许默认当成成功。判据同上。
 - 改 `inject` 列表 → `package.json` 的 `dsh.client.inject`。
 
 ## 已知边界
