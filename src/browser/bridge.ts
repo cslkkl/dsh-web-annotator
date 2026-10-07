@@ -19,6 +19,7 @@ const allowed = (origin: string): boolean => {
 let current: MessagePort | undefined;
 declare global {
   interface Window {
+    __LAYOUT_CARE_CONFIG__?: { allowedParentOrigins?: string[] };
     __DSH_PAGE_ANNOTATION_BRIDGE_DISPOSE__?: () => void;
   }
 }

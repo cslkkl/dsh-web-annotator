@@ -55,7 +55,7 @@ test('packaged Vite entry serves its bridge and preserves TSX source hints acros
     assert.match(bridge.headers.get('content-type')!, /text\/javascript/);
     assert.equal(bridge.headers.get('cache-control'), 'no-store');
     assert.equal(bridge.headers.get('x-content-type-options'), 'nosniff');
-    assert.match(await bridge.text(), /layout-care\/connect/);
+    assert.match(await bridge.text(), /dsh-browser-annotation-v1/);
     const head = await fetch(`${origin}/sandbox/__layout-care__/bridge.js`, { method: 'HEAD' });
     assert.equal(head.status, 200);
     assert.equal(await head.text(), '');
