@@ -19,7 +19,7 @@ format:check → lint → check:layering → check:doc-paths → build → typec
 | 脚本                   | npm                | 做什么                                                                                          |
 | ---------------------- | ------------------ | ----------------------------------------------------------------------------------------------- |
 | `check-layering.mjs`   | `check:layering`   | 依赖方向、picker 自包含、退休名字。规则见 [../docs/architecture.md](../docs/architecture.md) §6 |
-| `check-doc-paths.mjs`  | `check:doc-paths`  | Markdown 相对链接是否还在；文档里的 `npm run <脚本名>` 是否存在；首页 README 有没有被顶掉       |
+| `check-doc-paths.mjs`  | `check:doc-paths`  | Markdown 相对链接、`npm run <脚本名>`、首页 README 未被顶掉、截图清单与磁盘一致                 |
 | `verify-artifacts.mjs` | `verify:artifacts` | 用宿主加载器的方式**执行** `lib/client.js` 与 `lib/bridge.js`，断言导出面与注册行为             |
 | `check-package.mjs`    | `prepack`          | `npm pack` 前断言产物齐全、版本与补丁哈希一致                                                   |
 | `build.mjs`            | `build`            | 四个产物：`lib/index.js`、`lib/client.js`、`lib/bridge.js`、`lib/vite.js`                       |

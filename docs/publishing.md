@@ -26,6 +26,13 @@ Harness 安装，属于发版前的本机验收，见 [验证说明](verificatio
   步骤见 [分发说明](distribution.md)。
 - **分支保护**：在平台设置界面人工开启，不是仓库文件。
 
+## 截图声明
+
+[screenshots.json](../screenshots.json) 是随包发布的截图清单，供市场条目引用。
+它是"目录清单"的手写副本，所以由 `npm run check:doc-paths` **双向**校验：
+声明的文件必须存在，`docs/images/` 下的截图必须都已登记。
+新增截图要同批登记，否则门禁报红。
+
 ## 门禁的分工
 
 | 层              | 时机        | 做什么                                                                                              |

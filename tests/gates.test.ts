@@ -10,6 +10,7 @@ import {
   listDocuments,
   listWorkflows,
   localTarget,
+  screenshotFailures,
 } from '../scripts/check-doc-paths.mjs';
 
 const root = resolve(import.meta.dirname, '..');
@@ -123,6 +124,56 @@ test('the doc gate refuses a .github index that would displace the repository ho
     const [shadowing] = homepageFailures(directory);
     assert.equal(shadowing?.rel, '.github/README.md');
     assert.match(shadowing?.reason ?? '', /顶掉仓库首页/);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test('the screenshot manifest and the shipped images agree in both directions', async () => {
+  // A hand-maintained duplicate of a directory listing: a new screenshot that ships
+  // undeclared is only visible in a marketplace listing, and a renamed one leaves the
+  // manifest pointing at nothing. Neither breaks a build.
+  assert.deepEqual(screenshotFailures(root), []);
+
+  const directory = await mkdtemp(join(tmpdir(), 'web-annotator-shots-'));
+  const images = join(directory, 'docs', 'images');
+  try {
+    assert.deepEqual(
+      screenshotFailures(directory).map((failure) => failure.reason),
+      ['缺少截图声明文件'],
+      '没有清单文件时不能算通过',
+    );
+    await mkdir(images, { recursive: true });
+    await writeFile(join(images, 'shot.png'), 'png');
+    await writeFile(join(images, 'README.md'), '# not an image\n');
+
+    // Declared but absent.
+    await writeFile(join(directory, 'screenshots.json'), '["docs/images/gone.png"]\n');
+    assert.match(screenshotFailures(directory)[0]?.reason ?? '', /声明了不存在的截图/);
+
+    // Present but undeclared — the non-image file must not be demanded.
+    await writeFile(join(directory, 'screenshots.json'), '[]\n');
+    assert.deepEqual(
+      screenshotFailures(directory).map((failure) => failure.reason),
+      ['未声明的截图：docs/images/shot.png（新增截图要同批登记）'],
+    );
+
+    // A screenshot outside the one directory is a failure even when it exists.
+    await writeFile(join(directory, 'elsewhere.png'), 'png');
+    await writeFile(
+      join(directory, 'screenshots.json'),
+      '["elsewhere.png","docs/images/shot.png"]\n',
+    );
+    assert.match(screenshotFailures(directory)[0]?.reason ?? '', /截图只有一个家/);
+
+    // Malformed manifests must fail rather than silently pass.
+    await writeFile(join(directory, 'screenshots.json'), '{ not json\n');
+    assert.match(screenshotFailures(directory)[0]?.reason ?? '', /不是合法 JSON/);
+    await writeFile(join(directory, 'screenshots.json'), '["docs/images/shot.png",42]\n');
+    assert.match(screenshotFailures(directory)[0]?.reason ?? '', /字符串路径数组/);
+
+    await writeFile(join(directory, 'screenshots.json'), '["docs/images/shot.png"]\n');
+    assert.deepEqual(screenshotFailures(directory), []);
   } finally {
     await rm(directory, { recursive: true, force: true });
   }
