@@ -28,7 +28,8 @@ Harness 安装。**发布链路自己跑这一套** —— 那是发版门禁，
 **缺这一节时脚本直接失败**，不会退化成一份空正文。
 
 ```powershell
-# 1. 改 package.json 的 version 与 CHANGELOG 的对应一节，提交并推 main
+# 1. 改 package.json 的 version、CHANGELOG 的对应一节，以及市场条目的 tarball 行
+#    （见 [分发说明](distribution.md) 的「条目里的 tarball 必须跟着版本走」—— 漏改不报错）
 # 2. 打标签再推 —— 这一下触发发布
 git tag v<版本>
 git push origin v<版本>
