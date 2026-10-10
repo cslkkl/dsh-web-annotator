@@ -52,22 +52,22 @@ npm run release:assets     # 汇总发布产物与 Release 正文（需先 npm p
 
 ## 文档地图
 
-| 想知道                   | 去哪                                                       |
-| ------------------------ | ---------------------------------------------------------- |
-| 怎么用、怎么装           | [README.md](README.md)                                     |
-| 为什么这样设计、防错清单 | [docs/architecture.md](docs/architecture.md)               |
-| 宿主补丁如何应用与构建   | [docs/browser-integration.md](docs/browser-integration.md) |
-| 验证到什么程度、还缺什么 | [docs/verification.md](docs/verification.md)               |
-| 打包与市场收录           | [docs/distribution.md](docs/distribution.md)               |
-| 下一步做什么             | [docs/roadmap.md](docs/roadmap.md)                         |
-| 辅助文档区有什么         | [docs/README.md](docs/README.md)                           |
-| 页面 picker 与协议       | [src/browser/README.md](src/browser/README.md)             |
-| Client 半端与存储        | [src/client/README.md](src/client/README.md)               |
-| 各目录怎么改             | [src/README.md](src/README.md)                             |
-| 测试覆盖与运行           | [tests/README.md](tests/README.md)                         |
-| 脚本做什么、何时跑       | [scripts/README.md](scripts/README.md)                     |
-| 发布链路与 CI            | [docs/publishing.md](docs/publishing.md)                   |
-| 当时为什么这么定         | [.agents/notes/](.agents/notes/)                           |
+| 想知道                   | 去哪                                                        |
+| ------------------------ | ----------------------------------------------------------- |
+| 怎么用、怎么装           | [README.md](README.md)（英文 [README_en.md](README_en.md)） |
+| 为什么这样设计、防错清单 | [docs/architecture.md](docs/architecture.md)                |
+| 宿主补丁如何应用与构建   | [docs/browser-integration.md](docs/browser-integration.md)  |
+| 验证到什么程度、还缺什么 | [docs/verification.md](docs/verification.md)                |
+| 打包与市场收录           | [docs/distribution.md](docs/distribution.md)                |
+| 下一步做什么             | [docs/roadmap.md](docs/roadmap.md)                          |
+| 辅助文档区有什么         | [docs/README.md](docs/README.md)                            |
+| 页面 picker 与协议       | [src/browser/README.md](src/browser/README.md)              |
+| Client 半端与存储        | [src/client/README.md](src/client/README.md)                |
+| 各目录怎么改             | [src/README.md](src/README.md)                              |
+| 测试覆盖与运行           | [tests/README.md](tests/README.md)                          |
+| 脚本做什么、何时跑       | [scripts/README.md](scripts/README.md)                      |
+| 发布链路与 CI            | [docs/publishing.md](docs/publishing.md)                    |
+| 当时为什么这么定         | [.agents/notes/](.agents/notes/)                            |
 
 ## 事实来源（只查不抄）
 
@@ -104,8 +104,6 @@ npm run release:assets     # 汇总发布产物与 Release 正文（需先 npm p
       这是“用户能正常安装”的前置；在此之前安装说明必须写明会替换三行。
 - [ ] **原生 Desktop 与真实模型的重新验收**：本轮只验到 Web composition；
       Electron 截图边界由测试替代。记录为未验证，不要据此声称支持。
-- [ ] **英文 README**：目前只有中文根 README。面向国际用户时补齐 `README_en.md`，
-      与中文版逐条对齐（能力清单、上手步骤、指针）。
 - [ ] **发布稳定版前的兼容矩阵**：明确支持的 Harness / 浏览器 / 页面组合，
       再决定是否扩大范围。
 

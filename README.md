@@ -7,6 +7,8 @@
 [![Node](https://img.shields.io/badge/node-24.15.0-informational.svg)](.node-version)
 [![Harness](https://img.shields.io/badge/harness-0.2.0--rc.2-informational.svg)](docs/browser-integration.md)
 
+**简体中文** · [English](README_en.md)
+
 ![真实 Harness Browser 中的框选批注](docs/images/annotation-region.png)
 
 ## 它能做什么
