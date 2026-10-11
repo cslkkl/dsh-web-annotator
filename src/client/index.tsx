@@ -468,7 +468,7 @@ export function apply(ctx: Context): void {
           <Button
             type="button"
             size="sm"
-            variant="toolbar"
+            variant="ghost"
             icon={<IconInspectOutlineRegular />}
             onClick={() => {
               ctx.sidebarRight.openTab('browser');
