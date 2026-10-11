@@ -9,10 +9,10 @@ CI 与发布相关的事实都写在这里。
 
 ## workflows
 
-| 文件                                                      | 触发                                  | 做什么                                                                                                                                                                               |
-| --------------------------------------------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| [workflows/ci.yml](../.github/workflows/ci.yml)           | `push` / `pull_request` / 手动        | Ubuntu 与 Windows 双跑：`npm run check` → 真实 Chromium 存储回归 → 校验补丁基线 → 构建宿主提供方 → 窄范围类型检查 → `npm pack --dry-run --json`（经 `prepack` 做产物完整性断言）     |
-| [workflows/release.yml](../.github/workflows/release.yml) | `push` 标签 `v*` / 手动（显式 `tag`） | 构建并验收**要发布的那个** tgz，再建 Release：`npm run check` → 存储回归 → 补丁校验 → 构建宿主提供方 → `npm pack` → 真实宿主验收 → `verify:delivery` → 挂上 tgz、源码 ZIP 与验证记录 |
+| 文件                                                      | 触发                                  | 做什么                                                                                                                                                                                                                       |
+| --------------------------------------------------------- | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [workflows/ci.yml](../.github/workflows/ci.yml)           | `push` / `pull_request` / 手动        | Ubuntu 与 Windows 双跑：`npm run check` → 真实 Chromium 存储回归 → 校验补丁基线 → 构建宿主提供方 → 窄范围类型检查 → `npm pack --dry-run --json`（经 `prepack` 做产物完整性断言）                                             |
+| [workflows/release.yml](../.github/workflows/release.yml) | `push` 标签 `v*` / 手动（显式 `tag`） | 构建并验收**要发布的那个** tgz，再建 Release，最后发 npm：`npm run check` → 存储回归 → 补丁校验 → 构建宿主提供方 → `npm pack` → 真实宿主验收 → `verify:delivery` → 挂上 tgz、源码 ZIP 与验证记录 → Trusted Publishing 发 npm |
 
 `ci.yml` 检出官方 Harness 的精确基线到 `.host-source`，并把该路径经 `DSH_HOST_CHECKOUT`
 交给构建与校验脚本。`.host-source/` 已被 `.gitignore` 忽略。
@@ -38,7 +38,8 @@ git push origin v<版本>
 `release.yml` 随后在 Windows runner 上依次：核对标签与 `package.json` 一致 → `npm run check`
 → 真实 Chromium 存储回归 → 打补丁并按精确基线校验 → `build:host` → 窄范围类型检查
 → `npm pack` → 安装精确版本 Harness 并用**打包产物**跑 `test:acceptance` →
-`verify:delivery` → `npm run release:assets` → 建（或更新）Release 并挂附件。
+`verify:delivery` → `npm run release:assets` → 建（或更新）Release 并挂附件
+→ 发 npm（见下）。
 
 ⚠️ **验收失败就不发。** 这是「交付的 tgz 与验收时安装的运行时逐字节一致」的唯一可靠路径：
 换一台机器、换一个检出目录名重建 provider，产物里的 sourcemap `sources` 会带上那个目录名
@@ -59,11 +60,42 @@ git push origin v<版本>
 [`npm run release:assets`](../scripts/README.md) 现在自己断言附件齐不齐；复核时也要亲眼看一下
 Release 的附件列表。
 
+## npm 发布
+
+认证走 **Trusted Publishing（OIDC）**，与 [dsh-cpa-switch](https://github.com/cslkkl/dsh-cpa-switch)
+同一套做法：**仓库里不存任何 npm token**，npm 侧凭「本仓库的 `release.yml`」授权，
+所以 `release.yml` 里必须有 `id-token: write`。**不要**加 `NPM_TOKEN` secret ——
+OIDC 已替代它，加了反而会在 token 过期后静默回到「workflow 能跑、包发不出去」的状态。
+
+环境要求 npm CLI ≥ 11.5.1（Node 24 自带的够新），registry 由 `setup-node` 的
+`registry-url` 显式钉到 `https://registry.npmjs.org`。
+
+### 一次性配置（新包必须先建包）
+
+Trusted Publishing 配在**已存在的包**上，所以顺序不能颠倒：
+
+1. **先让包存在**：本机交互式 `npm publish --access public --tag alpha`（会要求 2FA），
+   或走 npm 的[暂存发布](https://docs.npmjs.com/staged-publishing)
+   （`npm stage publish`，之后由维护者用 2FA 放行）。
+2. **再配 Trusted Publisher**：npm 包设置页 → Trusted Publisher → GitHub Actions，
+   填 `cslkkl` / `dsh-web-annotator` / 工作流文件名 **`release.yml`**。
+   ⚠️ 这一步**必须交互式做**：绕过 2FA 的 granular token 已经没有权限改这项配置
+   （[2026-07-31 公告](https://github.blog/changelog/2026-07-31-restricting-npm-bypass-2fa-granular-access-tokens/)）。
+3. 之后每次推 `v*` 标签，`release.yml` 自动发，并带 `--provenance`。
+
+包还不存在时，`release.yml` 里的 npm 这一步会**明确警告后跳过**（Release 已经建好了，
+缺的只是 npm 这一路），不会让发布无故变红。
+
+### dist-tag：预览版不许碰 `latest`
+
+发布命令固定 `--tag alpha`。版本号带预发布段时如果不动 dist-tag，就会去写 `latest` ——
+那等于把预览冒充稳定版，而 Desktop 的社区市场正是按「`latest` 是稳定精确版本」来判断的
+（见 [分发说明](distribution.md)）。**发稳定版时**才改用 `latest`。
+
 ## 不在这里的事
 
-- **npm 发布**：本仓没有 npm 发布步骤，包也尚未发布到 npm。分发走 GitHub Release 的预构建 tgz，
-  由 [workflows/release.yml](../.github/workflows/release.yml) 在标签上建出，见 [分发说明](distribution.md)。
 - **分支保护**：在平台设置界面人工开启，不是仓库文件。
+- **市场条目**：向目录仓库提 PR，见 [分发说明](distribution.md)。
 
 ## 截图声明
 

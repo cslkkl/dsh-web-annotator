@@ -43,6 +43,11 @@ permissions:
   # ⚠️ **必须是 write** —— 建 Release 要写仓库内容。只读时前面每一步都会成功，
   # 挂在最后的 `gh release create` 才 403，症状与「推标签不建 Release」一样。
   contents: write
+  # ⚠️ **npm 走 Trusted Publishing（OIDC）就必须有这一行。** 少了它，npm 侧换不到
+  # 发布权、也拿不到 provenance，发布会以「未授权」失败 —— 而报错看不出是权限问题。
+  # 认证靠这一项，所以**不要**给仓库加 `NPM_TOKEN`：OIDC 已替代它，
+  # 加了反而会在 token 过期后静默回到「能跑但发不出去」的状态。
+  id-token: write
 
 concurrency:
   # 发布不能与另一次发布并发，也不能被后一次取消：取消发生在建 Release 之前
@@ -69,6 +74,9 @@ jobs:
         with:
           node-version-file: .node-version
           cache: npm
+          # Trusted Publishing 要求 npm CLI ≥ 11.5.1；Node 24 自带的够新。
+          # 显式钉住 registry，免得继承 runner 上的镜像配置。
+          registry-url: https://registry.npmjs.org
 
       - run: npm ci
 
@@ -209,3 +217,45 @@ jobs:
           foreach ($asset in (Get-ChildItem $dir -File)) {
             gh release upload $tag $asset.FullName --clobber
           }
+
+      # npm 发布走 **Trusted Publishing（OIDC）**：仓库里不存 token，npm 侧凭
+      # 「本仓库的这条 release.yml」授权。`--provenance` 让 npm 记下产物来源。
+      #
+      # ⚠️ **刻意放在建 Release 之后。** npm 那半失败时，用户仍然拿得到 Release 上的
+      # 安装包 —— GitHub Release 是本包的主要渠道。反过来先发 npm，一旦失败就什么都没有，
+      # 而重跑要再等一整轮构建与真实宿主验收。顺序还顺带排除了另一种坏状态：
+      # 「npm 上有、GitHub 上没有」（cpa-switch 的 v0.3.0 实踩过）。
+      #
+      # ⚠️ **`--tag alpha` 不能省。** 版本号带预发布段，必须显式挂到预览 dist-tag；
+      # 否则预览版会去动 `latest`，等于把预览冒充稳定版 —— 本仓明令禁止
+      # （见 [docs/distribution.md](../../docs/distribution.md) 的各渠道收录规则）。
+      #
+      # ⚠️ **「已发布过」不算失败**：版本号不能重发，而这条 workflow 还得能被重跑
+      # （补附件、补正文）。当成硬失败的话重跑永远走不过这一步。
+      - name: Publish to npm (trusted publishing)
+        shell: pwsh
+        run: |
+          $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
+
+          # Trusted Publishing 配在**已存在的包**上，所以包还不存在时这一路无从授权。
+          # 先问 registry：不存在就明确警告并继续 —— Release 已经建好了，缺的只是 npm。
+          # 这不是静默跳过，注解里写清了下一次该做什么。
+          npm view dsh-web-annotator version *> $null
+          if ($LASTEXITCODE -ne 0) {
+            Write-Output "::warning::dsh-web-annotator is not on npm yet — the npm leg is skipped. Do the first publish once and configure the Trusted Publisher (steps in docs/publishing.md); every tag after that publishes here."
+            exit 0
+          }
+
+          $out = npm publish --access public --provenance --tag alpha 2>&1
+          $code = $LASTEXITCODE
+          $out | Write-Output
+
+          if ($code -eq 0) {
+            Write-Output "::notice::published $version to npm under the alpha dist-tag"
+            exit 0
+          }
+          if ($out -match 'cannot publish over the previously published versions|previously published') {
+            Write-Output "::notice::$version is already on npm — skipping; the rest of this run still matters"
+            exit 0
+          }
+          exit $code
