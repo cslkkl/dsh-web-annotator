@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
@@ -12,6 +13,7 @@ import {
   localTarget,
   screenshotFailures,
 } from '../scripts/check-doc-paths.mjs';
+import { listTarFiles, readTarMember } from '../scripts/verify-delivery.mjs';
 
 const root = resolve(import.meta.dirname, '..');
 const sources = listSources(join(root, 'src')).map((file) =>
@@ -201,6 +203,30 @@ test('the doc gate fails on a renamed file and on a removed npm script', async (
     // A present target and a real script must not be reported.
     await writeFile(join(directory, 'ok.md'), '[here](docs/present.md)\n\n`npm run check`\n');
     assert.equal(brokenReferences(directory, new Set(['check'])).failures.length, 2);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+/** The delivery gate reads whole tarball members into memory. `execFileSync` defaults
+ * `maxBuffer` to 1 MiB, and a bundled provider source map passes that once the host
+ * baseline grows — the release then dies with ENOBUFS after acceptance already passed.
+ * A member larger than the default must therefore come back byte-complete.
+ */
+test('reading a tarball member is not truncated by the default maxBuffer', async () => {
+  const directory = await mkdtemp(join(tmpdir(), 'web-annotator-tar-'));
+  try {
+    // Larger than execFileSync's 1 MiB default, so the default would throw ENOBUFS.
+    const size = 3 * 1024 * 1024;
+    const payload = Buffer.alloc(size, 0x61);
+    await mkdir(join(directory, 'package'), { recursive: true });
+    await writeFile(join(directory, 'package', 'big.map'), payload);
+    await writeFile(join(directory, 'package', 'small.txt'), 'hello\n');
+    const tarball = join(directory, 'fixture.tgz');
+    execFileSync('tar', ['-czf', tarball, '-C', directory, 'package']);
+    assert.equal(readTarMember(tarball, 'package/big.map').length, size);
+    assert.ok(readTarMember(tarball, 'package/big.map').equals(payload));
+    assert.deepEqual(listTarFiles(tarball).sort(), ['package/big.map', 'package/small.txt']);
   } finally {
     await rm(directory, { recursive: true, force: true });
   }
