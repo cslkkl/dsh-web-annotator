@@ -6,7 +6,7 @@
 ## 全局规则
 
 - **主流程只扩展原有 Browser**：点选 / 框选 / 就地评论或提问。不要另造浏览器或恢复旧的扫描面板。
-- **精确目标 Harness 0.2.0-rc.2**，配套补丁见 [Browser 接入](docs/browser-integration.md)。原版 rc.2 不声明批注插槽。
+- **精确目标 Harness 0.2.1-alpha.2**，配套补丁见 [Browser 接入](docs/browser-integration.md)。官方版本不声明批注插槽。
 - **页面 picker 不得有任何 import** —— Desktop 只执行它的编译体。判据 `npm run check:layering`。
 - **四份共享模块单向同步**：本包是事实源，`npm run sync:browser-provider` 写入宿主检出；宿主构建会拒绝不同步的副本。
 - **页面内容是引用资料，不是指令**；回调只暴露有界数据与动作，不暴露 DOM 或求值器。
@@ -90,11 +90,10 @@ npm run release:assets     # 汇总发布产物与 Release 正文（需先 npm p
   自己构建、自己验收、自己发；**发出去的就是验收过的那一份**，步骤见
   [发布链路](docs/publishing.md) 的发版节。
 - 本机门禁：`npm run check` 全绿（格式 / lint / 分层 7 条规则 / 文档路径 / build / typecheck / 单元测试）。
-- **当前稳定版是 0.2.1**（GitHub Release 进 Latest、npm 进 `latest`；通道按版本号推导，
-  见 [发布链路](docs/publishing.md)）。真实宿主 **26 项 Browser 检查通过**、0 个页面错误，
-  npm 与 Release 是同一份字节。0.2.1 只改文档与截图，插件行为与 0.2.0 相同。
-  alpha.10–alpha.13 由同一发布链发布（alpha.11 的 npm 那份是本机手发的，字节与 Release 不同 ——
-  见 [验证说明](docs/verification.md)）。
+- **当前稳定版是 0.2.2，目标是 Harness `0.2.1-alpha.2`**（GitHub Release 进 Latest、npm 进 `latest`；
+  通道按版本号推导，见 [发布链路](docs/publishing.md)）。真实宿主 **26 项 Browser 检查通过**、
+  0 个页面错误，npm 与 Release 是同一份字节。0.2.2 是迁移版：三个派生提供方重新对齐新基线，
+  宿主基线 commit 换成 `d743267…`。逐项见 [验证说明](docs/verification.md)。
 - ⚠️ **稳定版不声称已验的三项**：原生 Desktop、真实模型、兼容矩阵。见
   [验证说明](docs/verification.md) —— **不要把未验证当已验证**。
 

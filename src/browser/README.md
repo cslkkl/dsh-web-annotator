@@ -13,7 +13,7 @@
 | `bridge.ts`            | 开发页（Vite `serve`）          | 只接受本页 parent 的 `MessageChannel` 启动           | `installAnnotationBridge`、`isAllowedParentOrigin`                                                                    |
 | `iframe-annotation.ts` | 宿主补丁                        | 向桥接 iframe 发一次有界请求，处理握手 / 取消 / 超时 | `annotateIframe`                                                                                                      |
 | `screenshot.ts`        | Client 半端                     | 在真实像素上画出选区并压成有界 JPEG                  | `markScreenshot`                                                                                                      |
-| `slots.ts`             | 编译期                          | 声明原版 rc.2 缺失的两个 Browser 子插槽              | 模块增强                                                                                                              |
+| `slots.ts`             | 编译期                          | 声明官方 0.2.1-alpha.2 缺失的两个 Browser 子插槽     | 模块增强                                                                                                              |
 
 ### 共享模块
 

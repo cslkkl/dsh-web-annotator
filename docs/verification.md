@@ -26,7 +26,7 @@ npm run test:storage
 
 ## 三、真实宿主验收
 
-需要精确版本 Harness 0.2.0-rc.2、配套提供方、已安装 Chromium，以及一个打包产物。
+需要精确版本 Harness 0.2.1-alpha.2、配套提供方、已安装 Chromium，以及一个打包产物。
 
 ```powershell
 npm run build                      # 先产出 lib/
@@ -89,6 +89,32 @@ npm run verify:delivery
 
 明细落在本地未入库的 `integration/*.json`；这里只留可复述的结论。
 
+### 0.2.2（2026-10-12）
+
+**迁移到 Harness `0.2.1-alpha.2`。** 本包替换官方三个提供方，而它们是从 Harness 源码派生重建的
+（包内内嵌上游代码），所以宿主升级后旧包被版本守卫明确拒绝 —— 本版把三份提供方重新对齐新基线。
+
+| 项目                      | 结果                                                              |
+| ------------------------- | ----------------------------------------------------------------- |
+| 补丁基线                  | `639ed01…`（rc.2）→ `d743267…`（`dsh-v0.2.1-alpha.2`）；26 个文件 |
+| 补丁校验                  | `verify:browser-patch` 通过：按精确基线应用并复现 26 个受审文件   |
+| 三个提供方类型检查        | `typecheck:{browser,chat,layout}-provider` 全过                   |
+| `npm run test:acceptance` | **26 项 Browser 检查通过**，0 个页面错误、0 个 4xx/5xx 响应       |
+| `npm run test:storage`    | 4 项通过                                                          |
+| 本机门禁                  | 51 项单元测试全绿                                                 |
+
+**冲突是怎么处理的**（不是"改个版本号"）：
+
+- 补丁的 18 个文件在新基线上**可直接应用**，含 Browser 全部核心 —— 上游一处未改这些文件。
+- 8 个冲突里 4 个是 README（文档），4 个是 Chat 源码。上游把消息流从 `conversation.view`
+  拆出独立的 `conversation.chat.flow`，并把 `ChatNodeList` 移进新文件 `ChatFlow.tsx`。
+  我们那条 `conversation.message.user-text` 链因此挂到新的 `chat.flow` 上；
+  `ChatView.tsx` 与上游新版**零差异**（`git diff` 为空），是迁移而不是硬塞。
+- 依赖侧：`cordis` 升到 `4.0.5-alpha.1`。旧 `node_modules` 残留会让 npm 解析出旧 peer 链
+  并报 ERESOLVE —— **干净重装**即可，不需要 `--force`。
+
+⚠️ **本版仍未验证**：原生 Desktop、真实模型、兼容矩阵 —— 与上一版相同的边界，迁移没有改变它们。
+
 ### 0.2.1（2026-10-12）
 
 **插件行为与 0.2.0 完全相同**，改的只有文档与截图。本版存在的理由是：npm 的 README 取自
@@ -131,7 +157,7 @@ npm run verify:delivery
 | ------------ | -------------------------------------------------------------------- |
 | 原生 Desktop | **未验证**；只验到 Web composition，Electron 截图边界由 Web 测试替代 |
 | 真实模型     | **未验证**；验收用官方 replay 适配器                                 |
-| 兼容矩阵     | **未定**；精确支持 Harness 0.2.0-rc.2，其他版本未验                  |
+| 兼容矩阵     | **未定**；精确支持 Harness 0.2.1-alpha.2，其他版本未验               |
 
 ### 0.2.0-alpha.13（2026-10-12）
 
@@ -235,7 +261,7 @@ dist-tag；稳定版 → Latest + `latest`。判断在可测的 `releaseChannel(
 | ------------------------------ | ---------------------------------------------------------------------------------- |
 | `npm run check`                | 格式 / lint / 分层 7 条规则 / 文档路径 / build / typecheck / 单元测试全绿          |
 | `npm run test:storage`         | 4 项通过：旧键迁移只在新键提交后删除、>8 MB 队列重载、写入失败保留与重试、显式删除 |
-| `npm run test:harness`         | 真实 Harness 0.2.0-rc.2 + 官方 replay，2 轮对话通过                                |
+| `npm run test:harness`         | 真实 Harness 0.2.1-alpha.2 + 官方 replay，2 轮对话通过                             |
 | `npm run test:acceptance`      | 打包产物 + 包内提供方，**24 项 Browser 检查通过**，0 个页面错误                    |
 | `npm run verify:browser-patch` | 补丁可应用到精确基线，并复现 26 个已审阅文件                                       |
 | `npm run verify:delivery`      | 交付的 tgz 与验收时运行的包逐字节一致，无变更文件                                  |

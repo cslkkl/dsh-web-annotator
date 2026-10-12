@@ -104,7 +104,7 @@ export function releaseNotes({
   paragraphs.push(
     `下载 **${tarball}**，在 DSH 插件管理页选择该本地包，再正常退出并重开 Desktop。` +
       '一个包内含 Browser、Chat 与 Layout 扩展，用户不需要编译；' +
-      '卸载整个 bundle 并重启可恢复官方提供方。精确支持 Harness 内核 **0.2.0-rc.2**。',
+      '卸载整个 bundle 并重启可恢复官方提供方。精确支持 Harness 内核 **0.2.1-alpha.2**。',
     '',
   );
   if (acceptance)

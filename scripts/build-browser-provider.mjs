@@ -1,4 +1,4 @@
-/** Build a reviewable Browser provider from the exact rc.2 source checkout.
+/** Build a reviewable Browser provider from the exact 0.2.1-alpha.2 source checkout.
  * The published Harness installation is never changed by this script.
  */
 import { build } from 'esbuild';

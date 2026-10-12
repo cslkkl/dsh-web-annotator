@@ -49,7 +49,7 @@ format:check → lint → check:layering → check:doc-paths → build → typec
 | `build-browser-provider.mjs`     | `build:browser-provider`                   | 先逐字节比对共享模块，再从宿主检出构建 Browser 提供方             |
 | `build-chat-provider.mjs`        | `build:chat-provider`                      | 构建 Chat 提供方（用户正文 chain）                                |
 | `build-layout-provider.mjs`      | `build:layout-provider`                    | 构建 Layout 提供方（全屏遮挡修复）                                |
-| `typecheck-browser-provider.mjs` | `typecheck:{browser,chat,layout}-provider` | 针对已安装 rc.2 声明的窄范围类型检查                              |
+| `typecheck-browser-provider.mjs` | `typecheck:{browser,chat,layout}-provider` | 针对已安装 0.2.1-alpha.2 声明的窄范围类型检查                     |
 | `package-host.mjs`               | `build:host` 的一部分                      | 把三个提供方放进 `lib/host`，记录逐文件哈希与补丁哈希             |
 | `collect-licenses.mjs`           | `build:host` 的一部分                      | 从 source map 反查被打包依赖，生成 `lib/THIRD_PARTY_LICENSES.md`  |
 | `verify-browser-patch.mjs`       | `verify:browser-patch`                     | 在独立 Git root 中把补丁应用到精确基线，并逐字节比对宿主检出      |

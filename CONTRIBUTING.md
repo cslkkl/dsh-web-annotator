@@ -9,7 +9,7 @@
 
 - Node.js **24.15.0**（见 [.node-version](.node-version)），npm。
 - 提交 `package-lock.json` 的变化，不要混用其他包管理器锁文件。
-- 目标 Harness 版本是 **0.2.0-rc.2**；升级该目标要同时检查客户端接口、包元数据与真实加载流程。
+- 目标 Harness 版本是 **0.2.1-alpha.2**；升级该目标要同时检查客户端接口、包元数据与真实加载流程。
 
 ```sh
 npm ci

@@ -818,7 +818,7 @@ try {
         // assertion would otherwise leave no trace to diagnose it from.
         failedResponses,
         runtime: fixture.runtime,
-        target: '0.2.0-rc.2 + bundled Browser, Chat and Layout extensions',
+        target: '0.2.1-alpha.2 + bundled Browser, Chat and Layout extensions',
         desktopNative: 'unverified',
         modelSourceEdits: 'unverified',
         screenshotAttachments: true,

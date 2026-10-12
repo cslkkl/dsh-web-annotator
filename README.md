@@ -6,7 +6,7 @@
 [![Package checks](https://github.com/cslkkl/dsh-web-annotator/actions/workflows/ci.yml/badge.svg)](https://github.com/cslkkl/dsh-web-annotator/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Node](https://img.shields.io/badge/node-24.15.0-informational.svg)](.node-version)
-[![Harness](https://img.shields.io/badge/harness-0.2.0--rc.2-informational.svg)](docs/browser-integration.md)
+[![Harness](https://img.shields.io/badge/harness-0.2.1--alpha.2-informational.svg)](docs/browser-integration.md)
 
 **简体中文** · [English](README_en.md)
 
@@ -57,7 +57,7 @@ dsh plugin --profile desktop add --ignore-scripts /absolute/path/dsh-web-annotat
 只装这一个包，然后正常退出并重开 Desktop。使用其他 Profile 时替换 `desktop`。
 
 该 bundle 在启用期间**替换官方 Browser、Chat 和 Layout 提供方**。
-请先确认 Harness 内核是 **0.2.0-rc.2**，不要在其他版本或另一套同类提供方上混装。
+请先确认 Harness 内核是 **0.2.1-alpha.2**，不要在其他版本或另一套同类提供方上混装。
 卸载整个 bundle 会撤销这些替换，重启后恢复官方提供方。
 
 旧本地预览用户先移除 `dsh-layout-care` 和 `dsh-layout-care-browser-preview` 再安装新包。

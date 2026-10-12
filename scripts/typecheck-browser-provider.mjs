@@ -1,4 +1,4 @@
-/** Narrow Client typecheck against installed rc.2 declarations, without a monorepo build.
+/** Narrow Client typecheck against installed 0.2.1-alpha.2 declarations, without a monorepo build.
  * `DSH_HOST_CHECKOUT` selects the Harness checkout, exactly as the provider builds do.
  */
 import { readdir, readFile, writeFile } from 'node:fs/promises';

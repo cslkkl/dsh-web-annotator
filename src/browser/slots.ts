@@ -1,4 +1,4 @@
-/** Preview declarations for the additive Browser patch, absent in stock rc.2. */
+/** Preview declarations for the additive Browser patch, absent in stock 0.2.1-alpha.2. */
 import type { TabId } from '@deepseek-ai/dsh-client-ui-dockkit';
 import type { BrowserAnnotationOptions } from './page-inspector';
 import type { AnnotationResult } from './protocol';

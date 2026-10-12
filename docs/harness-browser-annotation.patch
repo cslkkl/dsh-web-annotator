@@ -1,5 +1,5 @@
 diff --git a/docs/subsystems/sidebar-right.md b/docs/subsystems/sidebar-right.md
-index 6315827..b61b1db 100644
+index 6315827c27..b61b1dbcc8 100644
 --- a/docs/subsystems/sidebar-right.md
 +++ b/docs/subsystems/sidebar-right.md
 @@ -2,6 +2,8 @@
@@ -12,7 +12,7 @@ index 6315827..b61b1db 100644
  
  This page is the reference for the subsystem's contracts: addresses, tab-type registration, the navigation service, the extension slots and their owner props, the resource model, the Workspace Files service, the shipped types, and what is deliberately not built. How the layout engine, the frame, and the surface fit together is in the [Agent Note](../../.agents/notes/implemented/feature/2026-09-04-right-sidebar-docking-infrastructure.md); slot mechanics are in the [Slots reference](slots.md).
 diff --git a/docs/subsystems/sidebar-right.zh.md b/docs/subsystems/sidebar-right.zh.md
-index 1df6007..1588a87 100644
+index 1df6007e12..1588a87795 100644
 --- a/docs/subsystems/sidebar-right.zh.md
 +++ b/docs/subsystems/sidebar-right.zh.md
 @@ -2,6 +2,8 @@
@@ -25,51 +25,105 @@ index 1df6007..1588a87 100644
  
  本页是该子系统契约的参考：地址、tab 类型注册、导航服务、扩展 slot 与其 owner props、资源模型、Workspace Files 服务、内置类型，以及明确不做的事。布局引擎、frame 与停靠面如何拼在一起见 [Agent Note](../../.agents/notes/implemented/feature/2026-09-04-right-sidebar-docking-infrastructure.zh.md)；slot 机制见 [Slots 参考](slots.zh.md)。
 diff --git a/packages/client/ui-chat/README.md b/packages/client/ui-chat/README.md
-index f09b12c..6031abf 100644
+index b5c4c2e749..796e84bf3a 100644
 --- a/packages/client/ui-chat/README.md
 +++ b/packages/client/ui-chat/README.md
-@@ -182,3 +182,5 @@ None.
- </details>
+@@ -196,3 +196,5 @@ None; Chat presentation does not assemble or mutate provider requests.
+ None.
  
- **Runtime invariant:** No companion is published. Conversation and Slot registration enforce Chat target consistency.
+ </details>
 +
 +The optional `conversation.message.user-text` chain presents recognized user text inside the existing bubble, including local echoes and steering. A contribution receives only the joined text; all-decline preserves reference-aware ordinary rendering. It does not change the persisted message, model request, image attachments or message actions.
 diff --git a/packages/client/ui-chat/README.zh.md b/packages/client/ui-chat/README.zh.md
-index 599c4cb..b7f4765 100644
+index 307b8bb33f..3454e62574 100644
 --- a/packages/client/ui-chat/README.zh.md
 +++ b/packages/client/ui-chat/README.zh.md
-@@ -182,3 +182,5 @@ Chat 会在历史前插与 renderer 重新挂载时恢复语义锚点，并且
- </details>
+@@ -196,3 +196,5 @@ Chat 会在历史前插与 renderer 重新挂载时恢复语义锚点，并且
+ 无。
  
- **运行时不变式：** 不发布伴生入口。Conversation 与 slot 注册已经强制 Chat target 一致。
+ </details>
 +
 +可选的 `conversation.message.user-text` chain 在原有消息气泡中呈现已识别的用户正文，也覆盖本地回显与 steering。插件只收到拼接后的文本；全部拒绝时保留普通正文与引用呈现。它不改变持久化消息、模型请求、图片附件或消息操作。
 diff --git a/packages/client/ui-chat/src/client/apply.ts b/packages/client/ui-chat/src/client/apply.ts
-index e580772..94c73d0 100644
+index eabd566256..71cca4a5e0 100644
 --- a/packages/client/ui-chat/src/client/apply.ts
 +++ b/packages/client/ui-chat/src/client/apply.ts
-@@ -185,6 +185,7 @@ export function apply(ctx: Context): void {
-       children: {
-         'conversation.chat.node': { kind: 'keyed', scope: 'session', inject: CHAT_NODE_INJECT },
-         'conversation.message.images': { kind: 'single', scope: 'session' },
-+        'conversation.message.user-text': { kind: 'chain', scope: 'session' },
-       },
-       store: chatStore,
-       inject: (sessionId: SessionId): ChatViewInjected => {
+@@ -212,6 +212,7 @@ export function apply(ctx: Context): void {
+     children: {
+       'conversation.chat.node': { kind: 'keyed', scope: 'session', inject: CHAT_NODE_INJECT },
+       'conversation.message.images': { kind: 'single', scope: 'session' },
++      'conversation.message.user-text': { kind: 'chain', scope: 'session' },
+     },
+     inject: (sessionId: SessionId): ChatFlowDataInjected => {
+       const binding = ctx.sessions.binding(sessionId)
+diff --git a/packages/client/ui-chat/src/client/chat/ChatFlow.tsx b/packages/client/ui-chat/src/client/chat/ChatFlow.tsx
+index 1b8306ee5f..3f8fd7035d 100644
+--- a/packages/client/ui-chat/src/client/chat/ChatFlow.tsx
++++ b/packages/client/ui-chat/src/client/chat/ChatFlow.tsx
+@@ -2,7 +2,7 @@
+ import { memo, useCallback } from 'react'
+ import type { RenderMessageImages } from '@deepseek-ai/dsh-client-ui-conversation/client'
+ import { assertNever } from '@deepseek-ai/dsh-util-values'
+-import type { ChatFlowSlotProps } from '../contract/slots.ts'
++import type { ChatFlowSlotProps, ChatNodeOwnerProps } from '../contract/slots.ts'
+ import { ChatNodeSeat } from './ChatNodeSeat.tsx'
+ import { ChatGroupSeat } from './ChatGroupSeat.tsx'
+ import { PendingSteeringBubble, PendingSubmissionBubble } from './MessageItem.tsx'
+@@ -13,7 +13,7 @@ import { RunningStatus } from './RunningStatus.tsx'
+ export const ChatFlow = memo(function ChatFlow({
+   entries, pendingInputs, lastInputTurn, deferCollapse,
+   useSession, useChat, useChatNode, useChatNodeBottom, useChatNodeProcess, useChatGroup, usePresentation,
+-  useStore, actions, renderSlot, t, useGroupAction, useGroupHeaderAction,
++  useStore, actions, renderSlot, renderSlotChain, t, useGroupAction, useGroupHeaderAction,
+   cwd, openFile, openSkill, inspectCall, forkAt, loadImage, fileMentions,
+ }: ChatFlowSlotProps) {
+   const nodeStore = useChat(snapshot => snapshot.nodes)
+@@ -29,10 +29,17 @@ export const ChatFlow = memo(function ChatFlow({
+     owner => renderSlot('conversation.message.images', { ...owner, loadImage }),
+     [loadImage, renderSlot],
+   )
++  // Recognized user text may be replaced by the feature chain (the annotation prompt
++  // collapses into "N notes"); all-decline keeps the default bubble, so an ordinary
++  // message renders exactly as before.
++  const renderUserText = useCallback<ChatNodeOwnerProps['renderUserText']>(
++    (text, fallback) => renderSlotChain('conversation.message.user-text', { text }, { fallback }),
++    [renderSlotChain],
++  )
+   const seatProps = {
+     nodeStore, useChatNode, useChatNodeBottom, useChatNodeProcess, usePresentation,
+     useStore, actions, renderSlot, t, useGroupAction, deferCollapse,
+-    cwd, openFile, openSkill, inspectCall, forkAt, loadImage, renderMessageImages, fileMentions,
++    cwd, openFile, openSkill, inspectCall, forkAt, loadImage, renderMessageImages, renderUserText, fileMentions,
+   }
+   const rows = entries.map((entry) => {
+     switch (entry.kind) {
+@@ -48,10 +55,10 @@ export const ChatFlow = memo(function ChatFlow({
+   })
+   const pendingRows = pendingInputs.map(item => 'requestId' in item ? (
+     <PendingSubmissionBubble key={item.requestId} submission={item}
+-      renderMessageImages={renderMessageImages} t={t} />
++      renderMessageImages={renderMessageImages} renderUserText={renderUserText} t={t} />
+   ) : (
+     <PendingSteeringBubble key={item.id} content={item.content}
+-      renderMessageImages={renderMessageImages} t={t} />
++      renderMessageImages={renderMessageImages} renderUserText={renderUserText} t={t} />
+   ))
+   const tail = entries.at(-1)
+   const node = tail?.kind === 'node' ? nodeStore.get(tail.key) : undefined
 diff --git a/packages/client/ui-chat/src/client/chat/ChatNodeSeat.tsx b/packages/client/ui-chat/src/client/chat/ChatNodeSeat.tsx
-index f2269da..8e65d7c 100644
+index 4bc1947dca..f293563523 100644
 --- a/packages/client/ui-chat/src/client/chat/ChatNodeSeat.tsx
 +++ b/packages/client/ui-chat/src/client/chat/ChatNodeSeat.tsx
-@@ -45,7 +45,7 @@ function turnOf(node: ChatNode | undefined): number | undefined {
+@@ -48,7 +48,7 @@ function turnOf(node: ChatNode | undefined): number | undefined {
  export const ChatNodeSeat = memo(function ChatNodeSeat({
    nodeKey, groupPart, useChatNode, useChatNodeProcess, usePresentation,
    cwd, openFile, openSkill, inspectCall, forkAt,
--  loadImage, renderMessageImages, fileMentions, useStore, actions, renderSlot, t,
-+  loadImage, renderMessageImages, renderUserText, fileMentions, useStore, actions, renderSlot, t,
+-  loadImage, renderMessageImages, fileMentions, useStore, actions, renderSlot, t, useChatNodeBottom, deferCollapse, useGroupAction,
++  loadImage, renderMessageImages, renderUserText, fileMentions, useStore, actions, renderSlot, t, useChatNodeBottom, deferCollapse, useGroupAction,
  }: ChatNodeSeatProps) {
+   const bottom = useChatNodeBottom(nodeKey)
    const node = useChatNode(nodeKey)
-   const routedNode = node as ChatNode | undefined
-@@ -131,11 +131,12 @@ export const ChatNodeSeat = memo(function ChatNodeSeat({
+@@ -132,11 +132,12 @@ export const ChatNodeSeat = memo(function ChatNodeSeat({
        forkAt,
        loadImage,
        renderMessageImages,
@@ -83,62 +137,8 @@ index f2269da..8e65d7c 100644
    ])
    if (routedNode === undefined || owner === null) return null
    // Runtime dispatch owns the correlation: every Node's discriminant is the
-diff --git a/packages/client/ui-chat/src/client/chat/ChatView.tsx b/packages/client/ui-chat/src/client/chat/ChatView.tsx
-index 460f98b..cf485d5 100644
---- a/packages/client/ui-chat/src/client/chat/ChatView.tsx
-+++ b/packages/client/ui-chat/src/client/chat/ChatView.tsx
-@@ -10,7 +10,7 @@ import type { PendingSubmission } from '@deepseek-ai/dsh-api-session-controller/
- import {
-   Button, IconChevronDownOutlineRegular, MarkdownDelegateProvider, Modal,
- } from '@deepseek-ai/dsh-client-ui-primitives'
--import type { ChatViewSlotProps, OpenFileOptions } from '../contract/slots.ts'
-+import type { ChatNodeOwnerProps, ChatViewSlotProps, OpenFileOptions } from '../contract/slots.ts'
- import type { ChatSnapshot } from '../contract/snapshot.ts'
- import { PendingSteeringBubble, PendingSubmissionBubble } from './MessageItem.tsx'
- import { ChatNodeSeat } from './ChatNodeSeat.tsx'
-@@ -77,10 +77,10 @@ const ChatNodeList = memo(function ChatNodeList({ entries, useChatGroup, pending
-   })
-   const pendingRows = pendingInputs.map(item => 'requestId' in item ? (
-     <PendingSubmissionBubble key={item.requestId} submission={item}
--      renderMessageImages={seatProps.renderMessageImages} t={seatProps.t} />
-+        renderMessageImages={seatProps.renderMessageImages} renderUserText={seatProps.renderUserText} t={seatProps.t} />
-   ) : (
-     <PendingSteeringBubble key={item.id} content={item.content}
--      renderMessageImages={seatProps.renderMessageImages} t={seatProps.t} />
-+        renderMessageImages={seatProps.renderMessageImages} renderUserText={seatProps.renderUserText} t={seatProps.t} />
-   ))
-   const tail = entries.at(-1)
-   const node = tail?.kind === 'node' ? seatProps.nodeStore.get(tail.key) : undefined
-@@ -99,7 +99,7 @@ const ChatNodeList = memo(function ChatNodeList({ entries, useChatGroup, pending
-  * ordered business Node crosses the keyed renderer seat.
-  */
- export function ChatView({
--  useSession, useChat, useChatNode, useChatNodeProcess, useChatGroup, useConversation, useSessions, useStore, actions, renderSlot,
-+    useSession, useChat, useChatNode, useChatNodeProcess, useChatGroup, useConversation, useSessions, useStore, actions, renderSlot, renderSlotChain,
-   sessionId, openFile, openSkill, openExternalLink, loadOlder, loadThrough, loadImage, inspectCall, chatScroll, forkAt, fileMentions,
-   usePresentation, useProjection, t,
- }: ChatViewSlotProps) {
-@@ -210,6 +210,10 @@ export function ChatView({
-     owner => renderSlot('conversation.message.images', { ...owner, loadImage }),
-     [loadImage, renderSlot],
-   )
-+  const renderUserText = useCallback<ChatNodeOwnerProps['renderUserText']>(
-+    (text, fallback) => renderSlotChain('conversation.message.user-text', { text }, { fallback }),
-+    [renderSlotChain],
-+  )
- 
-   const firstKey = order[0]
-   const firstSeq = firstKey === undefined ? null : nodeStore.get(firstKey)?.anchorSeq ?? null
-@@ -272,6 +276,7 @@ export function ChatView({
-                 forkAt={forkAt}
-                 loadImage={loadImage}
-                 renderMessageImages={renderMessageImages}
-+                  renderUserText={renderUserText}
-                 fileMentions={fileMentions}
-                 renderSlot={renderSlot}
-                 t={t}
 diff --git a/packages/client/ui-chat/src/client/chat/MessageItem.tsx b/packages/client/ui-chat/src/client/chat/MessageItem.tsx
-index 9005150..22094af 100644
+index 9005150af0..22094affeb 100644
 --- a/packages/client/ui-chat/src/client/chat/MessageItem.tsx
 +++ b/packages/client/ui-chat/src/client/chat/MessageItem.tsx
 @@ -160,11 +160,12 @@ function TurnMaxTokensItem({ t }: {
@@ -221,16 +221,17 @@ index 9005150..22094af 100644
        {...data.skillNames === undefined ? {} : { skillNames: data.skillNames }}
        t={t}
 diff --git a/packages/client/ui-chat/src/client/contract/slots.ts b/packages/client/ui-chat/src/client/contract/slots.ts
-index 5c7a8e3..c661e01 100644
+index 52d7786e20..eefcb79b12 100644
 --- a/packages/client/ui-chat/src/client/contract/slots.ts
 +++ b/packages/client/ui-chat/src/client/contract/slots.ts
-@@ -1,4 +1,5 @@
+@@ -1,5 +1,5 @@
  /** Chat-owned Slot declarations and composed component props. */
-+import type { ReactNode } from 'react'
+-import type { RefObject } from 'react'
++import type { ReactNode, RefObject } from 'react'
  import type { MessageId } from '@deepseek-ai/dsh-llm/brand'
  import type { SessionId, SessionSeq } from '@deepseek-ai/dsh-session/types'
- import type {
-@@ -158,6 +159,8 @@ export interface ChatNodeInjected {
+ import type { PendingSubmission } from '@deepseek-ai/dsh-api-session-controller/client'
+@@ -206,6 +206,8 @@ export interface ChatNodeInjected {
  
  /** Stable owner currency delivered to a keyed Chat renderer. */
  export interface ChatNodeOwnerProps {
@@ -239,55 +240,55 @@ index 5c7a8e3..c661e01 100644
    /** Renderer-owned Node portion selected by the grouping Definition. */
    groupPart?: string
    cwd?: string | undefined
-@@ -262,7 +265,7 @@ export interface ChatViewInjected {
- /** Full Chat view props. */
- export type ChatViewSlotProps =
-   PropsRuntime<'conversation.view'>
+@@ -324,7 +326,7 @@ export interface ChatFlowOwnerProps extends Pick<ChatNodeOwnerProps,
+ /** Full props of the Chat-owned flow renderer. */
+ export type ChatFlowSlotProps =
+   PropsRuntime<'conversation.chat.flow'>
 -  & PropsRenderSlots<'conversation.chat.node' | 'conversation.message.images'>
 +  & PropsRenderSlots<'conversation.chat.node' | 'conversation.message.images' | 'conversation.message.user-text'>
    & PropsStore<ChatStore>
-   & InjectFace<ChatViewInjected>
+   & InjectFace<ChatFlowDataInjected>
    & PropsLocale<'chat'>
-@@ -282,6 +285,8 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
-   }
- 
-   interface SlotMap {
+@@ -369,6 +371,8 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
+       hookContext: ChatFlowHookContext
+       inject: ChatFlowInjected
+     }
 +    /** Feature-owned presentation of recognized user text; all-decline keeps the normal bubble. */
 +    'conversation.message.user-text': { kind: 'chain'; scope: 'session'; owner: { readonly text: string } }
      /**
       * Final Chat node renderer, keyed by `ChatNodeKind`. The component receives
       * the typed node, shared Chat actions, and Turn-data hook. Reusing a key
 diff --git a/packages/client/ui-layout/README.md b/packages/client/ui-layout/README.md
-index e32e926..bbeeb71 100644
+index 43c61b89d1..b2411f513b 100644
 --- a/packages/client/ui-layout/README.md
 +++ b/packages/client/ui-layout/README.md
 @@ -31,6 +31,8 @@ The root slot composes the sidebar, main content, and right column. The sidebar
  
- Global panels occupy the root-scoped `main` keyed slot; `conversation` is the reserved key for the Conversation. `ctx.layout.selectPanel(id)` selects a registered panel, and `null` selects the Conversation without changing the current Session. No global panel is registered by the shipped composition.
+ Global panels occupy the root-scoped `main` keyed slot; `conversation` is the reserved key for the Conversation. `ctx.layout.selectPanel(id)` selects a registered panel, and `null` selects the Conversation without changing the current Session. The Plugins page contributes one of the shipped global panels.
  
 +While the right panel is fullscreen, the covered main column is invisible and inert but remains mounted and measured. This prevents glass themes from painting or focusing the chat above the panel; restoring the panel preserves the same composer and draft.
 +
- <a id="window-chrome-seat"></a>
- ### Window-chrome seat
+ The single root-scoped `shell.bottom` slot spans the full width below the three columns. Its occupant controls its own height and visibility; the columns shrink by that height, and empty content reserves no space. Main-panel navigation preserves the bottom component. Column resize handles stop above it, while `shell.overlay` covers the whole frame. The default composition leaves this slot empty.
  
+ <a id="window-chrome-seat"></a>
 diff --git a/packages/client/ui-layout/README.zh.md b/packages/client/ui-layout/README.zh.md
-index 83b29e5..9ab9b41 100644
+index 9b426dcdef..611d53dcff 100644
 --- a/packages/client/ui-layout/README.zh.md
 +++ b/packages/client/ui-layout/README.zh.md
 @@ -31,6 +31,8 @@ kind: "package-reference"
  
- 全局面板占据 root 作用域的 `main` keyed slot；`conversation` 是为会话界面保留的 key。`ctx.layout.selectPanel(id)` 选中已注册面板，`null` 则选中会话界面，但不改变当前会话。默认组合不注册任何全局面板。
+ 全局面板占据 root 作用域的 `main` keyed slot；`conversation` 是为会话界面保留的 key。`ctx.layout.selectPanel(id)` 选中已注册面板，`null` 则选中会话界面，但不改变当前会话。Plugins 页面是默认组合中的一个全局面板。
  
 +右侧面板全屏时，后方主栏不可见且设为 inert，但保持挂载和尺寸。玻璃主题因此不会让聊天界面绘制在面板上方或误获焦点；退出全屏恢复同一输入框与草稿。
 +
- <a id="window-chrome-seat"></a>
- ### 窗口 chrome 座
+ root 作用域的单一 `shell.bottom` slot 横跨三列下方的整行。占用方控制自身高度与显隐；三列按该高度缩短，空内容不预留空间。切换主面板时保留底部组件。列宽拖拽手柄止于底部内容上方，`shell.overlay` 仍覆盖整个框架。默认组合不占用此 slot。
  
+ <a id="window-chrome-seat"></a>
 diff --git a/packages/client/ui-layout/src/client/AppFrame.module.css b/packages/client/ui-layout/src/client/AppFrame.module.css
-index 56494a9..c707f8e 100644
+index 5b71ebecfd..915800e14e 100644
 --- a/packages/client/ui-layout/src/client/AppFrame.module.css
 +++ b/packages/client/ui-layout/src/client/AppFrame.module.css
-@@ -74,6 +74,14 @@
+@@ -69,6 +69,14 @@
    overflow: hidden;
  }
  
@@ -303,7 +304,7 @@ index 56494a9..c707f8e 100644
     sidebar column, which keeps only a translucent tint; the centre paints the
     base background itself to stay opaque. The sidebar/centre separator moves
 diff --git a/packages/client/ui-layout/src/client/AppFrame.tsx b/packages/client/ui-layout/src/client/AppFrame.tsx
-index 841f9f7..1f6ba88 100644
+index 5614947447..e72dae0bd4 100644
 --- a/packages/client/ui-layout/src/client/AppFrame.tsx
 +++ b/packages/client/ui-layout/src/client/AppFrame.tsx
 @@ -32,8 +32,9 @@ export type AppFrameProps =
@@ -328,7 +329,7 @@ index 841f9f7..1f6ba88 100644
            {renderSlot('rightbar', { width: normal.rightbar, viewportWidth: viewport, canShow: normal.rightbar > 0 })}
          </RightbarColumn>
 diff --git a/packages/client/ui-sidebar-browser/README.md b/packages/client/ui-sidebar-browser/README.md
-index b15844e..592d2f2 100644
+index e3664ef582..03da2eea11 100644
 --- a/packages/client/ui-sidebar-browser/README.md
 +++ b/packages/client/ui-sidebar-browser/README.md
 @@ -46,6 +46,14 @@ The `browser.new` command opens a separate Browser page in the focused dock pane
@@ -347,7 +348,7 @@ index b15844e..592d2f2 100644
  
  <a id="understand-the-implementation"></a>
 diff --git a/packages/client/ui-sidebar-browser/README.zh.md b/packages/client/ui-sidebar-browser/README.zh.md
-index d09d327..df24c5c 100644
+index 4be25a37c0..776e5ad603 100644
 --- a/packages/client/ui-sidebar-browser/README.zh.md
 +++ b/packages/client/ui-sidebar-browser/README.zh.md
 @@ -46,6 +46,14 @@ Client 插件可以调用 `ctx.sidebarRight.openTab('browser', { params: { url }
@@ -367,7 +368,7 @@ index d09d327..df24c5c 100644
  <a id="understand-the-implementation"></a>
 diff --git a/packages/client/ui-sidebar-browser/src/client/annotation/iframe-annotation.ts b/packages/client/ui-sidebar-browser/src/client/annotation/iframe-annotation.ts
 new file mode 100644
-index 0000000..867e819
+index 0000000000..867e819fed
 --- /dev/null
 +++ b/packages/client/ui-sidebar-browser/src/client/annotation/iframe-annotation.ts
 @@ -0,0 +1,74 @@
@@ -447,7 +448,7 @@ index 0000000..867e819
 +}
 diff --git a/packages/client/ui-sidebar-browser/src/client/annotation/page-inspector.ts b/packages/client/ui-sidebar-browser/src/client/annotation/page-inspector.ts
 new file mode 100644
-index 0000000..9d57afa
+index 0000000000..9d57afa7fd
 --- /dev/null
 +++ b/packages/client/ui-sidebar-browser/src/client/annotation/page-inspector.ts
 @@ -0,0 +1,915 @@
@@ -1368,7 +1369,7 @@ index 0000000..9d57afa
 +}
 diff --git a/packages/client/ui-sidebar-browser/src/client/annotation/protocol.ts b/packages/client/ui-sidebar-browser/src/client/annotation/protocol.ts
 new file mode 100644
-index 0000000..2861153
+index 0000000000..28611536cd
 --- /dev/null
 +++ b/packages/client/ui-sidebar-browser/src/client/annotation/protocol.ts
 @@ -0,0 +1,169 @@
@@ -1543,7 +1544,7 @@ index 0000000..2861153
 +}
 diff --git a/packages/client/ui-sidebar-browser/src/client/annotation/screenshot.ts b/packages/client/ui-sidebar-browser/src/client/annotation/screenshot.ts
 new file mode 100644
-index 0000000..f8bf8b6
+index 0000000000..f8bf8b64f8
 --- /dev/null
 +++ b/packages/client/ui-sidebar-browser/src/client/annotation/screenshot.ts
 @@ -0,0 +1,49 @@
@@ -1598,7 +1599,7 @@ index 0000000..f8bf8b6
 +}
 diff --git a/packages/client/ui-sidebar-browser/src/client/annotation/slots.ts b/packages/client/ui-sidebar-browser/src/client/annotation/slots.ts
 new file mode 100644
-index 0000000..18856f0
+index 0000000000..18856f07c4
 --- /dev/null
 +++ b/packages/client/ui-sidebar-browser/src/client/annotation/slots.ts
 @@ -0,0 +1,24 @@
@@ -1627,7 +1628,7 @@ index 0000000..18856f0
 +  }
 +}
 diff --git a/packages/client/ui-sidebar-browser/src/client/browser/BrowserController.ts b/packages/client/ui-sidebar-browser/src/client/browser/BrowserController.ts
-index 45d17bb..1dcf3fa 100644
+index 45d17bb259..1dcf3fad2a 100644
 --- a/packages/client/ui-sidebar-browser/src/client/browser/BrowserController.ts
 +++ b/packages/client/ui-sidebar-browser/src/client/browser/BrowserController.ts
 @@ -7,6 +7,8 @@ import type { BrowserPage, BrowserPageFactory } from './BrowserPage.ts'
@@ -1714,7 +1715,7 @@ index 45d17bb..1dcf3fa 100644
      mount(request) {
        const { tabId, signal } = request
 diff --git a/packages/client/ui-sidebar-browser/src/client/electron/ElectronWebviewPresentation.ts b/packages/client/ui-sidebar-browser/src/client/electron/ElectronWebviewPresentation.ts
-index 5d3ff43..de1a20b 100644
+index 5d3ff43d40..de1a20b918 100644
 --- a/packages/client/ui-sidebar-browser/src/client/electron/ElectronWebviewPresentation.ts
 +++ b/packages/client/ui-sidebar-browser/src/client/electron/ElectronWebviewPresentation.ts
 @@ -2,9 +2,14 @@
@@ -1783,7 +1784,7 @@ index 5d3ff43..de1a20b 100644
    mount(viewportId: string): () => void {
      const host = document.getElementById(viewportId)
 diff --git a/packages/client/ui-sidebar-browser/src/client/index.ts b/packages/client/ui-sidebar-browser/src/client/index.ts
-index d44226e..c0f9218 100644
+index d44226eb13..c0f92180d3 100644
 --- a/packages/client/ui-sidebar-browser/src/client/index.ts
 +++ b/packages/client/ui-sidebar-browser/src/client/index.ts
 @@ -18,8 +18,12 @@ import type { BrowserPageFactory } from './browser/BrowserPage.ts'
@@ -1811,7 +1812,7 @@ index d44226e..c0f9218 100644
          const existing = controllers.get(sessionId)
          if (existing !== undefined) {
 diff --git a/packages/client/ui-sidebar-browser/src/client/view/BrowserBody.tsx b/packages/client/ui-sidebar-browser/src/client/view/BrowserBody.tsx
-index f819dba..b4fc5f6 100644
+index f819dba436..b4fc5f6687 100644
 --- a/packages/client/ui-sidebar-browser/src/client/view/BrowserBody.tsx
 +++ b/packages/client/ui-sidebar-browser/src/client/view/BrowserBody.tsx
 @@ -1,5 +1,5 @@
@@ -1867,7 +1868,7 @@ index f819dba..b4fc5f6 100644
      </div>
    )
 diff --git a/packages/client/ui-sidebar-browser/src/client/view/BrowserPresentation.ts b/packages/client/ui-sidebar-browser/src/client/view/BrowserPresentation.ts
-index dadf0dc..0b47111 100644
+index dadf0dc478..0b47111b85 100644
 --- a/packages/client/ui-sidebar-browser/src/client/view/BrowserPresentation.ts
 +++ b/packages/client/ui-sidebar-browser/src/client/view/BrowserPresentation.ts
 @@ -1,5 +1,9 @@
@@ -1881,7 +1882,7 @@ index dadf0dc..0b47111 100644
     * Attach the page inside a committed content container.
     * @param viewportId - content element id; its DOM ancestors must remain connected for page retention.
 diff --git a/packages/client/ui-sidebar-browser/src/client/view/IframePresentation.ts b/packages/client/ui-sidebar-browser/src/client/view/IframePresentation.ts
-index fc064f5..595677d 100644
+index fc064f5ca7..595677d781 100644
 --- a/packages/client/ui-sidebar-browser/src/client/view/IframePresentation.ts
 +++ b/packages/client/ui-sidebar-browser/src/client/view/IframePresentation.ts
 @@ -2,6 +2,9 @@

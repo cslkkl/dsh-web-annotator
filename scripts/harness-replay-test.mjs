@@ -45,7 +45,7 @@ function dependencyEntries(workspace) {
       );
     }
   }
-  if (!cliEntry) throw new Error('Set DSH_CLI_ENTRY to the Harness 0.2.0-rc.2 lib/bin.js file.');
+  if (!cliEntry) throw new Error('Set DSH_CLI_ENTRY to the Harness 0.2.1-alpha.2 lib/bin.js file.');
   return { cliEntry: resolve(cliEntry), replayEntry: resolve(replayEntry) };
 }
 
@@ -95,13 +95,13 @@ export async function launchReplayFixture({
   );
   assert.equal(
     replayManifest.version,
-    '0.2.0-rc.2',
+    '0.2.1-alpha.2',
     'Replay must match the target Harness version.',
   );
   assert.equal(
     cliManifest.version,
-    '0.2.0-rc.2',
-    'The integration fixture targets Harness 0.2.0-rc.2.',
+    '0.2.1-alpha.2',
+    'The integration fixture targets Harness 0.2.1-alpha.2.',
   );
   const work = join(resolve(workspace), 'work');
   await mkdir(work, { recursive: true });
@@ -111,7 +111,7 @@ export async function launchReplayFixture({
   const sessionsRoot = join(runtime, 'sessions');
   const overrideFile = join(runtime, 'replay.override.json');
   await writeFile(overrideFile, JSON.stringify(responses.map(textStream), null, 2) + '\n');
-  // rc.2 explicitly supports a whole-script override with file === overrideFile.
+  // 0.2.1-alpha.2 explicitly supports a whole-script override with file === overrideFile.
   assert.equal(
     replay.loadReplayScript({ file: overrideFile, overrideFile }).length,
     responses.length,
@@ -370,7 +370,7 @@ async function main() {
       JSON.stringify(
         {
           ok: true,
-          harnessVersion: '0.2.0-rc.2',
+          harnessVersion: '0.2.1-alpha.2',
           adapter: '@deepseek-ai/dsh-llm-replay',
           turns: ends.length,
           messages: snapshot.length,

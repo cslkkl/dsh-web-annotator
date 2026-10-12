@@ -15,7 +15,7 @@ for (const target of targets) {
   const source = resolve('integration', directory);
   const destination = join(output, directory);
   const provider = JSON.parse(await readFile(join(source, 'package.json'), 'utf8'));
-  assert.equal(provider.version, '0.2.0-rc.2');
+  assert.equal(provider.version, '0.2.1-alpha.2');
   assert.equal(
     provider.name,
     `@deepseek-ai/dsh-client-ui-${target === 'browser' ? 'sidebar-browser' : target}`,
@@ -60,7 +60,7 @@ await writeFile(
     {
       packageName: manifest.name,
       packageVersion: manifest.version,
-      targetHarness: '0.2.0-rc.2',
+      targetHarness: '0.2.1-alpha.2',
       upstreamCommit: HOST_BASE_COMMIT,
       patchSha256: createHash('sha256')
         .update(await readFile('docs/harness-browser-annotation.patch'))

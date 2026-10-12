@@ -1,4 +1,4 @@
-/** Build the fullscreen frame fix from the exact rc.2 checkout. */
+/** Build the fullscreen frame fix from the exact 0.2.1-alpha.2 checkout. */
 import { build } from 'esbuild';
 import { cp, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { resolve, join } from 'node:path';
