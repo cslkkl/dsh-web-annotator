@@ -137,3 +137,10 @@ npm run release:assets     # 汇总发布产物与 Release 正文（需先 npm p
 - **发布成功后头几分钟装不上** —— `npm install <包>@<tag>` 可能报
   `ETARGET … No matching version found`，而 `npm view` 同时已经能看到新版本：那是 npm/CDN 的
   传播延迟。**等几分钟，不是失败**，别急着改版本号重发（重发会被拒，版本号不能复用）。
+- **别删「已发布 README 引用过的截图」** —— npm 页面把相对路径的图**重写成
+  `raw.githubusercontent.com/<repo>/HEAD/docs/images/<name>`**，取的是**仓库 HEAD**、
+  不是包内副本。所以从 HEAD 删掉一个文件名，已发布版本的 npm 页面当场变破图
+  （本仓实踩：删 `annotation-region.png` 后 npm 上出现一张 0×0）。
+  换图时**沿用文件名**，或确认已发布版本的 README 不再引用它。
+- **README 的改动在 npm 上要等下一次发版** —— npm 的 README 取自**已发布的包**，
+  而图取自 HEAD。所以「仓库里改好了」与「npm 页面上是新的」是两个状态，别混为一谈。
