@@ -12,7 +12,22 @@ Click or drag inside the Browser tab Harness already has, then comment or ask th
 > The maintainer documentation is written in Chinese. This file mirrors [README.md](README.md) item by
 > item; every document it links to is Chinese-only.
 
-![A rectangle annotation in the real Harness Browser](docs/images/annotation-region.png)
+![Annotating a page inside the Harness Browser](docs/images/annotation-browser.png)
+
+```sh
+# Install this one package, then quit and reopen Desktop normally
+dsh plugin --profile desktop add --ignore-scripts /absolute/path/dsh-web-annotator-<version>.tgz
+```
+
+The package ships its build output, so there is nothing to compile and no build script to allow.
+Full instructions under [Install](#install).
+
+## Three steps
+
+| 1 · Pick                                                                    | 2 · Write                                                                                             | 3 · Send                                                                                    |
+| --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| ![Click an element or drag a rectangle](docs/images/annotation-element.png) | ![Expand the properties card to adjust colour, font and spacing](docs/images/annotation-expanded.png) | ![The chat collapses the notes into one "N notes" chip](docs/images/annotation-message.png) |
+| Click an element, click empty space, or drag a rectangle                    | Comment or ask; expand the card to read the tag, colour and font, and change them                     | Tick the notes to send, choose how, preview, then send to the session                       |
 
 ## What it does
 

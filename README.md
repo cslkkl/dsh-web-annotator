@@ -1,6 +1,7 @@
 # DSH Web Annotator · 网页批注与提问
 
-在 Harness 原有 Browser 标签页里，点击或框选网页，然后就地添加评论、向当前 Agent 提问。
+在 DeepSeek Harness **原有的 Browser 标签页**里点选或框选网页，就地写评论、向当前 Agent 提问，
+再把标记截图或 DOM 定位资料发给当前会话。
 
 [![Package checks](https://github.com/cslkkl/dsh-web-annotator/actions/workflows/ci.yml/badge.svg)](https://github.com/cslkkl/dsh-web-annotator/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
@@ -9,28 +10,33 @@
 
 **简体中文** · [English](README_en.md)
 
-![真实 Harness Browser 中的框选批注](docs/images/annotation-region.png)
+![在 Harness Browser 中框选页面并就地评论](docs/images/annotation-browser.png)
+
+```sh
+# 装这一个包，然后正常退出并重开 Desktop
+dsh plugin --profile desktop add --ignore-scripts /absolute/path/dsh-web-annotator-<版本>.tgz
+```
+
+包内已有运行产物，不需要编译，也不需要放行构建脚本。完整说明见[安装](#安装)。
+
+## 三步走
+
+| 1 · 选                                                    | 2 · 写                                                                 | 3 · 发                                                      |
+| --------------------------------------------------------- | ---------------------------------------------------------------------- | ----------------------------------------------------------- |
+| ![点选元素或框选区域](docs/images/annotation-element.png) | ![展开属性卡片，调整颜色字体间距](docs/images/annotation-expanded.png) | ![聊天里收成“N 条注释”](docs/images/annotation-message.png) |
+| 点元素、点空白，或拖动框选矩形                            | 写评论或提问；展开卡片可看标签、颜色、字体，也能改                     | 勾选要发的批注，选发送方式，预览后发到当前会话              |
 
 ## 它能做什么
 
-- **就地批注**：点选元素、点击空白位置，或拖动框选矩形区域，在选区旁写评论或提问。
-- **边看边改属性**：展开同一张属性卡片调整颜色、字体、间距，改动随批注交给 Agent，保存前不改写网页。
-- **临时操作网页**：按住空格键与网页交互，松开回到批注；输入框里的空格照常打字。
-- **带图或带定位资料发送**：截图会用蓝框或蓝圈标出所选位置，并叠加与附图一致的序号徽标；
-  没有截图时可只发坐标与 DOM 证据，也可两者一起发。
-- **聊天里一眼看清**：本插件发出的批注消息只显示“N 条注释”，展开后逐条给出序号、目标元素与
-  你的评论／提问；完整定位资料仍在同一个折叠里。
-- **多条管理**：保存后可编辑、逐条勾选、分批发送；失败保留，成功只移除本次发出去的。
-- **草稿不丢**：按会话与完整 URL 存进 IndexedDB；发送失败或保存失败都不会清空内容。
-
-**0.2.0 精确支持 Harness 0.2.0-rc.2。**
-一个预构建安装包同时包含插件和 Browser、Chat、Layout 扩展，安装后正常重启 Desktop 即可使用。
-扩展尚未合入官方 Harness。npm 上已有预览与稳定两个通道（`npm install dsh-web-annotator`）；
-社区目录的条目已提交，**等待维护者审阅**，所以不要据此认为市场已可搜索。
-每个版本的安装包与验证记录由[发布链路](.github/workflows/release.yml)在标签上构建并附到 Release。
-
-⚠️ **已验证到什么程度**：真实宿主 26 项 Browser 检查通过；但**原生 Desktop、真实模型、
-兼容矩阵仍未验证** —— 逐项边界见[验证说明](docs/verification.md)，不要把未验证当已验证。
+| 能力                 | 说明                                                                              |
+| -------------------- | --------------------------------------------------------------------------------- |
+| **就地批注**         | 点选元素、点击空白位置或拖动框选，在选区旁写评论或提问                            |
+| **边看边改属性**     | 展开同一张卡片调颜色、字体、间距，改动随批注交给 Agent，保存前不改写网页          |
+| **临时操作网页**     | 按住空格与网页交互，松开回到批注；输入框里的空格照常打字                          |
+| **带图或带定位资料** | 截图用蓝框或蓝圈标出所选位置，并叠加与附图一致的序号徽标；也可只发坐标与 DOM 证据 |
+| **聊天里一眼看清**   | 批注消息默认只显示“N 条注释”，展开后逐条给出序号、目标元素与你的评论／提问        |
+| **多条管理**         | 保存后可编辑、逐条勾选、分批发送；失败保留，成功只移除本次发出去的                |
+| **草稿不丢**         | 按会话与完整 URL 存进 IndexedDB；发送或保存失败都不会清空内容                     |
 
 ## 安装
 
@@ -42,18 +48,20 @@ dsh plugin --profile desktop add --ignore-scripts /absolute/path/dsh-web-annotat
 ```
 
 只装这一个包，然后正常退出并重开 Desktop。使用其他 Profile 时替换 `desktop`。
-包内已有运行产物，不需要用户编译或放行构建脚本。
 
 该 bundle 在启用期间**替换官方 Browser、Chat 和 Layout 提供方**。
 请先确认 Harness 内核是 **0.2.0-rc.2**，不要在其他版本或另一套同类提供方上混装。
 卸载整个 bundle 会撤销这些替换，重启后恢复官方提供方。
 
 旧本地预览用户先移除 `dsh-layout-care` 和 `dsh-layout-care-browser-preview` 再安装新包。
-已有批注会自动迁移。详见 [安装和市场发布](docs/distribution.md)。
+已有批注会自动迁移。详见[安装和市场发布](docs/distribution.md)。
 
 ## 使用方式
 
 1. 在当前会话点击“批注网页”，打开 Harness 原有的 Browser。
+
+   ![输入框里的“批注网页”入口](docs/images/annotation-entry.png)
+
 2. 输入网页地址，点击工具栏中“刷新”左边的“批注网页”。
 3. 点击元素或空白位置，或者拖动鼠标框选区域，在选区旁输入内容。
 4. 浮层默认只有选项图标、输入区和圆形 ✓。点左侧图标展开属性卡片，查看标签、颜色、字体等，
@@ -62,12 +70,12 @@ dsh plugin --profile desktop add --ignore-scripts /absolute/path/dsh-web-annotat
 5. 需要操作网页时按住空格键，松开回到批注。
 6. 保存后可编辑文字，勾选本次要发送的批注，再选择发送方式，预览后发送到当前会话。
 
-![实际展开的属性卡片](docs/images/annotation-expanded.png)
-
 图片通过 Harness 的正式图片附件流程发送。图片模式只发批注正文、网页 URL 和对应截图；
 详细模式保留坐标与 DOM 证据，但聊天默认只显示“N 条注释”，点击展开逐条卡片（序号、目标元素、
 评论或提问），再点“查看定位资料”展开完整请求；附件截图上的序号与卡片序号一致。
 模型能否直接识别图片取决于当前模型的图片能力。
+
+![图片模式的发送预览](docs/images/annotation-image.png)
 
 ## 当前支持范围
 
@@ -83,7 +91,7 @@ dsh plugin --profile desktop add --ignore-scripts /absolute/path/dsh-web-annotat
 | 其他远程页面                                   | 逐个页面分别验收；Web 仍受跨源与嵌入限制 |
 | iframe 内部与 closed Shadow DOM 的子元素       | 只定位外层载体，不能穿透                 |
 
-逐项的验证边界与手工清单见 [验证说明](docs/verification.md)。
+逐项的验证边界与手工清单见[验证说明](docs/verification.md)。
 
 ## 接入自己的 Vite 页面
 
@@ -105,9 +113,9 @@ export default defineConfig({ plugins: [webAnnotator()] });
 且 Web 版下只有带桥接的页面能被批注。所以本地项目要先变成一个 HTTP 地址：
 
 ```sh
-npm run build                                   # 首次需要，产出 lib/bridge.js
-npm run annotate -- "C:\路径\到\你的项目"        # 服务静态目录
-npm run annotate -- --proxy http://127.0.0.1:5173   # 套在已有 dev server 前面
+npm run build                                        # 首次需要，产出 lib/bridge.js
+npm run annotate -- "C:\路径\到\你的项目"             # 服务静态目录
+npm run annotate -- --proxy http://127.0.0.1:5173    # 套在已有 dev server 前面
 ```
 
 然后点「批注网页」，输入打印出来的 `http://127.0.0.1:4180`。
