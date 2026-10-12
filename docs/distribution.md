@@ -49,8 +49,22 @@
 [marketplace 条目](marketplace/cslkkl__dsh-web-annotator.yml) 的 `tarball` 钉的是**具体标签**
 （`releases/download/v<版本>/…`），不是 `releases/latest/download/…`：
 
-- **为什么不能用 `latest`**：本仓所有 Release 都是预发布版，`/releases/latest` **解析不到任何 Release**
-  （实测 `latest/download/<文件>` 直接 404）。上游两种写法都接受，而这里只有钉标签一种可用。
+- **为什么不能用 `latest`**：`latest/download/<文件名>` 只会在**当前 Latest 那个 Release** 里
+  找同名资产，而安装包的文件名里带版本号 —— 所以它只在文件名碰巧属于当前 Latest 时可用。
+  发下一版时 Latest 一移动，旧文件名就 404：
+
+  ```
+  Latest = v0.2.0 时的资产名：
+    dsh-web-annotator-0.2.0.tgz          ← 滚动链接能找到
+    dsh-web-annotator-source-0.2.0.zip
+    dsh-web-annotator-verification-0.2.0.json
+  换成 v0.2.1 之后，上面这些名字全部 404。
+  ```
+
+  也就是说滚动链接不会「一劳永逸」，只会在发下一版时**静默 404**。
+  （判据是 `gh api repos/<owner>/<repo>/releases/latest --jq '.assets[].name'` ——
+  不依赖网络实测，只看资产清单就能判定。）
+
 - **代价**：钉标签意味着**每发一版都要同步改这一行**，否则市场指向的是旧包。
   上游的每日探测会在 URL 404 时把 tarball 从站点上摘掉（不会报错，只是静默回落成源码安装），
   所以这行漏改不会有红信号 —— 判据是发版后手跑一次
