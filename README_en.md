@@ -24,10 +24,19 @@ Full instructions under [Install](#install).
 
 ## Three steps
 
-| 1 · Pick                                                                    | 2 · Write                                                                                             | 3 · Send                                                                                    |
-| --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| ![Click an element or drag a rectangle](docs/images/annotation-element.png) | ![Expand the properties card to adjust colour, font and spacing](docs/images/annotation-expanded.png) | ![The chat collapses the notes into one "N notes" chip](docs/images/annotation-message.png) |
-| Click an element, click empty space, or drag a rectangle                    | Comment or ask; expand the card to read the tag, colour and font, and change them                     | Tick the notes to send, choose how, preview, then send to the session                       |
+**1 · Pick** — click an element, click empty space, or drag a rectangle.
+
+![Click an element or drag a rectangle](docs/images/annotation-element.png)
+
+**2 · Write** — comment or ask next to the selection; expand the same card to read the tag, colour
+and font, and change them.
+
+![Expand the properties card to adjust colour, font and spacing](docs/images/annotation-expanded.png)
+
+**3 · Send** — tick the notes to send, choose how, preview, then send to the session; the chat
+collapses them into one "N notes" chip.
+
+![The chat collapses the notes into one "N notes" chip](docs/images/annotation-message.png)
 
 ## What it does
 

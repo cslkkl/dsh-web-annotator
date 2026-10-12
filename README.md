@@ -21,10 +21,17 @@ dsh plugin --profile desktop add --ignore-scripts /absolute/path/dsh-web-annotat
 
 ## 三步走
 
-| 1 · 选                                                    | 2 · 写                                                                 | 3 · 发                                                      |
-| --------------------------------------------------------- | ---------------------------------------------------------------------- | ----------------------------------------------------------- |
-| ![点选元素或框选区域](docs/images/annotation-element.png) | ![展开属性卡片，调整颜色字体间距](docs/images/annotation-expanded.png) | ![聊天里收成“N 条注释”](docs/images/annotation-message.png) |
-| 点元素、点空白，或拖动框选矩形                            | 写评论或提问；展开卡片可看标签、颜色、字体，也能改                     | 勾选要发的批注，选发送方式，预览后发到当前会话              |
+**1 · 选** —— 点元素、点空白位置，或拖动框选矩形区域。
+
+![点选元素或框选区域](docs/images/annotation-element.png)
+
+**2 · 写** —— 在选区旁写评论或提问；展开同一张卡片可看标签、颜色、字体，也能直接改。
+
+![展开属性卡片，调整颜色字体间距](docs/images/annotation-expanded.png)
+
+**3 · 发** —— 勾选要发的批注，选发送方式，预览后发到当前会话；聊天里收成“N 条注释”。
+
+![聊天里收成“N 条注释”](docs/images/annotation-message.png)
 
 ## 它能做什么
 
