@@ -24,6 +24,17 @@ let browser;
 let page;
 const checks = [];
 const errors = [];
+/** HTTP responses that came back 4xx/5xx, with their URL.
+ *
+ * ⚠️ Chrome's console message for a failed resource is just
+ * `Failed to load resource: the server responded with a status of 404 (Not Found)` —
+ * **it does not name the URL**, so a failure used to be undiagnosable from the run
+ * log: the assertion said "expected [] but got one 404" and nothing else. Recording
+ * the responses lets the assertion message name the request that failed.
+ *
+ * This only adds evidence; the pass/fail judgement is still `errors` alone.
+ */
+const failedResponses = [];
 let artifacts = resolve('integration/annotation-artifacts');
 const bundledHost = process.env.WEB_ANNOTATOR_BUNDLED_HOST === '1';
 if (bundledHost)
@@ -90,6 +101,11 @@ try {
   page.on('pageerror', (error) => errors.push(error.message));
   page.on('console', (message) => {
     if (message.type() === 'error') errors.push(message.text());
+  });
+  // See `failedResponses`: this is what makes a URL-less console error diagnosable.
+  page.on('response', (response) => {
+    if (response.status() >= 400)
+      failedResponses.push(`${String(response.status())} ${response.url()}`);
   });
   await fixture.api.rpc('workspace/create', { request: { path: root } });
   await page.goto(fixture.launchUrl);
@@ -781,7 +797,16 @@ try {
   passed(
     'Full queues block picking before a draft can be lost; sending one selected note retains the other 31 and re-enables picking',
   );
-  assert.deepEqual(errors, []);
+  // The judgement is unchanged (`errors` must be empty). What changed is that a
+  // failure now names the offending request: Chrome's own 404 message carries no URL,
+  // and a run that fails on one unexplained 404 cannot be acted on.
+  assert.deepEqual(
+    errors,
+    [],
+    failedResponses.length === 0
+      ? undefined
+      : `浏览器控制台报错，下面是本轮的 4xx/5xx 响应（控制台消息本身不带 URL）：\n  ${failedResponses.join('\n  ')}`,
+  );
   await page.screenshot({ path: join(artifacts, 'submitted.png') });
   await writeFile(
     join(artifacts, 'report.json'),
@@ -789,6 +814,9 @@ try {
       {
         checks,
         errors,
+        // Kept even when the run passes: a transient 404 that arrives after the
+        // assertion would otherwise leave no trace to diagnose it from.
+        failedResponses,
         runtime: fixture.runtime,
         target: '0.2.0-rc.2 + bundled Browser, Chat and Layout extensions',
         desktopNative: 'unverified',
@@ -820,6 +848,7 @@ try {
     console.error((await page.locator('body').innerText()).slice(-3200));
   }
   console.error('Browser errors:', errors);
+  if (failedResponses.length > 0) console.error('Failed responses:', failedResponses);
   throw error;
 } finally {
   await browser?.close();

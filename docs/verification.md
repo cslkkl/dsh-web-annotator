@@ -89,6 +89,29 @@ npm run verify:delivery
 
 明细落在本地未入库的 `integration/*.json`；这里只留可复述的结论。
 
+### 0.2.0-alpha.13（2026-10-12）
+
+本轮把**发布通道改成按版本号推导**：带预发布段的版本 → GitHub 的 Pre-release + npm 的预览
+dist-tag；稳定版 → Latest + `latest`。判断在可测的 `releaseChannel()` 里，判据见
+[tests/release-notes.test.ts](../tests/release-notes.test.ts)。
+
+原先两处写死在 workflow 里（`--prerelease` 与 `--tag alpha`），后果是**给稳定版打标签会发出
+一个「标着预发布、npm 上仍留在旧 alpha」的版本，而日志里看不出任何异常** —— 这类判断必须可测，
+所以它从 YAML 搬进了脚本。
+
+| 项目                      | 结果                                                                                     |
+| ------------------------- | ---------------------------------------------------------------------------------------- |
+| 发布链                    | 通过；注解 `published 0.2.0-alpha.13 to npm under the alpha dist-tag`                    |
+| `npm run test:acceptance` | **26 项 Browser 检查通过**，0 个页面错误（本机也跑了一遍，同样 26 项）                   |
+| **通道按版本号生效**      | Release `prerelease=true`、npm `alpha` 指向 alpha.13，而 `latest` **未被抢**（仍在旧版） |
+| npm ↔ Release 字节一致    | `18e02e6a…`（两处 SHA-1 相同）                                                           |
+
+⚠️ **第一次运行在验收步骤失败，第二次通过，其间没有改任何代码。** 失败原因是浏览器控制台
+报了一个 `404`，而 Chrome 的那条消息**不带 URL**，所以当时无法判断是哪个资源。这暴露的是
+**诊断缺陷**而不是产品缺陷：现在脚本会记录 4xx/5xx 响应的 URL，断言消息会把它带出来，
+`report.json` 里也留一份 `failedResponses`（通过时也留，好让"断言之后才到达的偶发 404"有痕迹）。
+判定仍是 `errors` 必须为空 —— 只加证据，不放宽标准。
+
 ### 0.2.0-alpha.12（2026-10-12）
 
 本轮**不改插件代码**（界面行为与 alpha.11 相同），改的是发布链路：新增 npm 一路，
