@@ -89,6 +89,28 @@ npm run verify:delivery
 
 明细落在本地未入库的 `integration/*.json`；这里只留可复述的结论。
 
+### 0.2.0-alpha.12（2026-10-12）
+
+本轮**不改插件代码**（界面行为与 alpha.11 相同），改的是发布链路：新增 npm 一路，
+认证走 OIDC Trusted Publishing，仓库里不存 token。本版同时是那条 Trusted Publisher
+连接的激活发布 —— 新建的连接有 2 天期限，过期即不可编辑。
+
+| 项目                       | 结果                                                                                       |
+| -------------------------- | ------------------------------------------------------------------------------------------ |
+| 发布链                     | 23 步一次通过；npm 那步的注解是 `published 0.2.0-alpha.12 to npm under the alpha dist-tag` |
+| `npm run test:acceptance`  | 打包产物 + 包内提供方，**26 项 Browser 检查通过**，0 个页面错误                            |
+| `npm run verify:delivery`  | 交付的 tgz 与验收时安装的运行时逐字节一致，无变更文件                                      |
+| **npm ↔ Release 字节一致** | 新增判据：npm 上 `dist.shasum` 与 Release 附件的 SHA-1 **完全相同**                        |
+
+最后那条是本轮真正要证的东西。alpha.11 是**在本机打的包**，与 Release 附件有 22 个文件不同 ——
+差异只在 provider 产物里写进的检出目录名（`../harness-browser-integration/…` 对 `.host-source/…`）
+以及三份发布后才改的文档，代码等价，但「发出去的就是验收过的那一份」在 npm 这条渠道上不成立。
+现在由 CI 在同一个 job 里构建、验收、发布，两个渠道拿到同一份字节。
+
+⚠️ **`latest` 会滞后**：npm 只在**全新包的首个版本**强制占用 `latest`，之后 `--tag alpha`
+不会去动它，所以 `latest` 停在 alpha.11。这不等于「预览冒充稳定版」，但 Desktop 社区市场
+仍不满足（它要求 `latest` 是稳定精确版本）。
+
 ### 0.2.0-alpha.11（2026-10-11）
 
 本轮只有一个改动：输入框左侧的“批注网页”从 `variant="toolbar"` 改成 `ghost`。
