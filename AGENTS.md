@@ -152,3 +152,15 @@ npm run release:assets     # 汇总发布产物与 Release 正文（需先 npm p
   （`releases/download/v<版本>/…`），每发一版同步改，漏改**没有红信号**。
   判据不依赖网络实测：`gh api repos/<owner>/<repo>/releases/latest --jq '.assets[].name'`
   看清单里有没有那个文件名。细节见 [分发说明](docs/distribution.md)。
+- **`execFileSync` 默认 `maxBuffer` 只有 1 MiB，而它只在发版链里炸** ——
+  `verify:delivery` 把 tar 成员整个读进内存；宿主基线一涨，`chat-provider/lib/client.js.map`
+  就超过 1 MiB，脚本抛 `spawnSync tar ENOBUFS`。**CI 是绿的**（CI 不跑 `verify:delivery`），
+  只有推标签才暴露。实测：那个 map 现在 1,134,815 字节。读大成员时要显式给 `maxBuffer`，
+  且新增这类读取要有「超过默认值的成员必须完整读回」的测试。
+- **发版失败但什么都没发出去时，版本号还能用** —— 与「发布成功后的传播延迟」要分开判断。
+  判据是查两处**实际状态**，不是看 CI：`gh release view v<版本>` 与
+  `npm view <包>@<版本>`。两个都「不存在」就可以修好再发同一个版本（移动标签要用
+  `git push --force origin v<版本>`）；只要有一处存在，就必须换新版本号。
+- **`npm view <包> dist-tags` 会读缓存，比 registry 慢** —— 发完版立刻查可能仍显示旧 `latest`，
+  而日志已经写着 `published … under the latest dist-tag`。要看真相就直查原始 packument：
+  `Invoke-RestMethod https://registry.npmjs.org/<包>` 的 `dist-tags` 与 `time`。**别据此重发。**
