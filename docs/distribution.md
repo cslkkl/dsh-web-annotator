@@ -4,8 +4,8 @@
 
 包名 `dsh-web-annotator`，源码在 [cslkkl/dsh-web-annotator](https://github.com/cslkkl/dsh-web-annotator)。
 预构建包通过 GitHub Release 分发，面向精确 Harness **0.2.0-rc.2**，用户不需要编译。
-版本号见 [../package.json](../package.json)。npm 尚未发布过：发布链路（OIDC Trusted Publishing）
-已就绪，**只差一次性的建包与配置**，步骤在 [发布链路](publishing.md) 的 npm 发布节。
+版本号见 [../package.json](../package.json)。npm 已发布预览版（`npm install dsh-web-annotator@alpha`），
+发布由 CI 走 OIDC Trusted Publishing，见 [发布链路](publishing.md) 的 npm 发布节。
 社区目录的条目已提交、**等待维护者审阅**（[awesome-dsh-plugin#6833](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin/pull/6833)），
 **提交不等于收录**：合并并被目录同步之后，才能声明该市场可搜索、可安装。
 
@@ -29,13 +29,13 @@
 
 ## 各渠道的收录规则
 
-| 渠道                                   | 要求                                                                             | 本项目的做法                                               |
-| -------------------------------------- | -------------------------------------------------------------------------------- | ---------------------------------------------------------- |
-| DSH 官方插件管理页 / CLI               | 预构建包声明合法 `dsh.bundle.patch`，可安装 npm spec 或本地 tgz                  | 安装一个预构建包                                           |
-| `dshmarket`（awesome-dsh-plugin 目录） | 向目录仓库提交插件 YAML，维护者审阅合并；仓库须创建满一天并带 `dsh-plugin` topic | 条目用 `tarball` 指向已发布的 Release tgz，不必先发 npm    |
-| 按 GitHub topic 自动发现的市场         | 仓库带 `dsh-plugin` topic；安装方式取决于各市场                                  | 标签便于发现，不等于安装已验收                             |
-| Desktop 的 `dsh-community-market`      | 目录解析唯一 npm 包名，要求 npm `latest` 是稳定精确版本                          | alpha 发的是 `alpha` dist-tag，`latest` 留空；稳定版才满足 |
-| npm（可选）                            | 包的 `repository` 字段必须指回本仓库，否则不会与条目关联                         | 已声明；发布走 OIDC，用 `alpha` dist-tag                   |
+| 渠道                                   | 要求                                                                             | 本项目的做法                                                                                       |
+| -------------------------------------- | -------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| DSH 官方插件管理页 / CLI               | 预构建包声明合法 `dsh.bundle.patch`，可安装 npm spec 或本地 tgz                  | 安装一个预构建包                                                                                   |
+| `dshmarket`（awesome-dsh-plugin 目录） | 向目录仓库提交插件 YAML，维护者审阅合并；仓库须创建满一天并带 `dsh-plugin` topic | 条目用 `tarball` 指向已发布的 Release tgz，不必先发 npm                                            |
+| 按 GitHub topic 自动发现的市场         | 仓库带 `dsh-plugin` topic；安装方式取决于各市场                                  | 标签便于发现，不等于安装已验收                                                                     |
+| Desktop 的 `dsh-community-market`      | 目录解析唯一 npm 包名，要求 npm `latest` 是稳定精确版本                          | **仍不满足**：还没有稳定版，而全新包的首个版本会被 npm 强制占住 `latest`，所以它现在指向一个 alpha |
+| npm（可选）                            | 包的 `repository` 字段必须指回本仓库，否则不会与条目关联                         | 已声明；发布走 OIDC，用 `alpha` dist-tag                                                           |
 
 以上是查阅公开实现得到的规则，未在市场 UI 中实际安装本项目。
 其他版本或来源的行为需要分别确认。收录结果由市场维护者决定。

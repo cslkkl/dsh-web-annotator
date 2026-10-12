@@ -66,31 +66,71 @@ Release 的附件列表。
 同一套做法：**仓库里不存任何 npm token**，npm 侧凭「本仓库的 `release.yml`」授权，
 所以 `release.yml` 里必须有 `id-token: write`。**不要**加 `NPM_TOKEN` secret ——
 OIDC 已替代它，加了反而会在 token 过期后静默回到「workflow 能跑、包发不出去」的状态。
+配好之后建议把包的 Publishing access 改成「**Require two-factor authentication and
+disallow bypass 2fa tokens**」，堵掉 token 这条并行通道。
 
 环境要求 npm CLI ≥ 11.5.1（Node 24 自带的够新），registry 由 `setup-node` 的
 `registry-url` 显式钉到 `https://registry.npmjs.org`。
 
-### 一次性配置（新包必须先建包）
+### npm 侧怎么配（一次性）
 
-Trusted Publishing 配在**已存在的包**上，所以顺序不能颠倒：
+Trusted Publishing 配在**已存在的包**上，所以顺序不能颠倒：先让包存在，再配连接。
+登录 npmjs.com → **Packages → 本包 → Settings → Trusted publishing** →
+**Add trusted publisher** → 选 **GitHub Actions**：
 
-1. **先让包存在**：本机交互式 `npm publish --access public --tag alpha`（会要求 2FA），
-   或走 npm 的[暂存发布](https://docs.npmjs.com/staged-publishing)
-   （`npm stage publish`，之后由维护者用 2FA 放行）。
-2. **再配 Trusted Publisher**：npm 包设置页 → Trusted Publisher → GitHub Actions，
-   填 `cslkkl` / `dsh-web-annotator` / 工作流文件名 **`release.yml`**。
-   ⚠️ 这一步**必须交互式做**：绕过 2FA 的 granular token 已经没有权限改这项配置
-   （[2026-07-31 公告](https://github.blog/changelog/2026-07-31-restricting-npm-bypass-2fa-granular-access-tokens/)）。
-3. 之后每次推 `v*` 标签，`release.yml` 自动发，并带 `--provenance`。
+| 字段                 | 值                                               |
+| -------------------- | ------------------------------------------------ |
+| Organization or user | `cslkkl`                                         |
+| Repository           | `dsh-web-annotator`                              |
+| Workflow filename    | `release.yml`（**只填文件名**，不带 `.github/`） |
+| Environment name     | 留空                                             |
+
+⚠️ **`Allowed actions` 里必须勾 `Allow npm publish`。** 2026-09-03 之后新建的连接
+**默认只允许 `npm stage publish`**（暂存发布，要人工批准才上线）。漏勾时包只会进暂存区，
+而 **workflow 依然全绿** —— 症状是「CI 成功、npm 上看不到新版本」，最难查的一类。
+`Allow npm dist-tag` 不用勾：发稳定版用的是 `npm publish --tag latest`，属于 publish 权限。
+
+⚠️ **字段建好不可改** —— provider 与必填项一旦创建即固定，填错只能删掉重建。
+
+⚠️ **新建的连接有 2 天激活期**：必须在 2 天内成功发布一次，否则连接**过期且不可编辑**，
+只能删除重建。所以「配好」与「发一版」要挨着做；而为了激活而发的那一版本身也得有内容，
+不要为了跑通链路发一个空版本。
 
 包还不存在时，`release.yml` 里的 npm 这一步会**明确警告后跳过**（Release 已经建好了，
 缺的只是 npm 这一路），不会让发布无故变红。
 
-### dist-tag：预览版不许碰 `latest`
+### 备用路径：本机手发
 
-发布命令固定 `--tag alpha`。版本号带预发布段时如果不动 dist-tag，就会去写 `latest` ——
-那等于把预览冒充稳定版，而 Desktop 的社区市场正是按「`latest` 是稳定精确版本」来判断的
-（见 [分发说明](distribution.md)）。**发稳定版时**才改用 `latest`。
+OIDC 不可用时，所有者可在本机发布，但**只用于建包这类一次性动作**。本机打包的字节与
+CI 验收过的那份**不同**：provider 产物里会写进检出目录名（`../harness-browser-integration/…`
+而不是 `.host-source/…`），sourcemap 也跟着变 —— 长期走这条路等于让「发出去的就是验收过的
+那一份」失效。首个版本之后一律由 CI 发。
+
+⚠️ 本机 `npm` 若指向镜像（如 `registry.npmmirror.com`），`npm login` / `npm publish` 会报
+`Public registration is not allowed` —— 镜像只读，不提供账号与发布。发布时显式指定官方源：
+
+```powershell
+npm publish <tgz 或 .> --registry=https://registry.npmjs.org --access public --tag alpha
+```
+
+装包仍走镜像（快），所以**不要**改全局 registry。
+
+### dist-tag 与 `latest`
+
+发布命令固定 `--tag alpha`，用户按 `@alpha` 取预览版。
+
+⚠️ **全新包的第一个版本会被 npm 强制占住 `latest`** —— 包必须有一个 `latest`，
+`--tag alpha` 拦不住这件事。所以在**还没有稳定版**期间，`latest` 会指向某个 alpha。
+这不等于「预览冒充稳定版」（用户显式要 `@alpha` 拿到的才是我们承诺的那条），
+但意味着 Desktop 社区市场**仍不会收录**：它要求 `latest` 是稳定精确版本
+（见 [分发说明](distribution.md)）。发稳定版时才把 `latest` 指过去。
+
+### 发布后复核
+
+1. `npm view dsh-web-annotator dist-tags` —— `alpha` 应指向刚发的版本。
+2. `npm install dsh-web-annotator@alpha` 真装一次。
+   ⚠️ 头几分钟可能报 `ETARGET … No matching version found`：那是 npm/CDN 的**传播延迟**，
+   而 `npm view` 同时已经能看到新版本。**等几分钟再试，不是失败。**
 
 ## 不在这里的事
 

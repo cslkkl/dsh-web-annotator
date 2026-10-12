@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.2.0-alpha.12 — 发布链路接上 npm 的 OIDC
+
+- 发布链路新增 npm 一路：推 `v*` 标签后，Release 建完再由 **Trusted Publishing（OIDC）**
+  把同一份产物发到 npm 的 `alpha` dist-tag，仓库里不存 token（`id-token: write` + `--provenance`）。
+  它排在建 Release **之后**：npm 那半失败时用户仍拿得到安装包，也排除了「npm 有、GitHub 没有」。
+- 本版是这条路径的第一次真实运行，兼作 npm Trusted Publisher 连接的激活发布 ——
+  新建的连接**有 2 天激活期**，过期后连字段都不可改。
+- 文档补上这轮踩到的三处，都写在 [发布链路](docs/publishing.md) 与 [AGENTS.md](AGENTS.md)
+  的「活跃坑」：本机 npm 指向镜像时登录/发布报 `Public registration is not allowed`；
+  Trusted Publisher 的 `Allowed actions` 默认**不含**直接发布（漏勾则 CI 全绿而 npm 上没有新版本）；
+  发布成功后头几分钟 `npm install` 会因传播延迟报 `ETARGET`，那不是失败。
+- 插件代码与宿主提供方**没有变化**，界面行为与 alpha.11 相同。
+
 ## 0.2.0-alpha.11 — 输入框入口不再显成“被选中”
 
 - 输入框左侧的“批注网页”不再是一块恒有灰底的实心按钮。它原先借用了 `variant="toolbar"`

@@ -126,3 +126,14 @@ npm run release:assets     # 汇总发布产物与 Release 正文（需先 npm p
   两个验收脚本因此同时声明了 Node 与 browser 全局。
 - **PowerShell 变量名大小写不敏感** —— `$docs` 会覆盖 `$Docs`；且 `$Host` / `$HOME`
   等是只读自动变量，给它们赋值**静默失败**（脚本会带着空配置继续跑）。写维护脚本时变量名要真正区分开。
+- **本机 `npm` 指向镜像（`registry.npmmirror.com`）时，登录与发布都报
+  `Public registration is not allowed`** —— 镜像只读，不提供账号与发布，与地区、账号都无关。
+  装包继续用镜像（快），只在发布命令上显式 `--registry=https://registry.npmjs.org`。
+  同理 `release.yml` 里的 `registry-url` 不能省，否则 runner 继承到镜像就发不出去。
+- **npm 连接里的 `Allowed actions` 默认不含直接发布** —— 2026-09-03 之后新建的 Trusted
+  Publisher 连接默认只允许 `npm stage publish`。漏勾 `Allow npm publish` 时，包只进暂存区等人工批准，
+  而 **workflow 全绿**：症状是「CI 成功、npm 上没有新版本」。另外新建的连接**有 2 天激活期**，
+  过期后连字段都不可改，只能删掉重建。
+- **发布成功后头几分钟装不上** —— `npm install <包>@<tag>` 可能报
+  `ETARGET … No matching version found`，而 `npm view` 同时已经能看到新版本：那是 npm/CDN 的
+  传播延迟。**等几分钟，不是失败**，别急着改版本号重发（重发会被拒，版本号不能复用）。
