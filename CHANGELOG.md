@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.2.0-alpha.13 — 发布通道按版本号推导
+
+- 发布链不再把 `--prerelease` 与 `--tag alpha` 写死在 workflow 里，改由版本号推导：
+  带预发布段的版本 → GitHub 的 Pre-release + npm 的预览 dist-tag（`alpha`…）；
+  稳定版 → Latest + `latest`。判断放在可测的 `releaseChannel()` 里。
+  原先写死时，**给稳定版打标签会发出一个「标着预发布、npm 上仍留在旧 alpha」的版本，
+  而日志里看不出任何异常**。
+- Release 正文不再把稳定版称作“预览版”：措辞跟着通道走。
+- 插件代码与宿主提供方**没有变化**，界面行为与 alpha.12 相同。
+
 ## 0.2.0-alpha.12 — 发布链路接上 npm 的 OIDC
 
 - 发布链路新增 npm 一路：推 `v*` 标签后，Release 建完再由 **Trusted Publishing（OIDC）**
