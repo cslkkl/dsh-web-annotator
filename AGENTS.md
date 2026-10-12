@@ -90,12 +90,13 @@ npm run release:assets     # 汇总发布产物与 Release 正文（需先 npm p
   自己构建、自己验收、自己发；**发出去的就是验收过的那一份**，步骤见
   [发布链路](docs/publishing.md) 的发版节。
 - 本机门禁：`npm run check` 全绿（格式 / lint / 分层 7 条规则 / 文档路径 / build / typecheck / 单元测试）。
-- **0.2.0 已发布为稳定版**：GitHub Release 进 Latest、npm 进 `latest`（通道按版本号推导，
-  见 [发布链路](docs/publishing.md)）；真实宿主 **26 项 Browser 检查通过**、0 个页面错误，
-  npm 与 Release 是同一份字节。alpha.10–alpha.13 由同一发布链发布（alpha.11 的 npm 那份
-  是本机手发的，字节与 Release 不同 —— 见 [验证说明](docs/verification.md)）。
-- ⚠️ **0.2.0 不声称已验的三项**：原生 Desktop、真实模型、兼容矩阵。见
-  [验证说明](docs/verification.md) 的 0.2.0 节 —— **不要把未验证当已验证**。
+- **当前稳定版是 0.2.1**（GitHub Release 进 Latest、npm 进 `latest`；通道按版本号推导，
+  见 [发布链路](docs/publishing.md)）。真实宿主 **26 项 Browser 检查通过**、0 个页面错误，
+  npm 与 Release 是同一份字节。0.2.1 只改文档与截图，插件行为与 0.2.0 相同。
+  alpha.10–alpha.13 由同一发布链发布（alpha.11 的 npm 那份是本机手发的，字节与 Release 不同 ——
+  见 [验证说明](docs/verification.md)）。
+- ⚠️ **稳定版不声称已验的三项**：原生 Desktop、真实模型、兼容矩阵。见
+  [验证说明](docs/verification.md) —— **不要把未验证当已验证**。
 
 ## 待办
 
@@ -142,5 +143,13 @@ npm run release:assets     # 汇总发布产物与 Release 正文（需先 npm p
   不是包内副本。所以从 HEAD 删掉一个文件名，已发布版本的 npm 页面当场变破图
   （本仓实踩：删 `annotation-region.png` 后 npm 上出现一张 0×0）。
   换图时**沿用文件名**，或确认已发布版本的 README 不再引用它。
-- **README 的改动在 npm 上要等下一次发版** —— npm 的 README 取自**已发布的包**，
-  而图取自 HEAD。所以「仓库里改好了」与「npm 页面上是新的」是两个状态，别混为一谈。
+- **README 的改动在 npm 上要等下一次发版，而且发完之后页面还会滞后** —— npm 的 README 取自
+  **已发布的包**，而图取自 HEAD，所以「仓库里改好了」与「npm 页面上是新的」是两个状态。
+  发完版立刻去看还可能看到**上一个版本**的 README 与几张破图（实测约几分钟），
+  硬刷新才变 —— **别据此判断发布失败**，先核对 registry 的 `dist-tags`。
+- **`releases/latest/download/<文件名>` 不是「永远指向最新版」** —— 安装包的**文件名里带版本号**，
+  而这个 URL 只去**当前 Latest 那个 Release** 里找同名资产，所以它只在文件名碰巧属于当前 Latest
+  时可用：发下一版时 Latest 一移动，旧文件名就 **404**。市场条目的 `tarball` 因此必须钉具体标签
+  （`releases/download/v<版本>/…`），每发一版同步改，漏改**没有红信号**。
+  判据不依赖网络实测：`gh api repos/<owner>/<repo>/releases/latest --jq '.assets[].name'`
+  看清单里有没有那个文件名。细节见 [分发说明](docs/distribution.md)。
