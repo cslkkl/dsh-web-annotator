@@ -35,6 +35,7 @@
 npm run check              # 提交前跑这个：格式 → lint → 分层 → 文档路径 → build → typecheck → 产物断言 → test
 npm run format             # prettier --write
 npm run demo               # 起 examples/responsive-demo（仅本机）
+npm run annotate -- <目录>  # 给本地前端起批注服务（非门禁，见 scripts/README.md）
 npm run test:storage       # 真实 Chromium 的 IndexedDB 回归
 npm run build:host         # 构建三个宿主提供方并放入 lib/host
 npm pack                   # 触发 prepack 完整性断言

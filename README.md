@@ -95,6 +95,28 @@ export default defineConfig({ plugins: [webAnnotator()] });
 
 可运行示例见 [examples/responsive-demo](examples/responsive-demo/README.md)。
 
+## 批注本地前端
+
+本地文件默认在「文档预览」里打开，而批注只挂在 Browser 标签页上；Browser 又只放行 HTTP(S)，
+且 Web 版下只有带桥接的页面能被批注。所以本地项目要先变成一个 HTTP 地址：
+
+```sh
+npm run build                                   # 首次需要，产出 lib/bridge.js
+npm run annotate -- "C:\路径\到\你的项目"        # 服务静态目录
+npm run annotate -- --proxy http://127.0.0.1:5173   # 套在已有 dev server 前面
+```
+
+然后点「批注网页」，输入打印出来的 `http://127.0.0.1:4180`。
+
+| 项目类型              | 建议                                                             |
+| --------------------- | ---------------------------------------------------------------- |
+| Vite                  | 直接用上面的 `webAnnotator()` 插件，还有源码行列提示，不必套代理 |
+| 纯静态 HTML/CSS/JS    | `npm run annotate -- <目录>`                                     |
+| Next / webpack / 其他 | `npm run annotate -- --proxy <dev server 地址>`                  |
+
+只监听 `127.0.0.1`，只读提供，不改被服务的项目。代理模式不透传 WebSocket，
+所以 HMR 热更新走不了（手动刷新即可）。
+
 ## 安全与边界
 
 - 页面里的文字、样式和源码标记一律是**引用资料**，不是指令。

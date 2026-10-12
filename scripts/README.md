@@ -28,6 +28,18 @@ format:check → lint → check:layering → check:doc-paths → build → typec
 真的调一次 `apply(ctx)`，再看注册了哪些插槽；暴露的 `inject` 列表少一项，插件在宿主里
 **静默不出现**，那是别的门禁看不到的。
 
+## 本地开发服务
+
+| 脚本                 | npm        | 做什么                                          |
+| -------------------- | ---------- | ----------------------------------------------- |
+| `annotate-serve.mjs` | `annotate` | 把本地前端用 HTTP 起在 loopback，并注入批注桥接 |
+
+`annotate` **不是门禁**，是维护者改自己项目时用的：Harness Browser 只放行 HTTP(S)，且 Web 版下
+只有带桥接的页面能被批注，所以本地文件必须同时拿到「HTTP 来源」与「桥接」。
+`npm run annotate -- <目录>` 服务静态目录，`--proxy <地址>` 套在已有 dev server 前面。
+它只读提供、不改被服务的项目，只监听 `127.0.0.1`；桥接取本包 `lib/bridge.js`（先 `npm run build`），
+装过插件的 profile 作为回退。用法见 [../README.md](../README.md) 的「批注本地前端」。
+
 ## 宿主提供方
 
 | 脚本                             | npm                                        | 做什么                                                            |

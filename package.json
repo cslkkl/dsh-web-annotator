@@ -62,6 +62,7 @@
     "check:doc-paths": "node scripts/check-doc-paths.mjs",
     "verify:artifacts": "node scripts/verify-artifacts.mjs",
     "demo": "vite --config examples/responsive-demo/vite.config.ts",
+    "annotate": "node scripts/annotate-serve.mjs",
     "test:browser": "node scripts/annotation-acceptance.mjs",
     "test:harness": "node scripts/harness-replay-test.mjs",
     "test:acceptance": "node scripts/annotation-acceptance.mjs",

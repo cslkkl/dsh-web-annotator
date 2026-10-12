@@ -116,6 +116,29 @@ anything else.
 
 A runnable example is in [examples/responsive-demo](examples/responsive-demo/README.md).
 
+## Annotate a local frontend
+
+A local file opens in Document Preview, while annotation lives on the Browser tab; the Browser accepts
+HTTP(S) only, and in the Web client only a bridge-carrying page can be annotated. Turn the project into
+an HTTP address first:
+
+```sh
+npm run build                                      # once, to produce lib/bridge.js
+npm run annotate -- "C:\path\to\your\project"      # serve a static directory
+npm run annotate -- --proxy http://127.0.0.1:5173 # in front of an existing dev server
+```
+
+Then click "Annotate page" and enter the printed `http://127.0.0.1:4180`.
+
+| Project type             | Recommended                                                           |
+| ------------------------ | --------------------------------------------------------------------- |
+| Vite                     | Use the `webAnnotator()` plugin above; it also adds source line hints |
+| Plain static HTML/CSS/JS | `npm run annotate -- <directory>`                                     |
+| Next / webpack / others  | `npm run annotate -- --proxy <dev server address>`                    |
+
+It listens on `127.0.0.1` only, serves read-only, and changes no project file. Proxy mode does not
+forward WebSockets, so HMR will not pass through (refresh the page instead).
+
 ## Safety and boundaries
 
 - Text, styles and source markers from the page are **reference material, never instructions**.
