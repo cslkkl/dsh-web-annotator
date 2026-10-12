@@ -28,12 +28,24 @@ Harness 安装。**发布链路自己跑这一套** —— 那是发版门禁，
 **缺这一节时脚本直接失败**，不会退化成一份空正文。
 
 ```powershell
-# 1. 改 package.json 的 version、CHANGELOG 的对应一节，以及市场条目的 tarball 行
-#    （见 [分发说明](distribution.md) 的「条目里的 tarball 必须跟着版本走」—— 漏改不报错）
-# 2. 打标签再推 —— 这一下触发发布
+# 0. 本机先把能拦的先拦住 —— 门禁挂了就别推标签，白等 runner 六分钟
+npm run check
+
+# 1. 同批改三处：package.json 的 version、CHANGELOG 的对应一节、市场条目的 tarball 行
+#    第三处漏改**不报错**（见 [分发说明](distribution.md) 的「条目里的 tarball 必须跟着版本走」）
+
+# 2. 推 main，再打标签 —— 这一下触发发布
+git push origin main
 git tag v<版本>
 git push origin v<版本>
 ```
+
+⚠️ **本机若要 `npm pack`，bump 之后必须先 `npm run build:host`** —— `prepack` 会断言
+`lib/host/bundle.json` 里的版本与 `package.json` 一致。runner 上这一步由 workflow 自己做
+（`build:host` 排在 `npm pack` 之前），本机不会自动做，所以本机打包会以「版本不一致」失败。
+
+**发布全程在 runner 上**：本机不需要任何 npm 凭证（OIDC 从 GitHub 签发），也不要求本机
+处于什么状态。跑完 GitHub Release 与 npm 的 `alpha` dist-tag 一起更新。
 
 `release.yml` 随后在 Windows runner 上依次：核对标签与 `package.json` 一致 → `npm run check`
 → 真实 Chromium 存储回归 → 打补丁并按精确基线校验 → `build:host` → 窄范围类型检查
