@@ -22,9 +22,46 @@ import { fileURLToPath } from 'node:url';
 const OUTPUT = 'integration/release-assets';
 /** The Release body, read by the workflow's `gh release --notes-file`. */
 const NOTES = 'integration/release-notes.md';
+/** The publishing channel, read by the workflow's Release and npm steps.
+ *
+ * It must stay **outside** `OUTPUT`: everything in there is uploaded as a Release
+ * asset, so a handoff file placed there would ship to users.
+ */
+const CHANNEL = 'integration/release-channel.json';
 
 function escapeVersion(version) {
   return version.replaceAll(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/** Which channel a version publishes on: a prerelease must never claim the stable one.
+ *
+ * This judgement lives in a tested function rather than in the workflow, because the
+ * workflow used to hardcode `--prerelease` and `--tag alpha`. Had anyone tagged a
+ * stable `0.2.0`, it would have shipped as a GitHub prerelease while npm kept
+ * `latest` on an older alpha — and neither flag shows up in the run log, so the run
+ * would have looked clean.
+ *
+ * @param {string} version - the version from `package.json`.
+ * @returns {{ prerelease: boolean, npmTag: string }} the channel to publish on.
+ */
+export function releaseChannel(version) {
+  // SemVer: `-` opens the prerelease part; `+` opens build metadata, which does
+  // **not** make a version a prerelease (`0.2.0+build.5` is a stable 0.2.0).
+  // Identifiers are dot-separated and non-empty, so `0.2.0-` and `0.2` are rejected
+  // rather than silently classified.
+  const identifier = '[0-9A-Za-z-]+';
+  const match = new RegExp(
+    `^(\\d+)\\.(\\d+)\\.(\\d+)(?:-(${identifier}(?:\\.${identifier})*))?(?:\\+(${identifier}(?:\\.${identifier})*))?$`,
+  ).exec(version);
+  assert.ok(
+    match,
+    `版本号 ${version} 不是合法的 SemVer —— 发布前先修正，别让标签与包指向两个版本。`,
+  );
+  const prerelease = match[4] !== undefined;
+  if (!prerelease) return { prerelease: false, npmTag: 'latest' };
+  // `alpha.12` → `alpha`。纯数字标识（如 `-0`）没有可用的名字，落到 `next`。
+  const first = match[4].split('.')[0];
+  return { prerelease: true, npmTag: /^[a-z][a-z0-9-]*$/i.test(first) ? first : 'next' };
 }
 
 /** The `## <version> …` section of a Changelog without its heading.
@@ -48,7 +85,7 @@ export function changelogSection(markdown, version) {
 /** The published Release body: the changelog section plus what a reader needs to
  * install this exact build and check what they downloaded.
  * @param {{ section: string, version: string, tag: string, commit: string,
- *   tarball: string, sourceArchive: string, sha256: string,
+ *   tarball: string, sourceArchive: string, sha256: string, prerelease: boolean,
  *   acceptance?: { checks: number, errors: number } }} input - release facts.
  * @returns {string} the Markdown body.
  */
@@ -60,6 +97,7 @@ export function releaseNotes({
   tarball,
   sourceArchive,
   sha256,
+  prerelease,
   acceptance,
 }) {
   const paragraphs = [section, ''];
@@ -76,11 +114,16 @@ export function releaseNotes({
         '交付的 tgz 与验收时安装的运行时逐字节一致。',
       '',
     );
+  // A stable release must not call itself a preview, and a preview must not imply
+  // the stability a stable release would claim. The channel decides the sentence.
+  const standing = prerelease
+    ? `本版仍是 **${version} 预览版**，不代表已被市场收录。`
+    : `本版是 **${version} 稳定版**；兼容范围见 [验证说明](docs/verification.md)。`;
   paragraphs.push(
     `安装包 SHA-256：\`${sha256}\``,
     '',
     `源码 ZIP \`${sourceArchive}\` 与验证记录对应标签 \`${tag}\`（提交 \`${commit}\`）；` +
-      `安装插件请选择 .tgz。本版仍是 **${version} 预览版**，不代表已被市场收录。`,
+      `安装插件请选择 .tgz。${standing}`,
     '',
   );
   return paragraphs.join('\n');
@@ -113,6 +156,10 @@ async function main() {
     section,
     `CHANGELOG.md 里没有 ${version} 一节 —— 先写变更记录，再发版；不要发一份空白正文。`,
   );
+
+  // The workflow reads this instead of deciding for itself, so "prerelease or not"
+  // and "which npm dist-tag" have exactly one home.
+  const channel = releaseChannel(version);
 
   const commit = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
   const tarballName = `dsh-web-annotator-${version}.tgz`;
@@ -158,6 +205,7 @@ async function main() {
     tag,
     sourceCommit: commit,
     targetHarness: manifest.engines.dsh,
+    channel,
     tarball: { name: tarballName, sha256, bytes: bytes.length },
     sourceArchive: { name: sourceArchive, ref: archiveRef },
     ...(acceptance ? { acceptance: { ...acceptance, boundaries: report } } : {}),
@@ -182,9 +230,11 @@ async function main() {
       tarball: tarballName,
       sourceArchive,
       sha256,
+      prerelease: channel.prerelease,
       acceptance,
     }),
   );
+  await writeFile(CHANNEL, JSON.stringify(channel, null, 2) + '\n');
 
   // "The Release looks fine" and "the Release has the installable package" must not be
   // the same observation: assert the asset set rather than trusting the upload loop.
@@ -192,8 +242,16 @@ async function main() {
     const present = await readFile(join(OUTPUT, name)).catch(() => undefined);
     assert.ok(present, `发布附件缺失：${name}（上传逻辑只挂 ${OUTPUT}/ 里的文件）`);
   }
+  // The handoff file must never be uploaded as an asset: it belongs to the workflow,
+  // not to users. Assert its absence rather than trusting where it was written.
+  assert.equal(
+    await readFile(join(OUTPUT, 'release-channel.json')).catch(() => undefined),
+    undefined,
+    `${OUTPUT}/release-channel.json 不该存在 —— 附件目录里的每个文件都会被挂到 Release 上`,
+  );
 
   console.log(`Release ${tag} (commit ${commit})`);
+  console.log(`channel      prerelease=${String(channel.prerelease)}  npmTag=${channel.npmTag}`);
   console.log(
     `tarball      ${join(OUTPUT, tarballName)}  sha256=${sha256}  bytes=${String(bytes.length)}`,
   );

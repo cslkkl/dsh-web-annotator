@@ -21,8 +21,10 @@
 2. bump `package.json` 的版本号、`CHANGELOG.md` 的对应一节与市场条目的 `tarball` 行，推 `main`；
    再推 `v<版本>` 标签。[release workflow](../.github/workflows/release.yml) 随后跑门禁、
    打包产物验收与交付一致性，建出挂着预构建 `.tgz`（外加源码 ZIP 与验证记录）的预览 Release，
-   最后把同一份产物发到 npm 的 `alpha` dist-tag —— 预览版不碰 `latest`。
-3. 完成稳定版所需的原生截图、真实模型与兼容验收后，去掉 `--tag alpha`，发布稳定版并设置 `latest`。
+   最后把同一份产物发到 npm —— 通道按版本号推导：预览版进 `alpha`，稳定版进 `latest`。
+3. 完成稳定版所需的原生截图、真实模型与兼容验收后，**只改版本号与 `CHANGELOG`** 就能发稳定版：
+   workflow 会按版本号自动去掉 `--prerelease`、把 dist-tag 换成 `latest`（判据在
+   [scripts/release-assets.mjs](../scripts/release-assets.mjs) 的 `releaseChannel()`）。
 4. 向社区目录提交 [marketplace 条目](marketplace/cslkkl__dsh-web-annotator.yml)。
    合并并被目录同步后，才能声明该市场可搜索、可安装。
 5. 在新 Profile 中走一遍搜索、安装、重启、批注、卸载，记录精确市场与宿主版本。
@@ -35,7 +37,7 @@
 | `dshmarket`（awesome-dsh-plugin 目录） | 向目录仓库提交插件 YAML，维护者审阅合并；仓库须创建满一天并带 `dsh-plugin` topic | 条目用 `tarball` 指向已发布的 Release tgz，不必先发 npm                                            |
 | 按 GitHub topic 自动发现的市场         | 仓库带 `dsh-plugin` topic；安装方式取决于各市场                                  | 标签便于发现，不等于安装已验收                                                                     |
 | Desktop 的 `dsh-community-market`      | 目录解析唯一 npm 包名，要求 npm `latest` 是稳定精确版本                          | **仍不满足**：还没有稳定版，而全新包的首个版本会被 npm 强制占住 `latest`，所以它现在指向一个 alpha |
-| npm（可选）                            | 包的 `repository` 字段必须指回本仓库，否则不会与条目关联                         | 已声明；发布走 OIDC，用 `alpha` dist-tag                                                           |
+| npm（可选）                            | 包的 `repository` 字段必须指回本仓库，否则不会与条目关联                         | 已声明；发布走 OIDC，预览版用 `alpha` dist-tag、稳定版用 `latest`                                  |
 
 以上是查阅公开实现得到的规则，未在市场 UI 中实际安装本项目。
 其他版本或来源的行为需要分别确认。收录结果由市场维护者决定。

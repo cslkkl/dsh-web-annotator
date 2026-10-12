@@ -45,7 +45,8 @@ git push origin v<版本>
 （`build:host` 排在 `npm pack` 之前），本机不会自动做，所以本机打包会以「版本不一致」失败。
 
 **发布全程在 runner 上**：本机不需要任何 npm 凭证（OIDC 从 GitHub 签发），也不要求本机
-处于什么状态。跑完 GitHub Release 与 npm 的 `alpha` dist-tag 一起更新。
+处于什么状态。跑完 GitHub Release 与 npm 一起更新：**预发布版本**进 GitHub 的 Pre-release
+与 npm 的预览 dist-tag（`alpha`…），**稳定版本**进 GitHub 的 Latest 与 npm 的 `latest`。
 
 `release.yml` 随后在 Windows runner 上依次：核对标签与 `package.json` 一致 → `npm run check`
 → 真实 Chromium 存储回归 → 打补丁并按精确基线校验 → `build:host` → 窄范围类型检查
@@ -125,11 +126,25 @@ CI 验收过的那份**不同**：provider 产物里会写进检出目录名（`
 npm publish <tgz 或 .> --registry=https://registry.npmjs.org --access public --tag alpha
 ```
 
+（`--tag` 按上面的表选：预览版用 `alpha`，稳定版用 `latest`。）
+
 装包仍走镜像（快），所以**不要**改全局 registry。
 
 ### dist-tag 与 `latest`
 
-发布命令固定 `--tag alpha`，用户按 `@alpha` 取预览版。
+**通道由版本号推导，不写死在 workflow 里**：`npm run release:assets` 把结论写进
+`integration/release-channel.json`，Release 与 npm 两步都只读它。
+
+| 版本号           | GitHub Release | npm dist-tag |
+| ---------------- | -------------- | ------------ |
+| `0.2.0-alpha.12` | 预发布         | `alpha`      |
+| `0.2.0`          | 正式版         | `latest`     |
+
+判断在 `releaseChannel()` 里，有判据钉着（`+build` 元数据不算预发布、纯数字标识落到 `next`）。
+之所以不写在 YAML 里：早先两处写死（`--prerelease` 与 `--tag alpha`）时，**给稳定版打标签会发出
+一个「标着预发布、npm 上仍留在旧 alpha」的版本，而日志里看不出任何异常** —— 这类判断必须可测。
+
+用户按 `@alpha` 取预览版，按包名取稳定版。
 
 ⚠️ **全新包的第一个版本会被 npm 强制占住 `latest`** —— 包必须有一个 `latest`，
 `--tag alpha` 拦不住这件事。所以在**还没有稳定版**期间，`latest` 会指向某个 alpha。

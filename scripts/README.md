@@ -61,6 +61,12 @@ format:check → lint → check:layering → check:doc-paths → build → typec
 产物全部落在 `integration/release-assets/`（已忽略），由
 [release workflow](../.github/workflows/release.yml) 挂到 Release 上。
 
+它还算出**发布通道**并写进 `integration/release-channel.json`（在附件目录**之外**，
+免得被当成附件发出去）：带预发布段的版本 → GitHub Pre-release + npm 预览 dist-tag；
+稳定版 → Latest + `latest`。判据在 `releaseChannel()`，由
+[tests/release-notes.test.ts](../tests/release-notes.test.ts) 钉住 —— 这两处原先写死在
+workflow 里，给稳定版打标签会发出「标着预发布、npm 仍留在旧 alpha」的版本而日志全绿。
+
 测试 home 落在仓库的**父目录** `work/`（`defaultWorkspace`），不在包内。
 `work/` 与 `integration/` 都被 `.gitignore` 忽略。
 

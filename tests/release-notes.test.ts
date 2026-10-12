@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { changelogSection, releaseNotes } from '../scripts/release-assets.mjs';
+import { changelogSection, releaseChannel, releaseNotes } from '../scripts/release-assets.mjs';
 
 const changelog = [
   '# Changelog',
@@ -47,6 +47,7 @@ test('release notes carry the section, the hash and the tag they were built from
     tarball: 'dsh-web-annotator-0.2.0-alpha.10.tgz',
     sourceArchive: 'dsh-web-annotator-source-0.2.0-alpha.10.zip',
     sha256: 'f'.repeat(64),
+    prerelease: true,
     acceptance: { checks: 26, errors: 0 },
   });
   assert.match(notes, /一条改动/);
@@ -64,6 +65,30 @@ test('release notes carry the section, the hash and the tag they were built from
     tarball: 't.tgz',
     sourceArchive: 's.zip',
     sha256: 'a'.repeat(64),
+    prerelease: true,
   });
   assert.doesNotMatch(bare, /项 Browser 检查通过/);
+});
+
+test('a prerelease version publishes as a prerelease, a stable one does not', () => {
+  // The workflow used to hardcode `--prerelease` and `--tag alpha`, so tagging a
+  // stable version would have shipped it as a GitHub prerelease while npm kept
+  // `latest` on an older alpha — with nothing in the log to show for it.
+  assert.deepEqual(releaseChannel('0.2.0-alpha.12'), { prerelease: true, npmTag: 'alpha' });
+  assert.deepEqual(releaseChannel('0.2.0-beta.1'), { prerelease: true, npmTag: 'beta' });
+  assert.deepEqual(releaseChannel('0.2.0-rc.2'), { prerelease: true, npmTag: 'rc' });
+  assert.deepEqual(releaseChannel('0.2.0'), { prerelease: false, npmTag: 'latest' });
+  assert.deepEqual(releaseChannel('1.0.0'), { prerelease: false, npmTag: 'latest' });
+});
+
+test('build metadata is not a prerelease, and a nameless prerelease still gets a tag', () => {
+  // SemVer: `+build` is metadata, not a prerelease — treating it as one would keep a
+  // stable release off `latest`.
+  assert.deepEqual(releaseChannel('0.2.0+build.5'), { prerelease: false, npmTag: 'latest' });
+  // `-0` carries no usable dist-tag name; it must not produce an invalid one.
+  assert.deepEqual(releaseChannel('0.2.0-0'), { prerelease: true, npmTag: 'next' });
+  // An unparseable version must fail loudly rather than pick a channel by accident.
+  assert.throws(() => releaseChannel('0.2.0-'), /SemVer/);
+  assert.throws(() => releaseChannel('0.2'), /SemVer/);
+  assert.throws(() => releaseChannel('v0.2.0'), /SemVer/);
 });
