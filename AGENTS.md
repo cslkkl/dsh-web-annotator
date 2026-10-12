@@ -90,13 +90,12 @@ npm run release:assets     # 汇总发布产物与 Release 正文（需先 npm p
   自己构建、自己验收、自己发；**发出去的就是验收过的那一份**，步骤见
   [发布链路](docs/publishing.md) 的发版节。
 - 本机门禁：`npm run check` 全绿（格式 / lint / 分层 7 条规则 / 文档路径 / build / typecheck / 单元测试）。
-- **alpha.12 已由发布链在标签上构建、验收并发布，并首次经 OIDC 发到 npm**：
-  npm 上的 `dist.shasum` 与 Release 附件**逐字节相同**（26 项 Browser 检查通过、0 个页面错误、
-  交付的 tgz 与验收时安装的运行时一致）。alpha.10 / alpha.11 同样由发布链发布，
-  但 alpha.11 的 npm 那份是**本机手发**的，字节与 Release 不同 —— 见
-  [验证说明](docs/verification.md) 的 alpha.12 节。alpha.11 也装进了本机 `web` profile
-  （市场那条 URL 命令），依赖记的是稳定 https 链接。
-- 原生 Desktop 与真实模型**仍未**验收。逐项的边界见 [docs/verification.md](docs/verification.md)。
+- **0.2.0 已发布为稳定版**：GitHub Release 进 Latest、npm 进 `latest`（通道按版本号推导，
+  见 [发布链路](docs/publishing.md)）；真实宿主 **26 项 Browser 检查通过**、0 个页面错误，
+  npm 与 Release 是同一份字节。alpha.10–alpha.13 由同一发布链发布（alpha.11 的 npm 那份
+  是本机手发的，字节与 Release 不同 —— 见 [验证说明](docs/verification.md)）。
+- ⚠️ **0.2.0 不声称已验的三项**：原生 Desktop、真实模型、兼容矩阵。见
+  [验证说明](docs/verification.md) 的 0.2.0 节 —— **不要把未验证当已验证**。
 
 ## 待办
 

@@ -4,7 +4,8 @@
 
 包名 `dsh-web-annotator`，源码在 [cslkkl/dsh-web-annotator](https://github.com/cslkkl/dsh-web-annotator)。
 预构建包通过 GitHub Release 分发，面向精确 Harness **0.2.0-rc.2**，用户不需要编译。
-版本号见 [../package.json](../package.json)。npm 已发布预览版（`npm install dsh-web-annotator@alpha`），
+版本号见 [../package.json](../package.json)。npm 已发布：**`latest` 指向稳定版**，
+预览版在 `alpha` dist-tag（`npm install dsh-web-annotator@alpha`）。
 发布由 CI 走 OIDC Trusted Publishing，见 [发布链路](publishing.md) 的 npm 发布节。
 社区目录的条目已提交、**等待维护者审阅**（[awesome-dsh-plugin#6833](https://github.com/awesome-dsh-plugin/awesome-dsh-plugin/pull/6833)），
 **提交不等于收录**：合并并被目录同步之后，才能声明该市场可搜索、可安装。

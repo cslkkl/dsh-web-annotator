@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.2.0 — 第一个稳定版
+
+把 `0.2.0-alpha` 系列收成一个稳定版：在 Harness 原有 Browser 里点选或框选网页元素、
+就地评论或提问，再把标记截图或 DOM 定位资料发给当前会话。发布通道按版本号推导，
+本版因此自动进 GitHub 的 Latest 与 npm 的 `latest`（见 [发布链路](docs/publishing.md)）。
+
+**已验证**：真实宿主（Harness 0.2.0-rc.2 + 打包产物）**26 项 Browser 检查通过**、
+0 个页面错误；交付的 tgz 与验收时安装的运行时逐字节一致；npm 与 Release 是同一份字节。
+本机 `web` profile 也装过并确认界面正确。
+
+⚠️ **仍未验证的边界**（不要把本版当成这些也已验过）：
+
+- **原生 Desktop**：只验到 Web composition；Electron 截图边界由 Web 测试替代。
+- **真实模型**：验收用的是官方 replay 适配器，不是真实模型。
+- **兼容矩阵**：明确支持的 Harness / 浏览器 / 页面组合还没定。
+  本版**精确支持 Harness 内核 0.2.0-rc.2**，其他版本未验。
+
+逐项边界见 [验证说明](docs/verification.md)。
+
 ## 0.2.0-alpha.13 — 发布通道按版本号推导
 
 - 发布链不再把 `--prerelease` 与 `--tag alpha` 写死在 workflow 里，改由版本号推导：

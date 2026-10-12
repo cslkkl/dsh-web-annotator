@@ -33,17 +33,22 @@ Click or drag inside the Browser tab Harness already has, then comment or ask th
 - **Drafts survive**: notes are stored per session and full URL in IndexedDB. Neither a failed send nor a
   failed save clears them.
 
-**0.2.0-alpha is a preview and targets exactly Harness 0.2.0-rc.2.**
+**0.2.0 targets exactly Harness 0.2.0-rc.2.**
 One prebuilt package ships the plugin together with the Browser, Chat and Layout extensions, so a normal
-restart of Desktop is all it takes. The extensions are not part of the official Harness yet; nothing has
-been published to npm and no plugin market lists it yet.
+restart of Desktop is all it takes. The extensions are not part of the official Harness yet. npm carries
+both channels (`npm install dsh-web-annotator`); the community directory entry has been submitted and is
+**awaiting review**, so do not treat the market as searchable yet.
 Each release's package and verification record are built by the
 [release workflow](.github/workflows/release.yml) on the tag and attached to the Release.
+
+⚠️ **How far this is verified**: 26 Browser checks pass against a real host, but **native Desktop, a real
+model and the compatibility matrix remain unverified** — see the
+[verification notes](docs/verification.md) for each boundary, and do not read unverified as verified.
 
 ## Install
 
 Download the latest `dsh-web-annotator-*.tgz` from the
-[preview releases](https://github.com/cslkkl/dsh-web-annotator/releases), pick it in the DSH plugin
+[releases](https://github.com/cslkkl/dsh-web-annotator/releases), pick it in the DSH plugin
 manager, or use the official CLI:
 
 ```sh

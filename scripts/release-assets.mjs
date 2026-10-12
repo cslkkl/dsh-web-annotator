@@ -118,7 +118,10 @@ export function releaseNotes({
   // the stability a stable release would claim. The channel decides the sentence.
   const standing = prerelease
     ? `本版仍是 **${version} 预览版**，不代表已被市场收录。`
-    : `本版是 **${version} 稳定版**；兼容范围见 [验证说明](docs/verification.md)。`;
+    : // An absolute URL on purpose: the body is rendered on the Release page, where a
+      // repository-relative link does not resolve.
+      `本版是 **${version} 稳定版**。已验证到什么程度、哪些边界**仍未**验证，见 ` +
+      `[验证说明](https://github.com/cslkkl/dsh-web-annotator/blob/main/docs/verification.md) —— 不要把未验证当已验证。`;
   paragraphs.push(
     `安装包 SHA-256：\`${sha256}\``,
     '',

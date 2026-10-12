@@ -23,14 +23,18 @@
 - **多条管理**：保存后可编辑、逐条勾选、分批发送；失败保留，成功只移除本次发出去的。
 - **草稿不丢**：按会话与完整 URL 存进 IndexedDB；发送失败或保存失败都不会清空内容。
 
-**0.2.0-alpha 是预览版，精确支持 Harness 0.2.0-rc.2。**
+**0.2.0 精确支持 Harness 0.2.0-rc.2。**
 一个预构建安装包同时包含插件和 Browser、Chat、Layout 扩展，安装后正常重启 Desktop 即可使用。
-扩展尚未合入官方 Harness；npm 尚未发布，插件市场尚未收录。
+扩展尚未合入官方 Harness。npm 上已有预览与稳定两个通道（`npm install dsh-web-annotator`）；
+社区目录的条目已提交，**等待维护者审阅**，所以不要据此认为市场已可搜索。
 每个版本的安装包与验证记录由[发布链路](.github/workflows/release.yml)在标签上构建并附到 Release。
+
+⚠️ **已验证到什么程度**：真实宿主 26 项 Browser 检查通过；但**原生 Desktop、真实模型、
+兼容矩阵仍未验证** —— 逐项边界见[验证说明](docs/verification.md)，不要把未验证当已验证。
 
 ## 安装
 
-从 [预览 Release](https://github.com/cslkkl/dsh-web-annotator/releases) 下载最新 `dsh-web-annotator-*.tgz`，
+从 [Releases](https://github.com/cslkkl/dsh-web-annotator/releases) 下载最新 `dsh-web-annotator-*.tgz`，
 在 DSH 插件管理页选择该本地包，或使用官方 CLI：
 
 ```sh
