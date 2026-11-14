@@ -94,16 +94,16 @@ npm run verify:delivery
 **迁移到 Harness `0.2.2-rc.3`。** 补丁基线由 `d743267…`（0.2.1-alpha.2）换成
 `38a6a5c…`（`dsh-v0.2.2-rc.3`），三个派生提供方重新对齐。
 
-| 项目                      | 结果                                                            |
-| ------------------------- | --------------------------------------------------------------- |
-| 补丁基线                  | `d743267…` → `38a6a5c…`（`dsh-v0.2.2-rc.3`）；**27** 个文件     |
-| 补丁校验                  | `verify:browser-patch` 通过：按精确基线应用并复现 27 个受审文件 |
-| 三个提供方类型检查        | `typecheck:{browser,chat,layout}-provider` 全过                 |
-| 本机门禁                  | `npm run check` 全绿；52 项单元测试通过                         |
-| `npm run test:storage`    | 4 项通过（真实 Chromium）                                       |
-| `npm pack --dry-run`      | `prepack` 完整性断言通过（补丁哈希、逐文件哈希、版本一致）      |
-| `npm run test:acceptance` | **未运行**：需要精确版本真实宿主 + 打包产物，本轮未做           |
-| `npm run test:harness`    | **未运行**：同上                                                |
+| 项目                      | 结果                                                                      |
+| ------------------------- | ------------------------------------------------------------------------- |
+| 补丁基线                  | `d743267…` → `38a6a5c…`（`dsh-v0.2.2-rc.3`）；**27** 个文件               |
+| 补丁校验                  | `verify:browser-patch` 通过：按精确基线应用并复现 27 个受审文件           |
+| 三个提供方类型检查        | `typecheck:{browser,chat,layout}-provider` 全过                           |
+| 本机门禁                  | `npm run check` 全绿；52 项单元测试通过                                   |
+| `npm run test:storage`    | 4 项通过（真实 Chromium）                                                 |
+| `npm pack --dry-run`      | `prepack` 完整性断言通过（补丁哈希、逐文件哈希、版本一致）                |
+| `npm run test:acceptance` | **26 项 Browser 检查通过**，0 个页面错误、0 个 4xx/5xx（真实 0.2.2-rc.3） |
+| `npm run test:harness`    | **未运行**：要 `DSH_CLI_ENTRY` 指向宿主 `lib/bin.js`，本机未构建宿主 lib  |
 
 **冲突是怎么处理的**（不是"改个版本号"）：8 个冲突文件，全部按 rc.3 的上游新结构重述补丁语义。
 
@@ -130,8 +130,12 @@ npm run verify:delivery
 - **宿主检出不要装依赖**：宿主包在工作区里是 link 到未构建的源码包，`pnpm install` 之后
   esbuild 会就近解析到没有 `lib/` 的 junction 而报 `Could not resolve`。CI 也从不安装宿主依赖，
   构建靠本包 `node_modules` 的 `nodePaths` 回落。本机为此清掉了宿主里的 `node_modules`。
+- **验收脚本改了一处测量**：`annotation-acceptance.mjs` 原来分两次 `boundingBox()` 取「添加批注」
+  与「刷新」的位置，两次调用之间控件会重渲染（标签与宽度随激活态切换），于是两个坐标描述的是
+  两帧不同的布局，顺序断言偶发失败而工具栏其实正确。改成一次 `page.evaluate` 同帧量取两个
+  rect，**断言本身没有放宽**（仍是 `左边控件的右缘 ≤ 刷新左缘 + 1`）。
 
-⚠️ **本版未验证**：真实宿主上的 Browser 验收、真实模型、原生 Desktop、兼容矩阵 ——
+⚠️ **本版未验证**：真实模型、原生 Desktop、兼容矩阵 ——
 与上一版相同的边界，迁移没有改变它们。**不要把本机门禁绿当作真实宿主已验。**
 
 ### 0.2.2（2026-10-12）

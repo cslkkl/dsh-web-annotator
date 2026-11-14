@@ -127,9 +127,32 @@ try {
   const frame = page.frameLocator('iframe[data-sidebar-browser-frame="iframe"]');
   await frame.locator('#heading').waitFor();
   await button('添加批注').waitFor();
-  const annotateBox = await button('添加批注').boundingBox();
-  const reloadBox = await button('刷新').boundingBox();
-  assert.ok(annotateBox && reloadBox && annotateBox.x + annotateBox.width <= reloadBox.x + 1);
+  // ⚠️ Measure both boxes in ONE frame. Two `locator.boundingBox()` round trips let
+  // the contribution re-render between them (the control swaps label and width
+  // with its active state), so the pair described two different layouts and the
+  // adjacency assertion failed intermittently while the toolbar was correct.
+  // Scoping to the form that owns the Reload button keeps the composer's
+  // same-named button out of the scan.
+  const [annotateBox, reloadBox] = await page.evaluate(() => {
+    const rect = (element) => {
+      if (element === null) return null;
+      const { x, y, width, height } = element.getBoundingClientRect();
+      return { x, y, width, height };
+    };
+    const toolbar = [...document.querySelectorAll('form')].find(
+      (form) => form.querySelector('button[aria-label="刷新"]') !== null,
+    );
+    if (toolbar === undefined) return [null, null];
+    return [
+      rect(toolbar.querySelector('button[aria-label="添加批注"]')),
+      rect(toolbar.querySelector('button[aria-label="刷新"]')),
+    ];
+  });
+  assert.ok(annotateBox && reloadBox, 'both toolbar controls are mounted');
+  assert.ok(
+    annotateBox.x + annotateBox.width <= reloadBox.x + 1,
+    `the contribution must end before Reload: ${JSON.stringify({ annotateBox, reloadBox })}`,
+  );
   assert.equal(await button('添加批注').innerText(), '批注网页');
   passed('Controls mounted inside the original Browser tab');
   const verifyFullscreen = async (phase) => {
