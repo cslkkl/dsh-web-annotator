@@ -12,9 +12,13 @@ const patch = resolve('docs/harness-browser-annotation.patch');
 const base = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: checkout, encoding: 'utf8' }).trim();
 assert.equal(base, HOST_BASE_COMMIT, 'The reviewed patch base changed; re-review before building.');
 const tracked = new Set(
+  // The host tree is past the 1 MiB default `maxBuffer` (0.2.2-rc.3:
+  // 21,066 paths / ~1.2 MB), and the overflow surfaces as `spawnSync git
+  // ENOBUFS` rather than a readable diff. Same bound as verify-delivery.mjs.
   execFileSync('git', ['ls-tree', '-r', '--name-only', 'HEAD'], {
     cwd: checkout,
     encoding: 'utf8',
+    maxBuffer: 64 * 1024 * 1024,
   }).split('\n'),
 );
 const content = await readFile(patch, 'utf8');

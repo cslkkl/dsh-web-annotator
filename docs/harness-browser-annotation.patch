@@ -1,5 +1,5 @@
 diff --git a/docs/subsystems/sidebar-right.md b/docs/subsystems/sidebar-right.md
-index 6315827c27..b61b1dbcc8 100644
+index 2e661bfb4a..ed40464aa9 100644
 --- a/docs/subsystems/sidebar-right.md
 +++ b/docs/subsystems/sidebar-right.md
 @@ -2,6 +2,8 @@
@@ -12,7 +12,7 @@ index 6315827c27..b61b1dbcc8 100644
  
  This page is the reference for the subsystem's contracts: addresses, tab-type registration, the navigation service, the extension slots and their owner props, the resource model, the Workspace Files service, the shipped types, and what is deliberately not built. How the layout engine, the frame, and the surface fit together is in the [Agent Note](../../.agents/notes/implemented/feature/2026-09-04-right-sidebar-docking-infrastructure.md); slot mechanics are in the [Slots reference](slots.md).
 diff --git a/docs/subsystems/sidebar-right.zh.md b/docs/subsystems/sidebar-right.zh.md
-index 1df6007e12..1588a87795 100644
+index 50e1bf2536..7d24ac791a 100644
 --- a/docs/subsystems/sidebar-right.zh.md
 +++ b/docs/subsystems/sidebar-right.zh.md
 @@ -2,6 +2,8 @@
@@ -25,66 +25,87 @@ index 1df6007e12..1588a87795 100644
  
  本页是该子系统契约的参考：地址、tab 类型注册、导航服务、扩展 slot 与其 owner props、资源模型、Workspace Files 服务、内置类型，以及明确不做的事。布局引擎、frame 与停靠面如何拼在一起见 [Agent Note](../../.agents/notes/implemented/feature/2026-09-04-right-sidebar-docking-infrastructure.zh.md)；slot 机制见 [Slots 参考](slots.zh.md)。
 diff --git a/packages/client/ui-chat/README.md b/packages/client/ui-chat/README.md
-index b5c4c2e749..796e84bf3a 100644
+index 1a1869e4bd..03bfd8d4e3 100644
 --- a/packages/client/ui-chat/README.md
 +++ b/packages/client/ui-chat/README.md
-@@ -196,3 +196,5 @@ None; Chat presentation does not assemble or mutate provider requests.
+@@ -45,7 +45,7 @@ A fence layer's root element sets no margins, because the fence's [block box](..
+ 
+ Native message images use separate user and output positions. The `conversation.chat.user.content` Factory declares `conversation.chat.user.images`, which `UserContent` renders; the Assistant node registration declares `conversation.chat.message.images`, which `AssistantMarkdown` renders. Both receive image sources, the authorized `loadImage`, and layout options through explicit props. Their official `MessageImages` entries call the shared root-scoped `conversation.images.content` Factory. Each position can be replaced independently without duplicating the gallery implementation.
+ 
+-The session-scoped `conversation.chat.user.content` Factory renders only the user content stack: text, extra blocks, image/file attachments in input order, and reference summaries. Its [`UserContentInput`](src/client/contract/slots.ts) carries prepared `content`, transform `facts`, display props, and explicit `loadImage`; node-owned injections provide reference actions. It calls the shared `conversation.user.text` Factory for text and its own image Slot for images. Direct callers need a Session binding and supply their own row wrapper.
++The session-scoped `conversation.chat.user.content` Factory renders only the user content stack: text, extra blocks, image/file attachments in input order, and reference summaries. Its [`UserContentInput`](src/client/contract/slots.ts) carries prepared `content`, transform `facts`, display props, explicit `loadImage`, and an optional `renderUserText` seat the owning Chat row hands down, which wraps the `conversation.user.text` result so a feature chain can replace the text alone; node-owned injections provide reference actions. It calls the shared `conversation.user.text` Factory for text and its own image Slot for images. Direct callers need a Session binding and supply their own row wrapper.
+ 
+ `UserStyleBubble` and the [source-specific wrappers](<src/client/chat/MessageItem.tsx#L164-L340>) retain the user row, keys, pending/echo markers, timestamps, copy controls, and other message actions. The content Factory reads neither source-specific models nor private Context, and is not a global user-content override entry point.
+ 
+@@ -234,3 +234,5 @@ None; Chat presentation does not assemble or mutate provider requests.
  None.
  
  </details>
 +
 +The optional `conversation.message.user-text` chain presents recognized user text inside the existing bubble, including local echoes and steering. A contribution receives only the joined text; all-decline preserves reference-aware ordinary rendering. It does not change the persisted message, model request, image attachments or message actions.
 diff --git a/packages/client/ui-chat/README.zh.md b/packages/client/ui-chat/README.zh.md
-index 307b8bb33f..3454e62574 100644
+index 8f2648fd2d..13810577d7 100644
 --- a/packages/client/ui-chat/README.zh.md
 +++ b/packages/client/ui-chat/README.zh.md
-@@ -196,3 +196,5 @@ Chat 会在历史前插与 renderer 重新挂载时恢复语义锚点，并且
+@@ -45,7 +45,7 @@ kind: "package-reference"
+ 
+ 原生消息图片使用独立的用户与输出位置。`conversation.chat.user.content` Factory 声明 `conversation.chat.user.images`，由 `UserContent` 渲染；Assistant 节点注册声明 `conversation.chat.message.images`，由 `AssistantMarkdown` 渲染。两者通过显式 props 接收图片来源、授权 `loadImage` 和布局参数。官方 `MessageImages` 条目调用共享的 root 作用域 `conversation.images.content` Factory。每个位置均可独立替换，无需复制画廊实现。
+ 
+-Session 作用域的 `conversation.chat.user.content` Factory 只渲染用户内容区域：文本、额外内容块、按输入顺序排列的图片／文件附件及引用摘要。[`UserContentInput`](src/client/contract/slots.ts) 携带预处理的 `content`、变换 `facts`、显示 props 和显式 `loadImage`；引用动作由节点自己的 Injection 提供。正文调用共享 `conversation.user.text` Factory，图片调用自身拥有的图片 Slot。直接调用需要 Session 绑定，行包装层由调用方提供。
++Session 作用域的 `conversation.chat.user.content` Factory 只渲染用户内容区域：文本、额外内容块、按输入顺序排列的图片／文件附件及引用摘要。[`UserContentInput`](src/client/contract/slots.ts) 携带预处理的 `content`、变换 `facts`、显示 props、显式 `loadImage`，以及所属 Chat 行下发的可选 `renderUserText` seat —— 它包住 `conversation.user.text` 的结果，让特性链只替换正文；引用动作由节点自己的 Injection 提供。正文调用共享 `conversation.user.text` Factory，图片调用自身拥有的图片 Slot。直接调用需要 Session 绑定，行包装层由调用方提供。
+ 
+ `UserStyleBubble` 和[各来源包装层](<src/client/chat/MessageItem.tsx#L164-L340>) 保留用户行、key、pending／echo 标记、时间、复制控件及其他消息操作。内容 Factory 不读取来源专属模型或私有 Context，也不是全局用户内容替换入口。
+ 
+@@ -234,3 +234,5 @@ Markdown 文件、链接、图片、引用 chip 和工具文件控件将明确
  无。
  
  </details>
 +
 +可选的 `conversation.message.user-text` chain 在原有消息气泡中呈现已识别的用户正文，也覆盖本地回显与 steering。插件只收到拼接后的文本；全部拒绝时保留普通正文与引用呈现。它不改变持久化消息、模型请求、图片附件或消息操作。
 diff --git a/packages/client/ui-chat/src/client/apply.ts b/packages/client/ui-chat/src/client/apply.ts
-index eabd566256..71cca4a5e0 100644
+index 7e4a3a5f01..aff2b8a845 100644
 --- a/packages/client/ui-chat/src/client/apply.ts
 +++ b/packages/client/ui-chat/src/client/apply.ts
-@@ -212,6 +212,7 @@ export function apply(ctx: Context): void {
+@@ -226,6 +226,7 @@ export function apply(ctx: Context): void {
+     name: 'conversation.chat.flow', locale: NS, store: chatStore,
      children: {
        'conversation.chat.node': { kind: 'keyed', scope: 'session', inject: CHAT_NODE_INJECT },
-       'conversation.message.images': { kind: 'single', scope: 'session' },
 +      'conversation.message.user-text': { kind: 'chain', scope: 'session' },
      },
      inject: (sessionId: SessionId): ChatFlowDataInjected => {
        const binding = ctx.sessions.binding(sessionId)
 diff --git a/packages/client/ui-chat/src/client/chat/ChatFlow.tsx b/packages/client/ui-chat/src/client/chat/ChatFlow.tsx
-index 1b8306ee5f..3f8fd7035d 100644
+index d83a3043cc..238b954df0 100644
 --- a/packages/client/ui-chat/src/client/chat/ChatFlow.tsx
 +++ b/packages/client/ui-chat/src/client/chat/ChatFlow.tsx
-@@ -2,7 +2,7 @@
- import { memo, useCallback } from 'react'
- import type { RenderMessageImages } from '@deepseek-ai/dsh-client-ui-conversation/client'
+@@ -1,8 +1,8 @@
+ /** Ordered Chat rows, local echoes, and running status share the flow slot's parent. */
+-import { memo, type ReactElement } from 'react'
++import { memo, useCallback, type ReactElement } from 'react'
+ import type { PendingSubmission } from '@deepseek-ai/dsh-api-session-controller/client'
  import { assertNever } from '@deepseek-ai/dsh-util-values'
 -import type { ChatFlowSlotProps } from '../contract/slots.ts'
 +import type { ChatFlowSlotProps, ChatNodeOwnerProps } from '../contract/slots.ts'
  import { ChatNodeSeat } from './ChatNodeSeat.tsx'
  import { ChatGroupSeat } from './ChatGroupSeat.tsx'
  import { PendingSteeringBubble, PendingSubmissionBubble } from './MessageItem.tsx'
-@@ -13,7 +13,7 @@ import { RunningStatus } from './RunningStatus.tsx'
+@@ -26,7 +26,7 @@ function isTranscriptEcho(item: PendingInput): boolean {
  export const ChatFlow = memo(function ChatFlow({
    entries, pendingInputs, lastInputTurn, deferCollapse,
-   useSession, useChat, useChatNode, useChatNodeBottom, useChatNodeProcess, useChatGroup, usePresentation,
--  useStore, actions, renderSlot, t, useGroupAction, useGroupHeaderAction,
-+  useStore, actions, renderSlot, renderSlotChain, t, useGroupAction, useGroupHeaderAction,
-   cwd, openFile, openSkill, inspectCall, forkAt, loadImage, fileMentions,
+   useSession, useChat, useChatNode, useChatNodeBottom, useChatNodeProcess, useChatGroup, usePresentation, useConnectionState,
+-  useStore, actions, renderSlot, renderFactorySlot, t, useGroupAction, useGroupHeaderAction,
++  useStore, actions, renderSlot, renderSlotChain, renderFactorySlot, t, useGroupAction, useGroupHeaderAction,
+   cwd, openFile, inspectCall, forkAt, loadImage,
  }: ChatFlowSlotProps) {
    const nodeStore = useChat(snapshot => snapshot.nodes)
-@@ -29,10 +29,17 @@ export const ChatFlow = memo(function ChatFlow({
-     owner => renderSlot('conversation.message.images', { ...owner, loadImage }),
-     [loadImage, renderSlot],
-   )
-+  // Recognized user text may be replaced by the feature chain (the annotation prompt
-+  // collapses into "N notes"); all-decline keeps the default bubble, so an ordinary
-+  // message renders exactly as before.
+@@ -44,10 +44,18 @@ export const ChatFlow = memo(function ChatFlow({
+     return (location?.kind === 'turn' || location?.kind === 'step') && location.turn.status === 'open'
+   })
+   const holding = !running && latestTurnOpen
++  // Recognized user text may be replaced by the feature chain (an annotation
++  // prompt collapses into "N notes"); all-decline keeps the default bubble, so
++  // an ordinary message renders exactly as before. Durable, pending and local
++  // echo rows all pass through it.
 +  const renderUserText = useCallback<ChatNodeOwnerProps['renderUserText']>(
 +    (text, fallback) => renderSlotChain('conversation.message.user-text', { text }, { fallback }),
 +    [renderSlotChain],
@@ -92,136 +113,172 @@ index 1b8306ee5f..3f8fd7035d 100644
    const seatProps = {
      nodeStore, useChatNode, useChatNodeBottom, useChatNodeProcess, usePresentation,
      useStore, actions, renderSlot, t, useGroupAction, deferCollapse,
--    cwd, openFile, openSkill, inspectCall, forkAt, loadImage, renderMessageImages, fileMentions,
-+    cwd, openFile, openSkill, inspectCall, forkAt, loadImage, renderMessageImages, renderUserText, fileMentions,
+-    cwd, openFile, inspectCall, forkAt, loadImage,
++    cwd, openFile, inspectCall, forkAt, loadImage, renderUserText,
    }
    const rows = entries.map((entry) => {
      switch (entry.kind) {
-@@ -48,10 +55,10 @@ export const ChatFlow = memo(function ChatFlow({
-   })
-   const pendingRows = pendingInputs.map(item => 'requestId' in item ? (
-     <PendingSubmissionBubble key={item.requestId} submission={item}
--      renderMessageImages={renderMessageImages} t={t} />
-+      renderMessageImages={renderMessageImages} renderUserText={renderUserText} t={t} />
-   ) : (
-     <PendingSteeringBubble key={item.id} content={item.content}
--      renderMessageImages={renderMessageImages} t={t} />
-+      renderMessageImages={renderMessageImages} renderUserText={renderUserText} t={t} />
-   ))
-   const tail = entries.at(-1)
-   const node = tail?.kind === 'node' ? nodeStore.get(tail.key) : undefined
+@@ -73,9 +81,9 @@ export const ChatFlow = memo(function ChatFlow({
+   for (const [index, item] of pendingInputs.entries()) {
+     const row = isLocalSubmission(item)
+       ? <PendingSubmissionBubble key={item.requestId} submission={item}
+-        loadImage={loadImage} renderFactorySlot={renderFactorySlot} t={t} />
++        loadImage={loadImage} renderUserText={renderUserText} renderFactorySlot={renderFactorySlot} t={t} />
+       : <PendingSteeringBubble key={item.id} content={item.content}
+-        loadImage={loadImage} renderFactorySlot={renderFactorySlot} t={t} />
++        loadImage={loadImage} renderUserText={renderUserText} renderFactorySlot={renderFactorySlot} t={t} />
+     if (index <= firstTranscript) leadingRows.push(row)
+     else if (isTranscriptEcho(item)) openingRows.push(row)
+     else pendingRows.push(row)
 diff --git a/packages/client/ui-chat/src/client/chat/ChatNodeSeat.tsx b/packages/client/ui-chat/src/client/chat/ChatNodeSeat.tsx
-index 4bc1947dca..f293563523 100644
+index 4efdb94142..c2e2a645e3 100644
 --- a/packages/client/ui-chat/src/client/chat/ChatNodeSeat.tsx
 +++ b/packages/client/ui-chat/src/client/chat/ChatNodeSeat.tsx
-@@ -48,7 +48,7 @@ function turnOf(node: ChatNode | undefined): number | undefined {
+@@ -50,7 +50,7 @@ function turnOf(node: ChatNode | undefined): number | undefined {
  export const ChatNodeSeat = memo(function ChatNodeSeat({
    nodeKey, groupPart, useChatNode, useChatNodeProcess, usePresentation,
-   cwd, openFile, openSkill, inspectCall, forkAt,
--  loadImage, renderMessageImages, fileMentions, useStore, actions, renderSlot, t, useChatNodeBottom, deferCollapse, useGroupAction,
-+  loadImage, renderMessageImages, renderUserText, fileMentions, useStore, actions, renderSlot, t, useChatNodeBottom, deferCollapse, useGroupAction,
+   cwd, openFile, inspectCall, forkAt,
+-  loadImage, useStore, actions, renderSlot, t, useChatNodeBottom, deferCollapse, useGroupAction,
++  loadImage, renderUserText, useStore, actions, renderSlot, t, useChatNodeBottom, deferCollapse, useGroupAction,
  }: ChatNodeSeatProps) {
    const bottom = useChatNodeBottom(nodeKey)
    const node = useChatNode(nodeKey)
-@@ -132,11 +132,12 @@ export const ChatNodeSeat = memo(function ChatNodeSeat({
+@@ -138,10 +138,11 @@ export const ChatNodeSeat = memo(function ChatNodeSeat({
+       inspectCall,
        forkAt,
        loadImage,
-       renderMessageImages,
 +      renderUserText,
-       fileMentions,
        turnProcess,
      }, [
-     node, groupPart, cwd, openFile, openSkill, inspectCall, forkAt,
--    loadImage, renderMessageImages, fileMentions, turnProcess,
-+    loadImage, renderMessageImages, renderUserText, fileMentions, turnProcess,
+     node, groupPart, cwd, openFile, inspectCall, forkAt,
+-    loadImage, turnProcess,
++    loadImage, renderUserText, turnProcess,
    ])
    if (routedNode === undefined || owner === null) return null
    // Runtime dispatch owns the correlation: every Node's discriminant is the
 diff --git a/packages/client/ui-chat/src/client/chat/MessageItem.tsx b/packages/client/ui-chat/src/client/chat/MessageItem.tsx
-index 9005150af0..22094affeb 100644
+index f9551a8698..ea30122739 100644
 --- a/packages/client/ui-chat/src/client/chat/MessageItem.tsx
 +++ b/packages/client/ui-chat/src/client/chat/MessageItem.tsx
-@@ -160,11 +160,12 @@ function TurnMaxTokensItem({ t }: {
+@@ -177,7 +177,7 @@ const NO_MESSAGE_SOURCE: PropsRenderSlots<'conversation.chat.user.before'>['rend
  
  /** Right-aligned bubble shared by user and steering rows. */
  function UserStyleBubble({
--  content, renderMessageImages, actions, pending = false, echo = false, referenceLabels = [], skillNames = [],
-+  content, renderMessageImages, renderUserText, actions, pending = false, echo = false, referenceLabels = [], skillNames = [],
-   previewAttachments, references, t,
+-  node, renderSlotChain, content, loadImage, renderFactorySlot, actions,
++  node, renderSlotChain, content, loadImage, renderUserText, renderFactorySlot, actions,
+   pending = false, echo = false, batchStart = false,
+   referenceLabels, skillNames, previewAttachments, facts: inputFacts = EMPTY_TEXT_FACTS, interactive = false,
  }: {
-   content: readonly unknown[]
-   renderMessageImages: ChatNodeOwnerProps['renderMessageImages']
-+  renderUserText: ChatNodeOwnerProps['renderUserText']
-   /** Optional IconActions (or similar) below the bubble; receives the joined text. */
-   actions?: (text: string) => ReactNode
-   /** Whether this is the Host-authoritative pre-admission steering projection. */
-@@ -219,7 +220,7 @@ function UserStyleBubble({
-           </div>
-         )}
-         {showBubble && <div className={css.bubble}>
--          {projectUserText(text, referenceLabels, skillNames, 'skill', references)}
-+          {renderUserText(text, projectUserText(text, referenceLabels, skillNames, 'skill', references))}
-           {rest.map((block, i) => <JsonBlock key={i} label={t('message.extraBlock')} payload={block} truncatedLabel={truncated} />)}
-         </div>}
-         {referenceLabels.length > 0 && (
-@@ -239,15 +240,17 @@ function UserStyleBubble({
-  * @param props - Pending message content and conversation translator.
+@@ -203,7 +203,7 @@ function UserStyleBubble({
+   previewAttachments?: readonly UserContentAttachment[]
+   /** Inputs used by text transforms, separate from row and rendering props. */
+   facts?: Readonly<Partial<UserTextFacts>>
+-} & Pick<ChatNodeOwnerProps, 'loadImage'> & Pick<UserContentInput, 'interactive'>): ReactNode {
++} & Pick<ChatNodeOwnerProps, 'loadImage' | 'renderUserText'> & Pick<UserContentInput, 'interactive'>): ReactNode {
+   const parts = useMemo(() => contentParts(content), [content])
+   const prepared = useMemo<UserContentData>(() => ({
+     text: parts.text,
+@@ -227,6 +227,7 @@ function UserStyleBubble({
+       {renderFactorySlot('conversation.chat.user.content', {
+         content: prepared,
+         loadImage,
++        renderUserText,
+         facts,
+         interactive,
+       })}
+@@ -241,11 +242,11 @@ function UserStyleBubble({
+  * @param props - pending content, authorized image loader, and Factory/locale seats.
   * @returns the pending steering bubble.
   */
--export function PendingSteeringBubble({ content, renderMessageImages, t }: {
-+export function PendingSteeringBubble({ content, renderMessageImages, renderUserText, t }: {
+-export function PendingSteeringBubble({ content, loadImage, renderFactorySlot, t }: {
++export function PendingSteeringBubble({ content, loadImage, renderUserText, renderFactorySlot, t }: {
    content: readonly unknown[]
-   renderMessageImages: ChatNodeOwnerProps['renderMessageImages']
-+  renderUserText: ChatNodeOwnerProps['renderUserText']
+   renderFactorySlot: PropsRenderFactories['renderFactorySlot']
    t: ChatViewSlotProps['t']
- }): ReactNode {
+-} & Pick<ChatNodeOwnerProps, 'loadImage'>): ReactNode {
++} & Pick<ChatNodeOwnerProps, 'loadImage' | 'renderUserText'>): ReactNode {
    return (
      <UserStyleBubble
+       node={UNDECORATED_ROW}
+@@ -253,6 +254,7 @@ export function PendingSteeringBubble({ content, loadImage, renderFactorySlot, t
        content={content}
-       renderMessageImages={renderMessageImages}
+       renderFactorySlot={renderFactorySlot}
+       loadImage={loadImage}
 +      renderUserText={renderUserText}
        pending
-       t={t}
        actions={text => (
-@@ -270,9 +273,10 @@ export function PendingSteeringBubble({ content, renderMessageImages, t }: {
-  * @param props - the session snapshot's pending submission and render seats.
+         <MessageIconActions
+@@ -274,11 +276,11 @@ export function PendingSteeringBubble({ content, loadImage, renderFactorySlot, t
+  * @param props - the pending submission, authorized image loader, and render seats.
   * @returns the echoed user bubble.
   */
--export function PendingSubmissionBubble({ submission, renderMessageImages, t }: {
-+export function PendingSubmissionBubble({ submission, renderMessageImages, renderUserText, t }: {
+-export function PendingSubmissionBubble({ submission, loadImage, renderFactorySlot, t }: {
++export function PendingSubmissionBubble({ submission, loadImage, renderUserText, renderFactorySlot, t }: {
    submission: PendingSubmission
-   renderMessageImages: ChatNodeOwnerProps['renderMessageImages']
-+  renderUserText: ChatNodeOwnerProps['renderUserText']
+   renderFactorySlot: PropsRenderFactories['renderFactorySlot']
    t: ChatViewSlotProps['t']
- }): ReactNode {
+-} & Pick<ChatNodeOwnerProps, 'loadImage'>): ReactNode {
++} & Pick<ChatNodeOwnerProps, 'loadImage' | 'renderUserText'>): ReactNode {
    const content = useMemo(
-@@ -300,6 +304,7 @@ export function PendingSubmissionBubble({ submission, renderMessageImages, t }:
-       content={content}
+     () => (submission.text === '' ? [] : [{ type: 'text', text: submission.text }]),
+     [submission.text],
+@@ -307,6 +309,7 @@ export function PendingSubmissionBubble({ submission, loadImage, renderFactorySl
        previewAttachments={previewAttachments}
-       renderMessageImages={renderMessageImages}
+       renderFactorySlot={renderFactorySlot}
+       loadImage={loadImage}
 +      renderUserText={renderUserText}
        pending={submission.placement === 'steering'}
        echo
-       t={t}
-@@ -318,7 +323,7 @@ export function PendingSubmissionBubble({ submission, renderMessageImages, t }:
- 
- /** User and admitted-steering keyed Chat renderer. */
+       actions={text => (
+@@ -330,7 +333,7 @@ export function PendingSubmissionBubble({ submission, loadImage, renderFactorySl
+  * bubble without asking for it.
+  */
  export const UserMessageNodeView = memo(function UserMessageNodeView({
--  node, renderMessageImages, openFile, openSkill, t,
-+  node, renderMessageImages, renderUserText, openFile, openSkill, t,
- }: ChatNodeViewProps<'user' | 'steering'>) {
-   const data = node.data
-   return (
-@@ -326,6 +331,7 @@ export const UserMessageNodeView = memo(function UserMessageNodeView({
-       content={data.content}
-       references={{ openFile, openSkill }}
-       renderMessageImages={renderMessageImages}
+-  node, renderFactorySlot, loadImage, renderSlotChain, t,
++  node, renderFactorySlot, loadImage, renderUserText, renderSlotChain, t,
+ }: ChatNodeViewProps<'user' | 'steering'> & {
+   /** Bound by the `user` keyed registration, the only entry that declares the seat. */
+   renderSlotChain: PropsRenderSlots<'conversation.chat.user.before'>['renderSlotChain']
+@@ -344,6 +347,7 @@ export const UserMessageNodeView = memo(function UserMessageNodeView({
+       interactive
+       renderFactorySlot={renderFactorySlot}
+       loadImage={loadImage}
 +      renderUserText={renderUserText}
+       batchStart={node.kind === 'steering' && node.data.batchStart === true}
        {...data.referenceLabels === undefined ? {} : { referenceLabels: data.referenceLabels }}
        {...data.skillNames === undefined ? {} : { skillNames: data.skillNames }}
-       t={t}
+diff --git a/packages/client/ui-chat/src/client/chat/UserContent.tsx b/packages/client/ui-chat/src/client/chat/UserContent.tsx
+index ad73ea7a98..d1d4d4038f 100644
+--- a/packages/client/ui-chat/src/client/chat/UserContent.tsx
++++ b/packages/client/ui-chat/src/client/chat/UserContent.tsx
+@@ -12,12 +12,15 @@ const EMPTY_LABELS: readonly string[] = []
+  * @param props - prepared content, facts, authorized image loader, and framework Factory/locale seats.
+  * @returns the content stack using the existing user-message layout.
+  */
+-export function UserContent({ content, loadImage, facts, interactive = false, ellipsis = false, renderSlot, renderFactorySlot, t }:
++export function UserContent({ content, loadImage, facts, interactive = false, ellipsis = false, renderUserText, renderSlot, renderFactorySlot, t }:
+ FactoryComponentPropsOf<'conversation.chat.user.content'>) {
+   const { text, attachments, extraBlocks, referenceLabels = EMPTY_LABELS } = content
+   const compactImages = attachments.length > 1
+   const truncated = (total: number): string => t('json.truncated', { total })
+   const showBubble = text !== '' || extraBlocks.length > 0
++  // The projected text stays the fallback: a declining chain renders it byte for
++  // byte, references included, so ordinary messages keep their presentation.
++  const userText = renderFactorySlot('conversation.user.text', { text, facts, interactive, ellipsis })
+   return (
+     <div className={css.userStack}>
+       {attachments.length > 0 && (
+@@ -45,7 +48,7 @@ FactoryComponentPropsOf<'conversation.chat.user.content'>) {
+         </div>
+       )}
+       {showBubble && <UserMessageBubble data-message-bubble="" data-text-interaction-source="">
+-        {renderFactorySlot('conversation.user.text', { text, facts, interactive, ellipsis })}
++        {renderUserText === undefined ? userText : renderUserText(text, userText)}
+         {extraBlocks.map((block, index) => (
+           <JsonBlock key={index} label={t('message.extraBlock')} payload={block} truncatedLabel={truncated} />
+         ))}
 diff --git a/packages/client/ui-chat/src/client/contract/slots.ts b/packages/client/ui-chat/src/client/contract/slots.ts
-index 52d7786e20..eefcb79b12 100644
+index 676bb3fb2d..c61fbf17c0 100644
 --- a/packages/client/ui-chat/src/client/contract/slots.ts
 +++ b/packages/client/ui-chat/src/client/contract/slots.ts
 @@ -1,5 +1,5 @@
@@ -231,7 +288,7 @@ index 52d7786e20..eefcb79b12 100644
  import type { MessageId } from '@deepseek-ai/dsh-llm/brand'
  import type { SessionId, SessionSeq } from '@deepseek-ai/dsh-session/types'
  import type { PendingSubmission } from '@deepseek-ai/dsh-api-session-controller/client'
-@@ -206,6 +206,8 @@ export interface ChatNodeInjected {
+@@ -236,6 +236,8 @@ export interface UserBeforeOwnerProps {
  
  /** Stable owner currency delivered to a keyed Chat renderer. */
  export interface ChatNodeOwnerProps {
@@ -240,16 +297,30 @@ index 52d7786e20..eefcb79b12 100644
    /** Renderer-owned Node portion selected by the grouping Definition. */
    groupPart?: string
    cwd?: string | undefined
-@@ -324,7 +326,7 @@ export interface ChatFlowOwnerProps extends Pick<ChatNodeOwnerProps,
+@@ -269,6 +271,13 @@ export interface UserContentInput extends Pick<ChatNodeOwnerProps, 'loadImage'>,
+   readonly content: UserContentData
+   /** Transform inputs passed unchanged to UserText, separate from summary and rendering props. */
+   readonly facts: Readonly<Partial<UserTextFacts>>
++  /**
++   * Text-presentation chain seat the owning Chat row may hand down. It wraps the
++   * `conversation.user.text` result, so a contribution replaces only the text and
++   * leaves attachments, reference summary and message actions alone. Direct
++   * callers that omit it get the plain projected text.
++   */
++  readonly renderUserText?: ChatNodeOwnerProps['renderUserText']
+ }
+ 
+ /** Shared presentation state for one Turn-process answer generation. */
+@@ -381,7 +390,7 @@ export interface ChatFlowOwnerProps extends Pick<ChatNodeOwnerProps,
  /** Full props of the Chat-owned flow renderer. */
  export type ChatFlowSlotProps =
    PropsRuntime<'conversation.chat.flow'>
--  & PropsRenderSlots<'conversation.chat.node' | 'conversation.message.images'>
-+  & PropsRenderSlots<'conversation.chat.node' | 'conversation.message.images' | 'conversation.message.user-text'>
+-  & PropsRenderSlots<'conversation.chat.node'>
++  & PropsRenderSlots<'conversation.chat.node' | 'conversation.message.user-text'>
+   & PropsRenderFactories
    & PropsStore<ChatStore>
    & InjectFace<ChatFlowDataInjected>
-   & PropsLocale<'chat'>
-@@ -369,6 +371,8 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
+@@ -440,6 +449,8 @@ declare module '@deepseek-ai/dsh-client-ui-slots' {
        hookContext: ChatFlowHookContext
        inject: ChatFlowInjected
      }
@@ -259,10 +330,10 @@ index 52d7786e20..eefcb79b12 100644
       * Final Chat node renderer, keyed by `ChatNodeKind`. The component receives
       * the typed node, shared Chat actions, and Turn-data hook. Reusing a key
 diff --git a/packages/client/ui-layout/README.md b/packages/client/ui-layout/README.md
-index 43c61b89d1..b2411f513b 100644
+index 8a20476270..de80cccfdb 100644
 --- a/packages/client/ui-layout/README.md
 +++ b/packages/client/ui-layout/README.md
-@@ -31,6 +31,8 @@ The root slot composes the sidebar, main content, and right column. The sidebar
+@@ -35,6 +35,8 @@ The drawer mask fades with the panel’s transition duration and easing on both
  
  Global panels occupy the root-scoped `main` keyed slot; `conversation` is the reserved key for the Conversation. `ctx.layout.selectPanel(id)` selects a registered panel, and `null` selects the Conversation without changing the current Session. The Plugins page contributes one of the shipped global panels.
  
@@ -272,10 +343,10 @@ index 43c61b89d1..b2411f513b 100644
  
  <a id="window-chrome-seat"></a>
 diff --git a/packages/client/ui-layout/README.zh.md b/packages/client/ui-layout/README.zh.md
-index 9b426dcdef..611d53dcff 100644
+index e19b7a0bd2..d2ff8057b5 100644
 --- a/packages/client/ui-layout/README.zh.md
 +++ b/packages/client/ui-layout/README.zh.md
-@@ -31,6 +31,8 @@ kind: "package-reference"
+@@ -35,6 +35,8 @@ kind: "package-reference"
  
  全局面板占据 root 作用域的 `main` keyed slot；`conversation` 是为会话界面保留的 key。`ctx.layout.selectPanel(id)` 选中已注册面板，`null` 则选中会话界面，但不改变当前会话。Plugins 页面是默认组合中的一个全局面板。
  
@@ -285,47 +356,54 @@ index 9b426dcdef..611d53dcff 100644
  
  <a id="window-chrome-seat"></a>
 diff --git a/packages/client/ui-layout/src/client/AppFrame.module.css b/packages/client/ui-layout/src/client/AppFrame.module.css
-index 5b71ebecfd..915800e14e 100644
+index dd4a89c814..489ba6637c 100644
 --- a/packages/client/ui-layout/src/client/AppFrame.module.css
 +++ b/packages/client/ui-layout/src/client/AppFrame.module.css
-@@ -69,6 +69,14 @@
+@@ -74,6 +74,15 @@
    overflow: hidden;
  }
  
-+/* Keep the covered main tree mounted and measured, but out of paint and focus.
-+   A glass theme can create a stacking context on the right panel, trapping its
-+   dock layer below main content. Fullscreen owns the visible center regardless
-+   of that theme; restoring it preserves the same composer and draft. */
++/* A fullscreen right panel owns the visible centre. `inert` (AppFrame.tsx) takes
++   the covered subtree out of focus and pointers but paints nothing, and a glass
++   theme can lift the panel's own stacking context above the centre — so hide the
++   centre from paint too. Keeping it mounted (not `display:none`, not unmounted)
++   preserves its measurements, the composer and the draft for the restore. */
 +.frame[data-rightbar-fullscreen] .centerCol {
 +  visibility: hidden;
 +}
 +
- /* macOS desktop: the frame goes transparent so window vibrancy reaches the
-    sidebar column, which keeps only a translucent tint; the centre paints the
-    base background itself to stay opaque. The sidebar/centre separator moves
+ .mainPanel {
+   display: flex;
+   flex-direction: column;
 diff --git a/packages/client/ui-layout/src/client/AppFrame.tsx b/packages/client/ui-layout/src/client/AppFrame.tsx
-index 5614947447..e72dae0bd4 100644
+index 23e71c9c03..87f7996f10 100644
 --- a/packages/client/ui-layout/src/client/AppFrame.tsx
 +++ b/packages/client/ui-layout/src/client/AppFrame.tsx
-@@ -32,8 +32,9 @@ export type AppFrameProps =
+@@ -37,7 +37,16 @@ export type AppFrameProps =
    & PropsLocale<'common'>
+   & InjectFace<AppFrameInjected>
  
- /** Center column grid item (session-body building block). */
--function CenterColumn(props: { children?: ReactNode }) {
--  return <div className={css.centerCol}>{props.children}</div>
-+function CenterColumn(props: { children?: ReactNode; covered: boolean }) {
-+  return <div className={css.centerCol} aria-hidden={props.covered || undefined}
-+    {...(props.covered ? { inert: '' } : {})}>{props.children}</div>
+-/** Center column grid item (session-body building block). */
++/**
++ * Center column grid item (session-body building block). Two unrelated facts
++ * make the centre unreachable: the sidebar drawer covers it, and the right
++ * panel's fullscreen state covers it. Both mean the same thing to the browser —
++ * the subtree keeps its layout and its mounted state but takes neither pointer
++ * nor focus — so one `inert` seat carries them. The centre stays painted for
++ * the drawer (it is the drawer's backing); fullscreen shadows it through
++ * AppFrame.module.css instead, because a glass theme can raise the panel's own
++ * stacking context and paint it under the centre.
++ */
+ function CenterColumn(props: { children?: ReactNode; inert: boolean }) {
+   return <div className={css.centerCol} {...{ inert: props.inert ? '' : undefined }}>{props.children}</div>
  }
- 
- /** Subscribe to the main key without subscribing the column frame to each panel id. */
-@@ -281,7 +282,7 @@ export function AppFrame({
+@@ -317,7 +326,7 @@ export function AppFrame({
          {sidebar}
        </div>
        <>
--        <CenterColumn>{main}</CenterColumn>
-+        <CenterColumn covered={layoutInfo.rightbarFullscreen}>{main}</CenterColumn>
-         <RightbarColumn>
+-        <CenterColumn inert={drawerOpen}>{main}</CenterColumn>
++        <CenterColumn inert={drawerOpen || layoutInfo.rightbarFullscreen}>{main}</CenterColumn>
+         <RightbarColumn inert={drawerOpen}>
            {renderSlot('rightbar', { width: normal.rightbar, viewportWidth: viewport, canShow: normal.rightbar > 0 })}
          </RightbarColumn>
 diff --git a/packages/client/ui-sidebar-browser/README.md b/packages/client/ui-sidebar-browser/README.md
@@ -1784,12 +1862,12 @@ index 5d3ff43d40..de1a20b918 100644
    mount(viewportId: string): () => void {
      const host = document.getElementById(viewportId)
 diff --git a/packages/client/ui-sidebar-browser/src/client/index.ts b/packages/client/ui-sidebar-browser/src/client/index.ts
-index d44226eb13..c0f92180d3 100644
+index 29219212bc..c595937c15 100644
 --- a/packages/client/ui-sidebar-browser/src/client/index.ts
 +++ b/packages/client/ui-sidebar-browser/src/client/index.ts
 @@ -18,8 +18,12 @@ import type { BrowserPageFactory } from './browser/BrowserPage.ts'
  import { BROWSER_ID, browserDefinition } from './definition.tsx'
- import { en, zh } from './locales.ts'
+ import { en, ja, es, fr, de, ru, pt, zh } from './locales.ts'
  import { createBrowserStore } from './browser/store.ts'
 +import type {} from './annotation/slots.ts'
  
