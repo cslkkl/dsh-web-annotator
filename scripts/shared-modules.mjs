@@ -17,7 +17,7 @@ export function toHostSource(source) {
 }
 
 /** The reviewed Harness baseline this package's providers are built from. */
-export const HOST_BASE_COMMIT = 'd743267388641bc76f17c45ce8b4c231aed1d32c';
+export const HOST_BASE_COMMIT = '38a6a5c965aa99ab525161efb7cc5cf1fe62fced';
 
 /** The Harness checkout next to this package, overridable for CI and other layouts. */
 export function hostCheckout(root) {

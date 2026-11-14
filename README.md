@@ -57,7 +57,7 @@ dsh plugin --profile desktop add --ignore-scripts /absolute/path/dsh-web-annotat
 只装这一个包，然后正常退出并重开 Desktop。使用其他 Profile 时替换 `desktop`。
 
 该 bundle 在启用期间**替换官方 Browser、Chat 和 Layout 提供方**。
-请先确认 Harness 内核是 **0.2.1-alpha.2**，不要在其他版本或另一套同类提供方上混装。
+请先确认 Harness 内核是 **0.2.2-rc.3**，不要在其他版本或另一套同类提供方上混装。
 卸载整个 bundle 会撤销这些替换，重启后恢复官方提供方。
 
 旧本地预览用户先移除 `dsh-layout-care` 和 `dsh-layout-care-browser-preview` 再安装新包。

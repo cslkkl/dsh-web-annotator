@@ -57,7 +57,7 @@ collapses them into one "N notes" chip.
 - **Drafts survive**: notes are stored per session and full URL in IndexedDB. Neither a failed send nor a
   failed save clears them.
 
-**0.2.2 targets exactly Harness 0.2.1-alpha.2.**
+**0.3.0 targets exactly Harness 0.2.2-rc.3.**
 One prebuilt package ships the plugin together with the Browser, Chat and Layout extensions, so a normal
 restart of Desktop is all it takes. The extensions are not part of the official Harness yet. npm carries
 both channels (`npm install dsh-web-annotator`); the community directory entry has been submitted and is
@@ -84,7 +84,7 @@ Install this one package, then quit and reopen Desktop normally. Substitute your
 script has to be approved.
 
 While the bundle is enabled it **replaces the official Browser, Chat and Layout providers**. Check first
-that the Harness kernel is **0.2.1-alpha.2**, and do not mix it with another plugin that provides the same
+that the Harness kernel is **0.2.2-rc.3**, and do not mix it with another plugin that provides the same
 rows. Uninstalling the whole bundle undoes the replacement and a restart brings the official providers
 back.
 

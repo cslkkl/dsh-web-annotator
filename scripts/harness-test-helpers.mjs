@@ -1,4 +1,4 @@
-/** Helpers for integration tests against the real Harness 0.2.1-alpha.2 Web host.
+/** Helpers for integration tests against the real Harness 0.2.2-rc.3 Web host.
  * No mock app, profile edits, model configuration, or package installation occurs here.
  */
 import { spawn } from 'node:child_process';

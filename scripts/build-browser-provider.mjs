@@ -1,4 +1,4 @@
-/** Build a reviewable Browser provider from the exact 0.2.1-alpha.2 source checkout.
+/** Build a reviewable Browser provider from the exact 0.2.2-rc.3 source checkout.
  * The published Harness installation is never changed by this script.
  */
 import { build } from 'esbuild';
@@ -20,7 +20,7 @@ for (const file of SHARED_ANNOTATION_MODULES) {
     );
 }
 const manifest = JSON.parse(await readFile(join(source, 'package.json'), 'utf8'));
-manifest.peerDependencies = { '@deepseek-ai/cordis': '~4.0.4' };
+manifest.peerDependencies = { '@deepseek-ai/cordis': '~4.1.0' };
 delete manifest.devDependencies;
 delete manifest.scripts;
 await writeFile(join(output, 'package.json'), JSON.stringify(manifest, null, 2) + '\n');
