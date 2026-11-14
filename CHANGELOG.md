@@ -1,5 +1,40 @@
 # Changelog
 
+## 0.3.0 — 迁移到 Harness 0.2.2-rc.3
+
+**又是一次必需的迁移**：启用期间替换官方 Browser、Chat 与 Layout 三个提供方，而这三份是从 Harness
+源码派生重建的 —— 宿主升级后旧包会被版本守卫明确拒绝，而不是装上后静默崩溃。
+
+本版把三个提供方重新对齐 `0.2.2-rc.3`（含 rc.1 / rc.2 / rc.3 的全部破坏性变更），
+`peerDependencies`、`engines` 与 `@deepseek-ai/*` 全部精确钉到该版本，宿主基线 commit
+由 `d743267…`（0.2.1-alpha.2）换成 `38a6a5c…`（`dsh-v0.2.2-rc.3`）。
+
+- **cordis 4.0.5-alpha.1 → 4.1.0**：rc.3 三个包的 peer 声明本身就是 `~4.1.0`，
+  派生提供方写进自身 manifest 的 peer 也一并对齐，否则装上后宿主不满足其 peer。
+- **Chat 那半按 rc.3 的第三次重构重做**：上游把用户正文搬进 `conversation.chat.user.content`
+  Factory（`UserContent` 再调 `conversation.user.text`），气泡不再自己拼正文；
+  上游也接管了 `renderMessageImages` 的传递，改用 `loadImage` + `renderFactorySlot`。
+  我们那条 “识别用户正文并允许替换呈现” 的链因此落在 `UserContent` 包裹正文的位置，
+  语义与上一版一致：只替换正文，附件、引用摘要与消息操作不动。
+- **Layout 那半改用上游新签名**：rc.3 已把两个列组件的 `covered` 改名为 `inert`（抽屉用它），
+  并为全屏加了只服务于 transition 的 `data-rightbar-fullscreen`。补丁语义（全屏时主列
+  不可见且 inert）仍然需要，于是并入同一 `inert` 表达式，CSS 侧继续用 `visibility`
+  负责绘制；主列保持挂载，退出全屏后输入框与草稿不变。
+- **依赖清单按 rc.3 的真实 import 补齐**：`schemastery`（Chat 的新运行时依赖）
+  与 14 个此前未声明的 `@deepseek-ai/*` 类型来源，全部同一版本精确钉。
+- **`verify:browser-patch` 修掉 1 MiB 默认 `maxBuffer`**：宿主树已到 21,066 个路径（约 1.2 MB），
+  溢出只报 `spawnSync git ENOBUFS`，看不出因果。
+
+补丁仍是生成物：`git diff HEAD` 于精确基线，27 个文件（上一版 26 个；新增
+`packages/client/ui-chat/src/client/chat/UserContent.tsx`，因为正文渲染点在 rc.3 移到了那里）。
+
+验证：本机门禁全绿（格式 / lint / 分层 7 条 / 文档路径 / build / typecheck / 产物 6 项 /
+52 项单元测试）；`verify:browser-patch` 按精确基线应用并复现 27 个受审文件；
+三个提供方的窄范围类型检查全过；存储回归 4 项通过。
+
+⚠️ **本版未验证**：真实宿主上的 Browser 验收（`test:acceptance`）、真实模型、原生 Desktop、
+兼容矩阵 —— 与上一版相同的边界，迁移没有改变它们。
+
 ## 0.2.2 — 迁移到 Harness 0.2.1-alpha.2
 
 **这是一次必需的迁移，不是可选的升级**：本包在启用期间替换官方 Browser、Chat 与 Layout 三个提供方，

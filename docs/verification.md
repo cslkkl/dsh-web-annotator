@@ -26,7 +26,7 @@ npm run test:storage
 
 ## 三、真实宿主验收
 
-需要精确版本 Harness 0.2.1-alpha.2、配套提供方、已安装 Chromium，以及一个打包产物。
+需要精确版本 Harness 0.2.2-rc.3、配套提供方、已安装 Chromium，以及一个打包产物。
 
 ```powershell
 npm run build                      # 先产出 lib/
@@ -88,6 +88,51 @@ npm run verify:delivery
 ## 六、按版本的验收记录
 
 明细落在本地未入库的 `integration/*.json`；这里只留可复述的结论。
+
+### 0.3.0（2026-11-14，迁移版）
+
+**迁移到 Harness `0.2.2-rc.3`。** 补丁基线由 `d743267…`（0.2.1-alpha.2）换成
+`38a6a5c…`（`dsh-v0.2.2-rc.3`），三个派生提供方重新对齐。
+
+| 项目                      | 结果                                                            |
+| ------------------------- | --------------------------------------------------------------- |
+| 补丁基线                  | `d743267…` → `38a6a5c…`（`dsh-v0.2.2-rc.3`）；**27** 个文件     |
+| 补丁校验                  | `verify:browser-patch` 通过：按精确基线应用并复现 27 个受审文件 |
+| 三个提供方类型检查        | `typecheck:{browser,chat,layout}-provider` 全过                 |
+| 本机门禁                  | `npm run check` 全绿；52 项单元测试通过                         |
+| `npm run test:storage`    | 4 项通过（真实 Chromium）                                       |
+| `npm pack --dry-run`      | `prepack` 完整性断言通过（补丁哈希、逐文件哈希、版本一致）      |
+| `npm run test:acceptance` | **未运行**：需要精确版本真实宿主 + 打包产物，本轮未做           |
+| `npm run test:harness`    | **未运行**：同上                                                |
+
+**冲突是怎么处理的**（不是"改个版本号"）：8 个冲突文件，全部按 rc.3 的上游新结构重述补丁语义。
+
+- **`ui-layout/AppFrame.tsx`**：上游把 `CenterColumn` / `RightbarColumn` 的 `covered` 改成了
+  `inert`（给抽屉用），并自带 `data-rightbar-fullscreen`（只服务 CSS transition）。
+  补丁语义并入同一表达式：`<CenterColumn inert={drawerOpen || layoutInfo.rightbarFullscreen}>`。
+  不再单独加 `aria-hidden`：`inert` 已把子树移出可访问性树与焦点，上游在抽屉场景就用这一个
+  seat，补丁没必要引入第二种说法。绘制侧仍由 `AppFrame.module.css` 的 `visibility: hidden` 负责
+  —— `inert` 不隐藏像素，而玻璃主题可能把右栏的合成层抬到主列之上。
+- **`ui-chat`**：rc.3 把用户正文搬进 `conversation.chat.user.content` Factory
+  （`UserContent` 再调 `conversation.user.text`），气泡不再自己拼正文，也由上游接管了
+  `renderMessageImages`。补丁只剩 `renderUserText` 一条缝：`ChatFlow` 建 seat →
+  `ChatNodeSeat` 下传 → `UserStyleBubble` 转给内容 Factory 的输入 → `UserContent` 包住正文渲染。
+  `UserContentInput.renderUserText` 因此是**可选**字段：直接调用内容 Factory 的第三方没有它，
+  退化成普通正文，而不是编译失败。
+- **`contract/slots.ts`**：`conversation.message.images` 在 rc.3 的 `ChatFlow` 上已经**没有**
+  渲染点（图片改由内容 Factory 与 Assistant 节点各自声明），所以 `ChatFlowSlotProps` 只并列
+  `conversation.chat.node | conversation.message.user-text`；把 `images` 一并写回是 0.2.1 的
+  残留，会让 Flow 声明一个自己从不渲染的子槽。
+- **依赖侧**：rc.3 的 `ui-chat` 新增 `schemastery` 运行时依赖与十四个 `@deepseek-ai/*` 类型来源
+  （`ui-settings`、`context-menu`、`ui-layout`、`api-remotes`、`session-stats`、`tool-executor-ptc` 等）。
+  旧 `package-lock.json` 会把 0.2.1-alpha.2 的传递图再解析一遍并报 ERESOLVE ——
+  **删掉 lock 与 `node_modules` 重装**即可，不需要 `--force`。
+- **宿主检出不要装依赖**：宿主包在工作区里是 link 到未构建的源码包，`pnpm install` 之后
+  esbuild 会就近解析到没有 `lib/` 的 junction 而报 `Could not resolve`。CI 也从不安装宿主依赖，
+  构建靠本包 `node_modules` 的 `nodePaths` 回落。本机为此清掉了宿主里的 `node_modules`。
+
+⚠️ **本版未验证**：真实宿主上的 Browser 验收、真实模型、原生 Desktop、兼容矩阵 ——
+与上一版相同的边界，迁移没有改变它们。**不要把本机门禁绿当作真实宿主已验。**
 
 ### 0.2.2（2026-10-12）
 

@@ -1,6 +1,6 @@
 # Browser 集成
 
-官方 Harness 0.2.1-alpha.2 不声明批注插槽。本包配套的补丁扩展三个包：
+官方 Harness 0.2.2-rc.3 不声明批注插槽。本包配套的补丁扩展三个包：
 
 | 包                                   | 补丁做什么                                                                                                                  |
 | ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
@@ -24,6 +24,15 @@ npm run verify:browser-patch
 
 `verify:browser-patch` 会在独立的临时 Git root 里把补丁应用到精确基线，
 再与宿主检出逐字节比对。不这么做时 `git apply` 会静默跳过路径，看不出问题。
+
+补丁里新增的 `annotation/*.ts` 是宿主侧的未跟踪文件，所以生成前要先把工作区全部入索引
+（`git add -A`，不 commit）；只跑 `git diff HEAD` 抓不到未跟踪文件，补丁会缺 5 个文件。
+
+**宿主检出不要装依赖。** 宿主包在工作区里是 link 到未构建的源码包，
+`pnpm install` 之后 esbuild 会就近解析到没有 `lib/` 的 junction，报
+`Could not resolve "@deepseek-ai/…"`；CI 也从不安装宿主依赖，构建靠本包
+`node_modules` 的 `nodePaths` 回落。同理，本包的 `package-lock.json` 与旧版本共存时
+会出现 ERESOLVE —— 删掉 lock 与 `node_modules` 重装，不要用 `--force`。
 
 ## 应用与构建
 
@@ -54,7 +63,7 @@ CI 与发布链路用这个变量指向 `.host-source`。
 清单在 [../scripts/shared-modules.mjs](../scripts/shared-modules.mjs)。
 `build-browser-provider` 会在不一致时直接失败。同步方向是单向的：本包是事实源。
 
-局部类型检查针对已安装 0.2.1-alpha.2 声明，不能替代官方 monorepo 的全仓检查。
+局部类型检查针对已安装 0.2.2-rc.3 声明，不能替代官方 monorepo 的全仓检查。
 
 ## 单包分发
 
